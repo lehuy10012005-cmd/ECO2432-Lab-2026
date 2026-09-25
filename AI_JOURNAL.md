@@ -86,6 +86,24 @@ AI trực tiếp tra cứu mã nguồn đã xác thực của hợp đồng Teth
 
 **Ai phát hiện:** Sinh viên phát hiện và kiểm soát giới hạn suy diễn của AI.
 
+## Lần 5 (Lab 5: Viết đặc tả cho công cụ phân tích dòng tiền)
+
+**Prompt:**
+> "Hãy giúp tôi hoàn thiện bản đặc tả nghiệp vụ SPEC.md cho công cụ phân tích dòng tiền ví on-chain trong 90 ngày theo đúng chuẩn BA Fintech (Sổ tay thực hành ECO2432, trang 15–16). Không viết code trong buổi này. Bổ sung đầy đủ 6 phần: Mục đích, Đầu vào, Quy tắc R1–R6, Đầu ra, Trường hợp ngoại lệ và Ngoài phạm vi, kèm quy tắc mở rộng cho tình huống tự chuyển tiền (Self-transfer)."
+
+**AI trả về:**
+- Bản đặc tả nghiệp vụ `SPEC.md` hoàn chỉnh gồm 6 phần cốt lõi và 7 quy tắc nghiệp vụ tài chính (R1–R7).
+- Định nghĩa chặt chẽ cơ chế tính toán dòng tiền ra (`giá trị + phí gas`) và hạch toán phí gas của giao dịch thất bại.
+- Bổ sung 4 ca biên ngoại lệ (Edge Cases E1–E4) về xử lý ví rỗng, lỗi xác thực API Etherscan, địa chỉ sai định dạng và cơ chế phân trang tự động khi vượt quá 10.000 giao dịch.
+
+**Đánh giá:** Dùng được.
+
+**Chỗ sai & Phản biện của sinh viên:**
+Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường bỏ qua việc giao dịch thất bại vẫn làm giảm số dư ví do tốn phí gas (vi phạm nguyên tắc bảo toàn số dư sổ cái), hoặc quên chia đơn vị 10^18 từ `wei` sang `ETH`. Sinh viên đã yêu cầu chuẩn hóa từng quy tắc R1–R7 độc lập có thể kiểm thử được (testable assertion) trước khi chuyển sang bước sinh mã ở Lab 6.
+
+**Ai phát hiện:** Sinh viên định hình yêu cầu nghiệp vụ và giám sát cấu trúc đặc tả.
+
+
 
 
 
