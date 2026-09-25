@@ -43,4 +43,26 @@ AI tra cứu trực tiếp biên lai (receipt) từ mạng Sepolia RPC để ch�
 
 **Ai phát hiện:** Sinh viên phát hiện hiện tượng bất thường và chủ động hỏi AI đối soát dữ liệu on-chain.
 
+## Lần 3 (Lab 3: Đọc giao dịch và hợp đồng trên Etherscan)
+
+**Prompt:**
+> "rồi ok qua Lab 3 , cứ theo trình tự vậy"
+
+**AI trả về:**
+- Mổ xẻ chi tiết 8 trường dữ liệu on-chain của giao dịch `0x012b...9440` (Status, Block, Timestamp, From/To, Value, Tx Fee, Gas Price, Nonce) gắn với góc nhìn kế toán tài sản số và điều tra tuân thủ (AML/KYC).
+- Thẩm định hợp đồng thực tế USDT trên Ethereum Mainnet (`0xdAC17F958D2ee523a2206206994597C13D831ec7`): phân biệt Bytecode và Verified Code, truy vấn trực tiếp tổng cung (~88.3 tỷ USDT) qua hàm `totalSupply()`.
+- Phát hiện và phân tích quyền đóng băng tài khoản tập trung qua hàm `addBlackList()` và `destroyBlackFunds()`, trả lời sâu sắc về mức độ phi tập trung thực tế và rủi ro kiểm duyệt (Censorship Risk).
+- Tạo tệp sản phẩm nộp `forensics.md` và đồng bộ lên kho GitHub.
+
+**Đánh giá:** Dùng được.
+
+**Chỗ sai:**
+Nhiều người dùng lầm tưởng các token trên blockchain đều phi tập trung hoàn toàn và không ai có thể can thiệp số dư. Nếu không đọc tab Write Contract của hợp đồng USDT, sinh viên sẽ không phát hiện ra nhà phát hành Tether có đặc quyền đóng băng địa chỉ ví và tiêu hủy tiền trong ví của người khác.
+
+**Cách sửa:**
+AI trực tiếp tra cứu mã nguồn đã xác thực của hợp đồng Tether trên Etherscan, chỉ rõ tên các hàm quản trị danh sách đen (`addBlackList`, `destroyBlackFunds`) và phân tích bài học quản trị rủi ro dòng tiền cho doanh nghiệp.
+
+**Ai phát hiện:** Sinh viên định hướng yêu cầu AI phân tích rủi ro kiểm duyệt on-chain theo khung Sổ tay thực hành.
+
+
 
