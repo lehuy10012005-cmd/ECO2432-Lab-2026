@@ -103,6 +103,29 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 **Ai phát hiện:** Sinh viên định hình yêu cầu nghiệp vụ và giám sát cấu trúc đặc tả.
 
+## Lần 6 (Lab 6: Sinh mã bằng AI và kiểm tra kết quả)
+
+**Prompt:**
+> "Đọc tệp SPEC.md trong dự án và viết chương trình Python wallet_analyzer.py thực hiện đúng đặc tả đó. Tuân thủ các quy ước trong AGENTS.md. Trước khi viết mã, tóm tắt lại cách bạn hiểu yêu cầu để tôi xác nhận. Sau đó tiến hành kiểm tra checklist 6 điểm của Sổ tay thực hành trang 17–18."
+
+**AI trả về:**
+- Tóm tắt cách hiểu bản đặc tả `SPEC.md` và viết chương trình Python `wallet_analyzer.py`.
+- Tự động kết nối Etherscan API V2, tính toán dòng tiền vào/ra theo quy tắc R1–R7, xử lý ngoại lệ E1–E4 và trích xuất bảng số liệu tài chính kèm tệp biểu đồ đường `balance_chart.png`.
+- Tạo tệp cấu hình mẫu `.env.example` để bảo vệ khóa bí mật.
+
+**Đánh giá:** Phải sửa (sau khi sinh viên thực hiện bài kiểm tra checklist 6 điểm).
+
+**Checklist 6 điểm kiểm tra & Bắt 2 lỗi ngớ ngẩn do AI sinh ra:**
+1. **Lỗi 1 (Phiên bản API - Mục 6 Checklist):** AI ban đầu sinh mã sử dụng endpoint cũ `api-sepolia.etherscan.io/api?...` (Etherscan V1). Khi chạy thử nghiệm, API trả về lỗi: `NOTOK: You are using a deprecated V1 endpoint, switch to Etherscan API V2`. Sinh viên đã phát hiện và yêu cầu AI cập nhật lên chuẩn **Etherscan API V2** (`https://api.etherscan.io/v2/api?chainid=11155111...`).
+2. **Lỗi 2 (Hạch toán giao dịch thất bại - Mục 4 Checklist):** Trong bản nháp đầu tiên, AI chỉ lọc các giao dịch có `isError == "0"` và bỏ qua hoàn toàn các giao dịch thất bại. Sinh viên đã chỉ ra lỗi logic kế toán: Giao dịch thất bại thì người gửi (`from`) vẫn bị trừ phí gas, nếu bỏ qua thì số dư lũy kế sẽ bị lệch so với thực tế ví trên Etherscan. AI đã phải sửa lại hàm `process_cashflow` để ghi nhận phí gas của giao dịch lỗi vào dòng tiền RA (Quy tắc R4).
+3. **Các điểm kiểm tra còn lại:**
+   - *Đơn vị tiền:* Đã chia cho 10^18 (`WEI_IN_ETH`), không bị số 19 chữ số.
+   - *Bảo mật API:* Khóa được đọc qua `os.getenv("ETHERSCAN_API_KEY")`, không ghi cứng vào mã nguồn, tệp `.env` được bảo vệ trong `.gitignore`.
+   - *Xử lý lỗi:* Có cơ chế bắt ngoại lệ khi API lỗi hoặc địa chỉ ví sai cú pháp (Edge Case E2, E3).
+
+**Ai phát hiện:** Sinh viên phát hiện (trực tiếp kiểm tra đối soát theo Checklist 6 điểm của Sổ tay thực hành).
+
+
 
 
 
