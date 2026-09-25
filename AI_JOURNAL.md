@@ -23,3 +23,24 @@ Sinh viên yêu cầu AI đối chiếu Sổ tay môn học ECO2432 để viết
 
 **Ai phát hiện:** Sinh viên phát hiện.
 
+## Lần 2 (Lab 2: Ví và giao dịch đầu tiên)
+
+**Prompt:**
+> "địa chỉ ví : 0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50 mã băm của giao dịch thành công : 0x012b71a61a33cf554ffbda91ff2a2b679ef5339adb10fa21bc7fefc13b1c9440 mã băm giao dịch không thành công ( hoặc thành công) : 0xdfcb9f3cce3e8a8431af94d72b1641beb74c4aff514cd99a369cfcb2eb4c276c cố tình sửa 1 kí tự ở ví người nhận thì nó không cho chuyển qua trạng thái này ( cái này tôi chưa hiểu lắm mà đúng không)"
+
+**AI trả về:**
+- Giải thích bản chất kỹ thuật của giao dịch `0xdfcb...276c`: Đã thành công on-chain nhưng từng bị MetaMask cảnh báo đỏ "Đã bị đầu độc" (Address Poisoning).
+- Giải thích lý do khi cố tình sửa 1 ký tự ví người nhận thì MetaMask lập tức khóa nút gửi: Do cơ chế mã kiểm tra EIP-55 Checksum tự động phát hiện lỗi chính tả ngay tại lớp ứng dụng (client-side), giúp người dùng không tốn phí gas vô ích.
+- Tạo báo cáo `lab02.md` gồm bảng đối chiếu dữ liệu on-chain thực tế và đoạn giải trình 3 câu về tính bất biến (Immutability) của blockchain dưới góc nhìn kế toán và quản trị rủi ro.
+
+**Đánh giá:** Dùng được.
+
+**Chỗ sai:**
+Ban đầu sinh viên nhầm lẫn giao dịch `0xdfcb...276c` là giao dịch thất bại do nhìn thấy cảnh báo đỏ `⚠️ Đã bị đầu độc` trên MetaMask, và chưa phân biệt được giữa việc giao dịch thất bại on-chain (revert/out of gas) với việc bị ví chặn ngay từ giao diện do sai Checksum (chưa hề được phát sóng lên mạng nên không có Tx Hash).
+
+**Cách sửa:**
+AI tra cứu trực tiếp biên lai (receipt) từ mạng Sepolia RPC để chứng minh giao dịch thực tế đã Confirmed, đồng thời phân tích cơ chế bảo mật EIP-55 Checksum và thủ đoạn gian lận Address Poisoning theo đúng chuẩn nghiệp vụ tuân thủ AML.
+
+**Ai phát hiện:** Sinh viên phát hiện hiện tượng bất thường và chủ động hỏi AI đối soát dữ liệu on-chain.
+
+
