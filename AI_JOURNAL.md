@@ -64,5 +64,28 @@ AI trực tiếp tra cứu mã nguồn đã xác thực của hợp đồng Teth
 
 **Ai phát hiện:** Sinh viên định hướng yêu cầu AI phân tích rủi ro kiểm duyệt on-chain theo khung Sổ tay thực hành.
 
+## Lần 4 (Lab 4: Nhận diện hợp đồng có rủi ro)
+
+**Prompt:**
+> "Bạn là chuyên viên thẩm định rủi ro tài sản số. Dưới đây là mã nguồn một hợp đồng token trong contracts/lab04/ClubTokens.sol. Hãy liệt kê mọi quyền đặc biệt mà chủ sở hữu hợp đồng có thể thực hiện, và với mỗi quyền, nêu rõ: Tên hàm và số dòng; Người nắm giữ token chịu rủi ro gì. Chỉ trả lời dựa trên mã nguồn tôi cung cấp. Nếu không tìm thấy, nói là không tìm thấy."
+
+**AI trả về:**
+- Thẩm định 3 hợp đồng mẫu `ClubTokenA`, `ClubTokenB`, `ClubTokenC` trong tệp `contracts/lab04/ClubTokens.sol`.
+- Chỉ ra chính xác số dòng và cơ chế rủi ro:
+  + `ClubTokenA` (dòng 7–11): Sạch, không có quyền đặc biệt.
+  + `ClubTokenB` (dòng 18–20): Hàm `mint()` không có trần `MAX_SUPPLY`, rủi ro pha loãng vô hạn (Rug-pull).
+  + `ClubTokenC` (dòng 30–32 và dòng 34–37): Hàm `setRestricted()` kết hợp logic chặn trong hàm `_update()`, tạo bẫy Honeypot (chỉ cho mua, không cho bán).
+- Đưa ra đề xuất cải tiến mã nguồn và lập báo cáo chi tiết `lab04.md`.
+
+**Đánh giá:** Dùng được.
+
+**So sánh Đối chứng (Đọc thủ công vs AI) & Bắt lỗi AI:**
+- **Đọc thủ công tìm ra gì:** Sinh viên đọc mã nguồn 15 phút đầu và phát hiện ngay hàm `mint` ở Token B có `onlyOwner` và biến `restricted` ở Token C dùng để chặn chuyển tiền.
+- **AI tìm thêm được gì:** AI phân tích sâu hơn về mặt kỹ thuật: chỉ ra Token C vi phạm OpenZeppelin v5 ở chỗ can thiệp vào hàm `_update` nhưng không phát ra `event` khi gọi `setRestricted` (gây mù thông tin cho các bot cảnh báo on-chain), đồng thời chỉ ra thủ đoạn ngụy tạo lý do "bảo vệ cộng đồng" để che giấu bẫy Honeypot.
+- **AI có nói sai chỗ nào không:** Ban đầu nếu không có câu ràng buộc *"Chỉ trả lời dựa trên mã nguồn tôi cung cấp"*, AI thường tự suy đoán hợp đồng có thể dính lỗi Reentrancy (dù đây là token ERC-20 thuần túy không có hàm chuyển ETH). Sinh viên đã dùng đúng mẫu prompt chuẩn trong `prompt_templates.md` để ép AI bám sát từng dòng mã cụ thể từ dòng 1 đến dòng 40.
+
+**Ai phát hiện:** Sinh viên phát hiện và kiểm soát giới hạn suy diễn của AI.
+
+
 
 
