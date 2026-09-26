@@ -125,6 +125,26 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 **Ai phát hiện:** Sinh viên phát hiện (trực tiếp kiểm tra đối soát theo Checklist 6 điểm của Sổ tay thực hành).
 
+## Lần 7 (Lab 7: Tính chi phí vận hành thực tế — Gas)
+
+**Prompt:**
+> "Tôi đang làm Lab 7 môn ECO2432 về tính toán chi phí vận hành on-chain cho chương trình thẻ tích điểm câu lạc bộ (1.000 giao dịch/tháng, mỗi giao dịch tốn 50.000 gas, giá gas 20 Gwei, giá ETH 3.000 USD). Hãy lập bảng tính chi phí cho Ethereum Layer 1, so sánh với Layer 2 (rẻ hơn 100 lần), phân tích ai là người trả chi phí này (CLB hay sinh viên) và đề xuất các giải pháp kiến trúc kinh tế tối ưu."
+
+**AI trả về:**
+- Bảng tính chi tiết quy đổi từ Gas → Gwei → ETH → USD → VNĐ cho 1 giao dịch và cả tháng (1.000 giao dịch).
+- So sánh chi phí giữa Ethereum Mainnet L1 (75 triệu VNĐ/tháng) và Layer 2 Arbitrum/Base (750k VNĐ/tháng).
+- Phân tích kinh tế hành vi giữa hai đối tượng chịu phí và đề xuất 3 hướng kiến trúc tối ưu (Di chuyển L2, Gộp giao dịch Batching, và Mô hình hỗn hợp Hybrid).
+- Mở rộng tính toán chi phí cho đề tài Đồ án Capstone: Két tiết kiệm có khóa thời gian sinh viên (`TimeLockVault.sol`).
+
+**Đánh giá:** Phải sửa (sau khi sinh viên kiểm tra thứ nguyên toán học và phản biện tính khả thi kinh tế).
+
+**Chỗ sai & Phản biện sắc bén của sinh viên:**
+1. **Lỗi 1 (Sai lệch thứ nguyên & Quy đổi đơn vị Gwei):** Trong bản nháp đầu tiên, AI nhầm lẫn giữa Gwei và Wei. Thay vì nhân $10^{-9}$ để quy đổi Gwei ra ETH, AI lại nhân trực tiếp số gas với đơn giá Gwei rồi nhân với giá ETH ($50.000 \times 20 \times 3.000$), dẫn tới kết quả chi phí cho 1 giao dịch lên đến... **3.000.000.000 USD** (3 tỷ USD cho một lượt tích điểm!). Sinh viên phát hiện ngay lập tức nhờ kiểm tra thứ nguyên kế toán: $1\text{ ETH} = 10^9\text{ Gwei} = 10^{18}\text{ Wei}$. Công thức chuẩn xác phải là: $\text{Phí (ETH)} = 50.000 \times 20 \times 10^{-9} = 0,001\text{ ETH} = 3\text{ USD}$ ($\approx 75.000\text{ VNĐ}$).
+2. **Lỗi 2 (Ngây thơ về kinh tế hành vi & Trải nghiệm người dùng):** AI đề xuất cho sinh viên tự trả phí gas trên mạng chính Ethereum với lập luận rằng "để người dùng trải nghiệm sự phi tập trung đích thực của Web3". Sinh viên phản biện ngay: Sinh viên đi mua ly cà phê $25.000\text{ VNĐ}$ mà phải bỏ thêm $75.000\text{ VNĐ}$ tiền phí gas (tỷ lệ Gas-to-Value lên tới $300\%$) thì không một người dùng có lý trí nào chấp nhận. Đây là bài học sống còn: *Nếu chi phí giao dịch lớn hơn giá trị giao dịch thì mô hình kinh doanh phá sản*.
+
+**Ai phát hiện:** Sinh viên phát hiện và trực tiếp chấn chỉnh tư duy kinh tế của AI.
+
+
 
 
 
