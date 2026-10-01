@@ -5,23 +5,6 @@
 
 ---
 
-## 📌 THÔNG TIN ĐĂNG KÝ CẶP & CHỦ ĐỀ ĐỒ ÁN CAPSTONE (Hạn 26/09/2026)
-
-* **Thành viên nhóm (Cặp 2 sinh viên):**
-  1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Quản trị Repo)
-  2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp)
-* **Chủ đề lựa chọn:** **Chủ đề 5 — Gây quỹ có hoàn tiền (Crowdfunding with Refund Guarantee)**  
-  *(Căn cứ theo danh mục 10 chủ đề tại Phần N, Trang 48–49 — Sổ tay thực hành ECO2432)*
-* **Tên dự kiến sản phẩm:** **HCE-FundGuard** *(Nền tảng gây quỹ cộng đồng có bảo chứng hoàn tiền tự động)*
-* **Câu mô tả định vị sản phẩm (chuẩn mẫu quy định):**
-  > **“Nhóm xây dựng HCE-FundGuard cho các câu lạc bộ và nhóm sinh viên khởi nghiệp Trường Đại học Kinh tế để bảo đảm tính minh bạch của vốn góp và tự động hoàn trả 100% tiền cho người ủng hộ nếu dự án không đạt mục tiêu tài chính trước thời hạn quy định.”**
-* **Luồng cốt lõi cam kết demo:**
-  * Người ủng hộ nạp tiền góp vốn vào hợp đồng thông minh trước thời hạn (Deadline).
-  * **Kịch bản thành công:** Nếu tổng vốn góp $\ge$ Mục tiêu tài chính $\rightarrow$ Chủ dự án được quyền rút vốn để thực hiện.
-  * **Kịch bản thất bại:** Nếu hết hạn mà tổng vốn góp $<$ Mục tiêu $\rightarrow$ Hợp đồng khóa quyền rút của chủ dự án, từng người ủng hộ được tự rút lại $100\%$ tiền đã góp (Refund guarantee) mà không bị giữ lại bất kỳ khoản phí nào.
-* **Chi tiết hồ sơ đăng ký:** Xem tệp [TOPIC_REGISTRATION.md](./TOPIC_REGISTRATION.md)
-
----
 
 ## 📂 Danh mục sản phẩm các bài thực hành cá nhân (Lab 1 – 7)
 
@@ -46,4 +29,3 @@
 - `wallet_analyzer.py`: Mã nguồn công cụ phân tích ví on-chain (Lab 6).
 - `balance_chart.png`: Biểu đồ trực quan hóa số dư ví Sepolia thực tế (Lab 6).
 - `lab07.md`: Báo cáo chi phí gas thực tế (Lab 7).
-- `TOPIC_REGISTRATION.md`: Bản đăng ký cặp và chủ đề đồ án Capstone chính thức.
