@@ -1,4 +1,7 @@
 # ECO2432 — Tiền điện tử và Hợp đồng thông minh
+* **Sinh viên thực hiện:** Lê Văn Quang Huy
+* **Mã sinh viên:** `23K4300010`
+* **Lớp:** K57 Kinh Tế Số
 * **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế
 * **Giảng viên phụ trách:** TS. Hà Ngọc Long
 * **Kho lưu trữ:** [https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026)
