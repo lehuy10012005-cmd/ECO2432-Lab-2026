@@ -11,16 +11,16 @@
 
 ## 📂 Danh mục sản phẩm các bài thực hành cá nhân (Lab 1 – 7)
 
-| Bài Lab | Sản phẩm hoàn thành | Mô tả tóm tắt nội dung |
-| :--- | :--- | :--- |
-| **Lab 1** | [`AGENTS.md`](./AGENTS.md) | Quy ước dự án & 4 nguyên tắc cá nhân (Kế toán on-chain, AML, kiểm thử AI) |
-| **Lab 2** | [`lab02.md`](./lab02.md) | Giao dịch đầu tiên Sepolia, đối chiếu EIP-55 Checksum, Address Poisoning |
-| **Lab 3** | [`forensics.md`](./forensics.md) | Pháp y 8 trường giao dịch & Thẩm định hợp đồng USDT Mainnet (Blacklist) |
-| **Lab 4** | [`lab04.md`](./lab04.md) | Thẩm định 3 token trong `ClubTokens.sol`, trích dẫn dòng lỗi rug-pull & honeypot |
-| **Lab 5** | [`SPEC.md`](./SPEC.md) | Bản đặc tả nghiệp vụ BA cho công cụ phân tích dòng tiền ví on-chain 90 ngày |
-| **Lab 6** | [`wallet_analyzer.py`](./wallet_analyzer.py)<br>[`balance_chart.png`](./balance_chart.png) | Chương trình Python kết nối Etherscan API V2, tính dòng tiền & vẽ biểu đồ |
-| **Lab 7** | [`lab07.md`](./lab07.md) | Báo cáo thẩm định kinh tế & tính toán chi phí Gas (L1 75 triệu vs L2 750k VNĐ) |
-| **Nhật ký** | [`AI_JOURNAL.md`](./AI_JOURNAL.md) | Nhật ký AI ghi nhận 7 lần tương tác, bắt các lỗi logic & sai lệch thứ nguyên |
+| Bài Lab | Sản phẩm hoàn thành | Mô tả tóm tắt nội dung | Minh chứng Commit (Click xem code) |
+| :--- | :--- | :--- | :---: |
+| **Lab 1** | [`AGENTS.md`](./AGENTS.md) | Quy ước dự án & 4 nguyên tắc cá nhân (Kế toán on-chain, AML, kiểm thử AI) | [`e8aa347`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/e8aa347) |
+| **Lab 2** | [`lab02.md`](./lab02.md) | Giao dịch đầu tiên Sepolia, đối chiếu EIP-55 Checksum, Address Poisoning | [`5e4e774`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/5e4e774) |
+| **Lab 3** | [`forensics.md`](./forensics.md) | Pháp y 8 trường giao dịch & Thẩm định hợp đồng USDT Mainnet (Blacklist) | [`b5378a1`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/b5378a1) |
+| **Lab 4** | [`lab04.md`](./lab04.md) | Thẩm định 3 token trong `ClubTokens.sol`, trích dẫn dòng lỗi rug-pull & honeypot | [`bb9656c`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/bb9656c) |
+| **Lab 5** | [`SPEC.md`](./SPEC.md) | Bản đặc tả nghiệp vụ BA cho công cụ phân tích dòng tiền ví on-chain 90 ngày | [`8b0c099`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/8b0c099) |
+| **Lab 6** | [`wallet_analyzer.py`](./wallet_analyzer.py)<br>[`balance_chart.png`](./balance_chart.png) | Chương trình Python kết nối Etherscan API V2, tính dòng tiền & vẽ biểu đồ | [`fab046a`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/fab046a) |
+| **Lab 7** | [`lab07.md`](./lab07.md) | Báo cáo thẩm định kinh tế & tính toán chi phí Gas (L1 75 triệu vs L2 750k VNĐ) | [`c05dc4e`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/c05dc4e) |
+| **Nhật ký** | [`AI_JOURNAL.md`](./AI_JOURNAL.md) | Nhật ký AI ghi nhận 7 lần tương tác, bắt các lỗi logic & sai lệch thứ nguyên | [`c05dc4e`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/c05dc4e) |
 
 ---
 
