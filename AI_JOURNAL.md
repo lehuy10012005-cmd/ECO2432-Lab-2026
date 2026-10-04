@@ -144,6 +144,27 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 **Ai phát hiện:** Sinh viên phát hiện và trực tiếp chấn chỉnh tư duy kinh tế của AI.
 
+## Lần 8 (Lab 8: Khởi động Đồ án Capstone — Chủ đề 8: Ghi nhận quyền tác giả của ý tưởng nghiên cứu khoa học)
+
+**Prompt:**
+> "Chủ đề 8: Ghi nhận quyền tác giả của ý tưởng nghiên cứu khoa học. Đây sẽ là chủ đề đồ án của nhóm tôi (Lê Văn Quang Huy & Lại Vương Gia Bảo). Hãy xây dựng trọn bộ sản phẩm cho Lab 8: Khảo sát bài toán kinh tế - kỹ thuật, cơ chế băm dữ liệu & Proof of Existence, thiết kế hợp đồng ScholarProof.sol, lập bảng đối chiếu kiểm thử tối thiểu 3 ca và hoàn thiện hồ sơ đăng ký đề tài."
+
+**AI trả về:**
+- Phân tích bối cảnh vấn nạn chiếm đoạt ý tưởng nghiên cứu (Idea Scooping), đánh giá hạn chế của cơ quan bản quyền truyền thống và xác lập mô hình Proof of Existence (bằng chứng tồn tại mật mã) trên blockchain.
+- Đề xuất kiến trúc tách rời dữ liệu: Băm file phía client (SHA-256 / Keccak-256) để giữ bí mật tuyệt đối nội dung tài liệu, chỉ gửi chuỗi băm 32 bytes (`docHash`) lên Smart Contract để ghi dấu thời gian (`block.timestamp`).
+- Thiết kế hợp đồng thông minh `ScholarProof.sol` tuân thủ nghiêm ngặt `AGENTS.md` (Solidity ^0.8.20, Custom Errors, CEI, Events).
+- Thiết lập 3 ca kiểm thử bắt buộc: Luồng chuẩn, Ca gian lận mạo danh nộp lại cùng hash, và Ca biên dữ liệu rỗng.
+- Hoàn thiện tệp báo cáo `lab08.md`, bản đăng ký đề tài `TOPIC_REGISTRATION.md` cho sản phẩm mang tên **HCE-ScholarProof**.
+
+**Đánh giá:** Dùng được (sau khi sinh viên chấn chỉnh tư duy lưu trữ và thẩm định bản quyền).
+
+**Chỗ sai & Phản biện sắc bén của sinh viên:**
+1. **Lỗi 1 (Sai lầm chết người về lưu trữ dữ liệu - Storage Bloat):** Trong bản phác thảo ý tưởng ban đầu, AI từng gợi ý "lưu trữ toàn bộ nội dung tệp PDF đề cương nghiên cứu dạng chuỗi bytes hoặc chuỗi hex trực tiếp vào biến trạng thái của Smart Contract để đảm bảo tính bất biến". Sinh viên đã bác bỏ ngay lập tức: Dưới góc nhìn kế toán chi phí on-chain (đã chứng minh ở Lab 7), ghi 1 MB dữ liệu vào EVM Storage có thể ngốn hàng chục ngàn USD tiền gas, gây tắc nghẽn mạng và làm dự án phá sản ngay từ ngày đầu. Giải pháp chuẩn xác phải là **chỉ lưu mã băm 32 bytes (`docHash`) on-chain**, còn tệp gốc giữ nguyên off-chain.
+2. **Lỗi 2 (Nguy cơ lộ bí mật ý tưởng sơ khởi):** AI đề xuất cho sinh viên công khai toàn bộ tài liệu nghiên cứu lên IPFS công khai ngay khi đăng ký. Sinh viên phản biện: Ý tưởng nghiên cứu khoa học ở giai đoạn sơ khởi cần được bảo mật tối đa để tránh bị đối thủ sao chép trước khi công bố bài báo. Bằng chứng sở hữu trí tuệ trên blockchain chỉ cần chứng minh *"Tôi đã sở hữu tài liệu tạo ra mã băm này vào thời điểm T"* (Proof of Existence). Tài liệu gốc chỉ cần xuất trình khi có tranh chấp bản quyền xảy ra.
+
+**Ai phát hiện:** Sinh viên phát hiện và định hướng kiến trúc bảo mật kết hợp kinh tế on-chain.
+
+
 
 
 
