@@ -31,8 +31,8 @@
 | **Lab 5** | [`SPEC.md`](./SPEC.md) | Bản đặc tả nghiệp vụ BA cho công cụ phân tích dòng tiền ví on-chain 90 ngày | [`8b0c099`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/8b0c099) |
 | **Lab 6** | [`wallet_analyzer.py`](./wallet_analyzer.py)<br>[`balance_chart.png`](./balance_chart.png) | Chương trình Python kết nối Etherscan API V2, tính dòng tiền & vẽ biểu đồ | [`fab046a`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/fab046a) |
 | **Lab 7** | [`lab07.md`](./lab07.md) | Báo cáo thẩm định kinh tế & tính toán chi phí Gas (L1 75 triệu vs L2 750k VNĐ) | [`c05dc4e`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/c05dc4e) |
-| **Lab 8** | [`lab08.md`](./lab08.md)<br>[`TOPIC_REGISTRATION.md`](./TOPIC_REGISTRATION.md)<br>[`ScholarProof.sol`](./contracts/capstone/ScholarProof.sol) | Khởi động Đồ án Capstone Chủ đề 8 (HCE-ScholarProof), cơ chế Proof of Existence, thiết kế hợp đồng & 3 ca kiểm thử | *Đang cập nhật mã commit* |
-| **Nhật ký** | [`AI_JOURNAL.md`](./AI_JOURNAL.md) | Nhật ký AI ghi nhận 8 lần tương tác, bắt các lỗi logic & thẩm định đề tài | *Đang cập nhật mã commit* |
+| **Lab 8** | [`lab08.md`](./lab08.md)<br>[`TOPIC_REGISTRATION.md`](./TOPIC_REGISTRATION.md)<br>[`ScholarProof.sol`](./contracts/capstone/ScholarProof.sol) | Khởi động Đồ án Capstone Chủ đề 8 (HCE-ScholarProof), cơ chế Proof of Existence, thiết kế hợp đồng & 3 ca kiểm thử | [`40104a6`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/40104a6) |
+| **Nhật ký** | [`AI_JOURNAL.md`](./AI_JOURNAL.md) | Nhật ký AI ghi nhận 8 lần tương tác, bắt các lỗi logic & thẩm định đề tài | [`40104a6`](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026/commit/40104a6) |
 
 ---
 
