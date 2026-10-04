@@ -4,6 +4,7 @@
 * **Giảng viên phụ trách:** TS. Hà Ngọc Long
 * **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế
 * **Hạn nộp đăng ký:** Học kỳ I — Năm học 2026
+* **Kho lưu trữ nhóm chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
 
 ---
 

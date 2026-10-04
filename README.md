@@ -5,7 +5,8 @@
 * **Lớp:** K57 Kinh Tế Số
 * **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế
 * **Giảng viên phụ trách:** TS. Hà Ngọc Long
-* **Kho lưu trữ:** [https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026)
+* **Kho lưu trữ nhóm (Đồ án Capstone):** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
+* **Kho lưu trữ cá nhân (Lab 1 – 8):** [https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026](https://github.com/lehuy10012005-cmd/ECO2432-Lab-2026)
 
 ---
 
