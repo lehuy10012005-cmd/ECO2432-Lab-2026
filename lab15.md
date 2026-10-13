@@ -8,7 +8,7 @@
   1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Phụ trách Triển khai & Báo cáo Nghiệm thu)
   2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp / Phụ trách DApp Hosting & Kịch bản Demo Hội đồng)
 * **Kho lưu trữ GitHub chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-* **Cổng DApp trực tuyến (GitHub Pages):** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **Cổng DApp trực tuyến (Vercel):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 * **Địa chỉ hợp đồng Sepolia:** [`0xa2f53106B3dFdF23b6b158022646d231A21e49Cb`](https://sepolia.etherscan.io/address/0xa2f53106B3dFdF23b6b158022646d231A21e49Cb)
 * **Sản phẩm bàn giao Lab 15:**
   - Tài liệu triển khai & vận hành: [`DEPLOYMENT.md`](./DEPLOYMENT.md)
@@ -84,7 +84,7 @@ graph LR
 ```
 
 1. **Bước 1: Mở đầu & Xác thực Tác giả (In-Page Auth Gate):**
-   - Truy cập vào trang web trực tuyến: [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+   - Truy cập vào trang web trực tuyến: [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
    - Trình diễn tấm chắn Auth Gate: Khách vãng lai bị khóa chức năng biểu mẫu, bấm Đăng nhập tài khoản tác giả và kết nối ví MetaMask.
 2. **Bước 2: Xác lập Quyền tác giả (Proof of Existence):**
    - Nhập tên đề tài nghiên cứu mẫu K57 (VD: *"Ứng dụng Blockchain trong Kiểm toán Sổ cái Học thuật"*).

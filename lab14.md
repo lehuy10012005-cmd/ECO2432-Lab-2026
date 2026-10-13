@@ -8,7 +8,7 @@
   1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Trưởng nhóm Kiểm toán Bảo mật & Đặc tả)
   2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp / Kỹ sư Đánh giá Gas & Quản trị Rủi ro On-chain)
 * **Kho lưu trữ GitHub chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-* **DApp trực tuyến (GitHub Pages):** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **DApp trực tuyến (Vercel):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 * **Địa chỉ hợp đồng Sepolia:** [`0xa2f53106B3dFdF23b6b158022646d231A21e49Cb`](https://sepolia.etherscan.io/address/0xa2f53106B3dFdF23b6b158022646d231A21e49Cb)
 * **Sản phẩm bàn giao Lab 14:**
   - Báo cáo kiểm toán bảo mật độc lập: [`audit_report.md`](./audit_report.md)

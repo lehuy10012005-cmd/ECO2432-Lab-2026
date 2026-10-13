@@ -4,7 +4,7 @@
 > **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế  
 > **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
 > **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
-> **Website DApp trực tuyến (Live Demo):** [https://chungnhanquyentacgia.vercel.app/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+> **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 
 ---
 

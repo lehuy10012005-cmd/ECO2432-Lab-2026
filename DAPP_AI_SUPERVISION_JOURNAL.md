@@ -4,7 +4,7 @@
 > **Sinh viên thực hiện:** Lê Văn Quang Huy (23K4300010) & Lại Vương Gia Bảo (23K4300024) - K57 Kinh Tế Số  
 > **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
 > **Kho lưu trữ GitHub:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
-> **Website trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)  
+> **Website trực tuyến:** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)  
 > **Phiên bản tài liệu:** 1.0 (Living Audit Journal — Sẵn sàng tiếp tục cập nhật trong quá trình kiểm thử)
 
 ---

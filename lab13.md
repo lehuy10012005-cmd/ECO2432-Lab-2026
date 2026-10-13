@@ -8,7 +8,7 @@
   1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Phụ trách Tích hợp Web3 & Hợp đồng Thông minh)
   2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp / Phụ trách Giao diện Học thuật & Phôi Chứng thư A4)
 * **Kho lưu trữ GitHub chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-* **Địa chỉ DApp trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **Địa chỉ DApp trực tuyến:** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 * **Địa chỉ hợp đồng trên Sepolia:** [`0xa2f53106B3dFdF23b6b158022646d231A21e49Cb`](https://sepolia.etherscan.io/address/0xa2f53106B3dFdF23b6b158022646d231A21e49Cb)
 
 ---
@@ -96,7 +96,7 @@ sequenceDiagram
 ## 5. Kết quả Bàn giao Lab 13
 
 * **Tệp mã nguồn bàn giao:** [`web/index.html`](./web/index.html) tích hợp đầy đủ Web3 Provider và kết nối mạng Sepolia.
-* **Địa chỉ triển khai trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **Địa chỉ triển khai trực tuyến:** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 * **Kết luận:** Hoàn thành xuất sắc 100% mục tiêu kỹ thuật Lab 13, sẵn sàng cho công tác kiểm toán mã nguồn tại Lab 14.
 
 ---

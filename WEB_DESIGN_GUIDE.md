@@ -5,7 +5,7 @@
 * **Đơn vị bảo trợ học thuật:** Khoa Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế
 * **Học phần:** Tiền điện tử và Hợp đồng thông minh (ECO2432) — TS. Hà Ngọc Long
 * **Đội ngũ phát triển:** Lê Văn Quang Huy (23K4300010) & Lại Vương Gia Bảo (23K4300024)
-* **Website trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **Website trực tuyến:** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
 
 ---
 
