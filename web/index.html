@@ -14,9 +14,10 @@
     href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Merriweather:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
 
-  <!-- Ethers.js v6 & QRCode Generator -->
+  <!-- Ethers.js v6, QRCode Generator & Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -5040,11 +5041,293 @@
       return DEFAULT_COPYCHAIN_USERS;
     }
 
+    // ========================================================================
+    // CẤU HÌNH CƠ SỞ DỮ LIỆU ĐÁM MÂY SUPABASE (CLOUD DATABASE INTEGRATION)
+    // ========================================================================
+    const SUPABASE_RAW_URL = "https://nolpfigqglmwcbfqoksq.supabase.co/rest/v1/";
+    const SUPABASE_URL = SUPABASE_RAW_URL.replace(/\/rest\/v1\/?$/, "");
+    const SUPABASE_ANON_KEY = "sb_publishable_9CnWOFAXyeSBL0sGtIRsAw_DCj7aiaQ";
+
+    let supabaseClient = null;
+    try {
+      if (window.supabase && typeof window.supabase.createClient === "function") {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("✓ Kết nối Supabase Cloud Database thành công:", SUPABASE_URL);
+      } else {
+        console.warn("⚠️ Supabase JS Client chưa được nạp sẵn trên window.");
+      }
+    } catch (e) {
+      console.warn("⚠️ Lỗi khởi tạo Supabase Client:", e);
+    }
+
+    // Hàm đồng bộ người dùng lên Supabase
+    async function syncUserToSupabase(user) {
+      if (!supabaseClient || !user || !user.id) return;
+      try {
+        const payload = {
+          id: user.id,
+          mssv: user.mssv || user.id,
+          name: user.name || user.fullName || "",
+          full_name: user.fullName || user.name || "",
+          id_card: user.idCard || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          dob: user.dob || "",
+          address: user.address || "",
+          class_name: user.class || "",
+          faculty: user.faculty || "",
+          wallet: user.wallet || "",
+          role: user.role || "AUTHOR",
+          role_name: user.roleName || "Tác Giả",
+          badge: user.badge || "",
+          avatar: user.avatar || "",
+          password: user.password || "",
+          raw_data: user,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient
+          .from("copychain_users")
+          .upsert(payload, { onConflict: "id" });
+        if (error) {
+          console.warn("⚠️ [Supabase] Lỗi đồng bộ tài khoản:", error.message);
+        } else {
+          console.log("✓ [Supabase] Đã lưu tài khoản:", user.id, user.name);
+        }
+      } catch (err) {
+        console.warn("⚠️ [Supabase] Ngoại lệ khi lưu user:", err);
+      }
+    }
+
+    // Hàm đồng bộ tác phẩm lên Supabase
+    async function syncWorkToSupabase(work) {
+      if (!supabaseClient || !work || !work.code) return;
+      try {
+        const payload = {
+          code: work.code,
+          title: work.title || "",
+          type: work.type || "",
+          department: work.department || "",
+          authors_text: work.authorsText || (Array.isArray(work.authors) ? work.authors.join(", ") : ""),
+          author_wallet: work.authorWallet || "",
+          sha256: work.sha256 || "",
+          keccak256: work.keccak256 || work.hash || "",
+          tx_hash: work.txHash || "",
+          block_number: String(work.blockNumber || work.block || ""),
+          status: work.status || "VERIFIED",
+          status_text: work.statusText || "",
+          date_registered: work.dateRegistered || work.time || "",
+          raw_data: work,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient
+          .from("copychain_works")
+          .upsert(payload, { onConflict: "code" });
+        if (error) {
+          console.warn("⚠️ [Supabase] Lỗi đồng bộ tác phẩm:", error.message);
+        } else {
+          console.log("✓ [Supabase] Đã lưu tác phẩm:", work.code);
+        }
+      } catch (err) {
+        console.warn("⚠️ [Supabase] Ngoại lệ khi lưu work:", err);
+      }
+    }
+
+    // Hàm đồng bộ bản ghi sổ cái lên Supabase
+    async function syncRecordToSupabase(record) {
+      if (!supabaseClient || !record || !record.code) return;
+      try {
+        const payload = {
+          code: record.code,
+          title: record.title || "",
+          date: record.date || "",
+          faculty: record.faculty || "",
+          type: record.type || "",
+          advisor: record.advisor || "",
+          authors: record.authors || "",
+          author_email: record.authorEmail || "",
+          author_phone: record.authorPhone || "",
+          hash: record.hash || "",
+          sha256: record.sha256 || "",
+          block: String(record.block || ""),
+          time: record.time || "",
+          wallet: record.wallet || "",
+          tx_hash: record.txHash || "",
+          raw_data: record,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient
+          .from("copychain_records")
+          .upsert(payload, { onConflict: "code" });
+        if (error) {
+          console.warn("⚠️ [Supabase] Lỗi đồng bộ sổ cái:", error.message);
+        } else {
+          console.log("✓ [Supabase] Đã lưu sổ cái:", record.code);
+        }
+      } catch (err) {
+        console.warn("⚠️ [Supabase] Ngoại lệ khi lưu record:", err);
+      }
+    }
+
+    // Hàm kéo toàn bộ dữ liệu từ Supabase Cloud về khi mở trang web
+    async function initSupabaseCloudSync() {
+      if (!supabaseClient) return;
+      console.log("🔄 Đang đồng bộ dữ liệu với Supabase Cloud...");
+
+      // 1. Kéo bảng copychain_users
+      try {
+        const { data: usersData, error: uErr } = await supabaseClient
+          .from("copychain_users")
+          .select("*");
+        if (!uErr && Array.isArray(usersData) && usersData.length > 0) {
+          let updated = false;
+          usersData.forEach(row => {
+            const userObj = row.raw_data || {
+              id: row.id,
+              mssv: row.mssv,
+              name: row.name,
+              fullName: row.full_name,
+              idCard: row.id_card,
+              email: row.email,
+              phone: row.phone,
+              dob: row.dob,
+              address: row.address,
+              class: row.class_name,
+              faculty: row.faculty,
+              wallet: row.wallet,
+              role: row.role,
+              roleName: row.role_name,
+              badge: row.badge,
+              avatar: row.avatar,
+              password: row.password
+            };
+            const idx = ALL_USERS.findIndex(u => u.id === userObj.id || (u.email && u.email.toLowerCase() === (userObj.email || "").toLowerCase()));
+            if (idx >= 0) {
+              ALL_USERS[idx] = { ...ALL_USERS[idx], ...userObj };
+            } else {
+              ALL_USERS.push(userObj);
+              updated = true;
+            }
+          });
+          if (updated) {
+            localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(ALL_USERS));
+            if (typeof updateAuthUI === "function") updateAuthUI();
+          }
+        }
+      } catch (e) {
+        console.warn("⚠️ Không thể tải copychain_users từ Supabase:", e);
+      }
+
+      // 2. Kéo bảng copychain_works
+      try {
+        const { data: worksData, error: wErr } = await supabaseClient
+          .from("copychain_works")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (!wErr && Array.isArray(worksData) && worksData.length > 0) {
+          let hasNew = false;
+          worksData.forEach(row => {
+            const workObj = row.raw_data || {
+              code: row.code,
+              title: row.title,
+              type: row.type,
+              department: row.department,
+              authorsText: row.authors_text,
+              authorWallet: row.author_wallet,
+              sha256: row.sha256,
+              keccak256: row.keccak256,
+              txHash: row.tx_hash,
+              blockNumber: row.block_number,
+              status: row.status,
+              statusText: row.status_text,
+              dateRegistered: row.date_registered
+            };
+            const idx = COPYCHAIN_WORKS.findIndex(w => w.code === workObj.code);
+            if (idx >= 0) {
+              COPYCHAIN_WORKS[idx] = { ...COPYCHAIN_WORKS[idx], ...workObj };
+            } else {
+              COPYCHAIN_WORKS.push(workObj);
+              hasNew = true;
+            }
+          });
+          if (hasNew) {
+            localStorage.setItem("COPYCHAIN_REGISTERED_WORKS", JSON.stringify(COPYCHAIN_WORKS));
+            if (typeof updateAdminWorksTable === "function") updateAdminWorksTable();
+            if (typeof renderPortfolioWorks === "function") renderPortfolioWorks();
+          }
+        }
+      } catch (e) {
+        console.warn("⚠️ Không thể tải copychain_works từ Supabase:", e);
+      }
+
+      // 3. Kéo bảng copychain_records
+      try {
+        const { data: recData, error: rErr } = await supabaseClient
+          .from("copychain_records")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (!rErr && Array.isArray(recData) && recData.length > 0) {
+          let hasNew = false;
+          recData.forEach(row => {
+            const recObj = row.raw_data || {
+              code: row.code,
+              title: row.title,
+              date: row.date,
+              faculty: row.faculty,
+              type: row.type,
+              advisor: row.advisor,
+              authors: row.authors,
+              authorEmail: row.author_email,
+              authorPhone: row.author_phone,
+              hash: row.hash,
+              sha256: row.sha256,
+              block: row.block,
+              time: row.time,
+              wallet: row.wallet,
+              txHash: row.tx_hash
+            };
+            const idx = SAMPLE_RECORDS.findIndex(r => r.code === recObj.code);
+            if (idx >= 0) {
+              SAMPLE_RECORDS[idx] = { ...SAMPLE_RECORDS[idx], ...recObj };
+            } else {
+              SAMPLE_RECORDS.push(recObj);
+              hasNew = true;
+            }
+          });
+          if (hasNew) {
+            localStorage.setItem("COPYCHAIN_REGISTERED_RECORDS", JSON.stringify(SAMPLE_RECORDS));
+            if (typeof renderLedgerTable === "function") renderLedgerTable(SAMPLE_RECORDS);
+            if (typeof renderLiveTicker === "function") renderLiveTicker();
+            if (typeof populateDeedRecordPicker === "function") populateDeedRecordPicker();
+            if (typeof updatePortfolioCounters === "function") updatePortfolioCounters();
+          }
+        }
+      } catch (e) {
+        console.warn("⚠️ Không thể tải copychain_records từ Supabase:", e);
+      }
+
+      // 4. Đồng bộ 2 chiều: Đẩy dữ liệu cục bộ lên đám mây nếu chưa có
+      if (Array.isArray(ALL_USERS)) {
+        ALL_USERS.forEach(u => syncUserToSupabase(u));
+      }
+      if (Array.isArray(COPYCHAIN_WORKS)) {
+        COPYCHAIN_WORKS.forEach(w => syncWorkToSupabase(w));
+      }
+      if (Array.isArray(SAMPLE_RECORDS)) {
+        SAMPLE_RECORDS.forEach(r => syncRecordToSupabase(r));
+      }
+
+      console.log("✓ Hoàn tất chu trình đồng bộ Supabase Cloud!");
+    }
+
     function saveStoredUsers(users) {
       try {
         localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(users));
       } catch (e) {
         console.warn("Lỗi lưu localStorage:", e);
+      }
+      // Tự động đẩy lên Supabase Cloud
+      if (Array.isArray(users)) {
+        users.forEach(u => syncUserToSupabase(u));
       }
     }
 
@@ -5108,6 +5391,10 @@
       try {
         localStorage.setItem("COPYCHAIN_REGISTERED_WORKS", JSON.stringify(works));
       } catch (e) { }
+      // Tự động đẩy lên Supabase Cloud
+      if (Array.isArray(works)) {
+        works.forEach(w => syncWorkToSupabase(w));
+      }
     }
 
     let COPYCHAIN_WORKS = getStoredWorks();
@@ -6771,6 +7058,10 @@
       try {
         localStorage.setItem("COPYCHAIN_REGISTERED_RECORDS", JSON.stringify(records));
       } catch (e) { }
+      // Tự động đẩy lên Supabase Cloud
+      if (Array.isArray(records)) {
+        records.forEach(r => syncRecordToSupabase(r));
+      }
     }
 
     let SAMPLE_RECORDS = getStoredRecords();
@@ -8652,6 +8943,11 @@
     renderLiveTicker();
     populateDeedRecordPicker();
     renderDeedQr();
+
+    // Kích hoạt đồng bộ hóa cơ sở dữ liệu Supabase Cloud
+    if (typeof initSupabaseCloudSync === "function") {
+      initSupabaseCloudSync();
+    }
   </script>
 </body>
 
