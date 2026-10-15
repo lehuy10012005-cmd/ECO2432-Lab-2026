@@ -3572,6 +3572,32 @@
               </div>
             </div>
 
+            <!-- Khung cảnh báo lỗi tệp trùng lặp bản quyền (Mặc định ẩn) -->
+            <div id="wizDuplicateAlert" style="display: none; margin-top: 18px; background: #fef2f2; border: 2px solid #ef4444; border-radius: var(--radius-md); padding: 16px 18px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12); animation: fadeIn 0.3s ease;">
+              <div style="display: flex; align-items: flex-start; gap: 14px;">
+                <div style="font-size: 28px; line-height: 1; flex-shrink: 0;">🛑</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px;">
+                    <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #b91c1c;">LỖI: TỆP NÀY ĐÃ TRÙNG VỚI FILE ĐÃ ĐƯỢC CHỨNG NHẬN!</h4>
+                    <span style="background: #dc2626; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">Từ chối đăng ký</span>
+                  </div>
+                  <p style="margin: 0 0 10px 0; font-size: 12.5px; color: #991b1b; line-height: 1.5;">
+                    Hệ thống HUE-ScholarProof phát hiện nội dung tệp tác phẩm này hoàn toàn trùng khớp với công trình đã được bảo chứng bản quyền trước đó trên Sổ cái. Hệ thống <strong>từ chối xuất mã băm</strong> và <strong>không cho phép chuyển tiếp sang Bước 4</strong> nhằm bảo vệ quyền tác giả nguyên bản.
+                  </p>
+                  <div style="background: #ffffff; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #374151; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                    <div><span style="color: #6b7280;">Mã lưu trữ gốc:</span> <strong id="wizDupCode" style="color: #b91c1c; font-family: var(--font-mono);">--</strong></div>
+                    <div><span style="color: #6b7280;">Tác giả đã xác nhận:</span> <strong id="wizDupAuthor">--</strong></div>
+                    <div style="grid-column: 1 / -1;"><span style="color: #6b7280;">Tên tác phẩm gốc:</span> <strong id="wizDupTitle" style="color: var(--text-primary);">--</strong></div>
+                    <div style="grid-column: 1 / -1;"><span style="color: #6b7280;">Thời gian bảo chứng:</span> <span id="wizDupTime" style="font-weight: 600; color: #059669;">--</span></div>
+                  </div>
+                  <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; font-weight: 700; color: #b91c1c;">Vui lòng xóa tệp này và tải lên tệp tác phẩm gốc của bạn!</span>
+                    <button type="button" onclick="triggerSelectNewWizFile()" style="background: #dc2626; color: #ffffff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">🔄 Đổi tệp tác phẩm khác</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Bảng hiển thị kết quả băm mật mã kép (NẰM NGAY BÊN TRONG BƯỚC 3, BÊN DƯỚI DROPZONE) -->
             <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 12px;">
               <div class="hash-field-wrap">
@@ -3596,7 +3622,7 @@
             <!-- Các nút điều hướng Bước 3 -->
             <div class="wizard-actions-row">
               <button type="button" class="btn-cta-secondary" onclick="prevWizardStep()">&larr; Quay lại Bước 2</button>
-              <button type="button" class="btn-cta-primary" onclick="nextWizardStep()">Tiếp Tục: Bước 4 (Kiểm Tra Thông
+              <button type="button" class="btn-cta-primary" id="btnGoToStep4" onclick="nextWizardStep()" disabled style="opacity: 0.5; cursor: not-allowed;" title="Vui lòng tải tệp tác phẩm hợp lệ lên để tiếp tục">Tiếp Tục: Bước 4 (Kiểm Tra Thông
                 Tin) &rarr;</button>
             </div>
           </div>
@@ -6142,9 +6168,15 @@
         toast("Vui lòng nhập tên tác phẩm tại Bước 1!", "warning");
         return;
       }
-      if (step > 3 && !wizSelectedFile && !wizComputedSha256) {
-        toast("Vui lòng tải tệp tác phẩm lên tại Bước 3!", "warning");
-        return;
+      if (step > 3) {
+        if (typeof isWizFileDuplicate !== "undefined" && isWizFileDuplicate) {
+          toast("❌ TỆP TRÙNG LẶP: Tệp này đã trùng với file đã được chứng nhận trước đó trên hệ thống! Không thể chuyển sang Bước 4.", "error");
+          return;
+        }
+        if (!wizSelectedFile || !wizComputedSha256) {
+          toast("Vui lòng tải tệp tác phẩm hợp lệ lên tại Bước 3!", "warning");
+          return;
+        }
       }
 
       currentWizardStep = step;
@@ -6194,6 +6226,16 @@
         toast("🔒 Vui lòng đăng nhập hoặc đăng ký tài khoản để tiếp tục!", "warning");
         openLoginAccountModal();
         return;
+      }
+      if (currentWizardStep === 3) {
+        if (typeof isWizFileDuplicate !== "undefined" && isWizFileDuplicate) {
+          toast("❌ Không thể tiếp tục! Tệp này đã trùng với file đã được chứng nhận bản quyền trước đó trên hệ thống.", "error");
+          return;
+        }
+        if (!wizSelectedFile || !wizComputedSha256) {
+          toast("Vui lòng tải lên tệp tác phẩm hợp lệ trước khi tiếp tục!", "warning");
+          return;
+        }
       }
       goToWizardStep(currentWizardStep + 1);
     }
@@ -6280,12 +6322,118 @@
       }
     }
 
+    // Biến trạng thái kiểm tra trùng lặp bản quyền
+    let isWizFileDuplicate = false;
+    let duplicateWorkDetails = null;
+
+    // Hàm kiểm tra trùng lặp tệp đa tầng (Bộ nhớ RAM, Supabase Cloud Database và On-chain Smart Contract)
+    async function checkFileDuplicateAsync(sha256Hex, keccak256Hex, fileName) {
+      const sha = (sha256Hex || "").toLowerCase().trim();
+      const kec = (keccak256Hex || "").toLowerCase().trim();
+      if (!sha && !kec) return null;
+
+      // 1. Kiểm tra trong sổ cái nội bộ SAMPLE_RECORDS
+      if (Array.isArray(SAMPLE_RECORDS)) {
+        const match = SAMPLE_RECORDS.find(r => 
+          (r.sha256 && r.sha256.toLowerCase() === sha) ||
+          (r.hash && r.hash.toLowerCase() === kec) ||
+          (r.keccak256 && r.keccak256.toLowerCase() === kec)
+        );
+        if (match) return match;
+      }
+
+      // 2. Kiểm tra trong danh sách toàn hệ thống COPYCHAIN_WORKS
+      if (Array.isArray(COPYCHAIN_WORKS)) {
+        const match = COPYCHAIN_WORKS.find(w => 
+          (w.sha256 && w.sha256.toLowerCase() === sha) ||
+          (w.keccak256 && w.keccak256.toLowerCase() === kec) ||
+          (w.hash && w.hash.toLowerCase() === kec)
+        );
+        if (match) return match;
+      }
+
+      // 3. Kiểm tra thời gian thực trên Supabase Cloud Database
+      if (supabaseClient) {
+        try {
+          // Đối soát bảng copychain_records
+          let queryRec = supabaseClient.from("copychain_records").select("*");
+          if (sha && kec) queryRec = queryRec.or(`sha256.eq.${sha},hash.eq.${kec}`);
+          else if (sha) queryRec = queryRec.eq("sha256", sha);
+          else if (kec) queryRec = queryRec.eq("hash", kec);
+          const { data: recData, error: errRec } = await queryRec.limit(1);
+          if (!errRec && recData && recData.length > 0) {
+            return recData[0].raw_data || recData[0];
+          }
+
+          // Đối soát bảng copychain_works
+          let queryWork = supabaseClient.from("copychain_works").select("*");
+          if (sha && kec) queryWork = queryWork.or(`sha256.eq.${sha},keccak256.eq.${kec}`);
+          else if (sha) queryWork = queryWork.eq("sha256", sha);
+          else if (kec) queryWork = queryWork.eq("keccak256", kec);
+          const { data: workData, error: errWork } = await queryWork.limit(1);
+          if (!errWork && workData && workData.length > 0) {
+            return workData[0].raw_data || workData[0];
+          }
+        } catch (e) {
+          console.warn("⚠️ [Supabase] Lỗi khi truy vấn trùng lặp:", e);
+        }
+      }
+
+      // 4. Kiểm tra trên Hợp đồng Thông minh Sepolia On-Chain
+      try {
+        if (typeof ethers !== "undefined" && kec && kec.startsWith("0x") && kec.length === 66) {
+          const provider = (typeof window.ethereum !== "undefined")
+            ? new ethers.BrowserProvider(window.ethereum)
+            : new ethers.JsonRpcProvider("https://rpc.sepolia.org");
+          const contract = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, provider);
+          const isReg = await contract.isIdeaRegistered(kec);
+          if (isReg) {
+            const info = await contract.verifyIdea(kec);
+            return {
+              code: "SEPOLIA-ONCHAIN",
+              title: info[3] || "Tác phẩm On-Chain đã chứng thực",
+              authors: info[0] ? (info[0].slice(0, 8) + "..." + info[0].slice(-6)) : "Tác giả On-Chain",
+              date: new Date(Number(info[1]) * 1000).toLocaleString("vi-VN"),
+              time: new Date(Number(info[1]) * 1000).toLocaleString("vi-VN"),
+              sha256: sha,
+              hash: kec
+            };
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ [Blockchain] Gặp lỗi khi đọc isIdeaRegistered:", err);
+      }
+
+      return null;
+    }
+
+    function showWizDuplicateBanner(dup) {
+      const alertEl = document.getElementById("wizDuplicateAlert");
+      if (!alertEl) return;
+      const codeEl = document.getElementById("wizDupCode");
+      const titleEl = document.getElementById("wizDupTitle");
+      const authorEl = document.getElementById("wizDupAuthor");
+      const timeEl = document.getElementById("wizDupTime");
+
+      if (codeEl) codeEl.textContent = dup.code || "CC-ONCHAIN-VERIFIED";
+      if (titleEl) titleEl.textContent = dup.title || "Tác phẩm đã bảo chứng";
+      if (authorEl) authorEl.textContent = dup.authors || dup.authorsText || dup.authorEmail || "Tác giả HUE-ScholarProof";
+      if (timeEl) timeEl.textContent = dup.date || dup.time || dup.dateRegistered || "Đã lưu trữ";
+
+      alertEl.style.display = "block";
+    }
+
+    function hideWizDuplicateBanner() {
+      const alertEl = document.getElementById("wizDuplicateAlert");
+      if (alertEl) alertEl.style.display = "none";
+    }
+
     // --- UPLOAD TỆP & TÍNH SHA-256 + KECCAK-256 CHO BƯỚC 3 ---
     async function handleWizFileUpload(file) {
       if (!file) return;
       wizSelectedFile = file;
 
-      // Hiển thị giao diện nạp file
+      // Hiển thị giao diện nạp file ban đầu
       const dropzone = document.getElementById("wizDropzone");
       const emptyState = document.getElementById("wizDropEmptyState");
       const filledState = document.getElementById("wizDropFilledState");
@@ -6304,7 +6452,7 @@
       if (nameEl) nameEl.textContent = file.name;
       if (sizeEl) sizeEl.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
 
-      // Icon & Badge
+      // Icon & Badge theo định dạng
       const ext = file.name.split(".").pop().toLowerCase();
       if (ext === "pdf") { emojiEl.textContent = "📕"; badgeEl.textContent = "PDF"; }
       else if (["doc", "docx"].includes(ext)) { emojiEl.textContent = "📘"; badgeEl.textContent = "DOC"; }
@@ -6314,41 +6462,129 @@
       else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) { emojiEl.textContent = "🖼️"; badgeEl.textContent = "IMAGE"; }
       else { emojiEl.textContent = "📄"; badgeEl.textContent = ext.toUpperCase(); }
 
-      toast("Đang tính toán mã băm SHA-256 & Keccak-256 trong bộ nhớ RAM...", "info");
+      toast("Đang băm mật mã và kiểm tra đối soát trùng lặp bản quyền...", "info");
 
       // 1. Tính SHA-256 bằng Web Crypto API
+      let rawSha256 = "";
       try {
-        wizComputedSha256 = await calculateSHA256(file);
+        rawSha256 = await calculateSHA256(file);
       } catch (err) {
         console.error("SHA256 error:", err);
-        wizComputedSha256 = "b4c3e8" + Math.random().toString(16).slice(2) + "0123456789abcdef";
+        rawSha256 = "b4c3e8" + Math.random().toString(16).slice(2) + "0123456789abcdef";
       }
 
       // 2. Tính Keccak-256 bằng ethers.keccak256
+      let rawKeccak256 = "";
       try {
         const buffer = await file.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         if (typeof ethers !== "undefined" && typeof ethers.keccak256 === "function") {
-          wizComputedKeccak256 = ethers.keccak256(bytes);
+          rawKeccak256 = ethers.keccak256(bytes);
         } else {
-          wizComputedKeccak256 = "0x" + wizComputedSha256;
+          rawKeccak256 = "0x" + rawSha256;
         }
       } catch (err) {
         console.error("Keccak error:", err);
-        wizComputedKeccak256 = "0x8e4da685a41c7ce20441ae4c62629d3d2eacd22c5ceb54b0d0a7208ca76396f1";
+        rawKeccak256 = "0x8e4da685a41c7ce20441ae4c62629d3d2eacd22c5ceb54b0d0a7208ca76396f1";
       }
+
+      // 3. KIỂM TRA ĐỐI SOÁT TRÙNG LẶP VỚI CƠ SỞ DỮ LIỆU & BLOCKCHAIN
+      const duplicate = await checkFileDuplicateAsync(rawSha256, rawKeccak256, file.name);
+
+      if (duplicate) {
+        isWizFileDuplicate = true;
+        duplicateWorkDetails = duplicate;
+
+        // YÊU CẦU 1: TUYỆT ĐỐI KHÔNG XUẤT RA MÃ BĂM
+        wizComputedSha256 = "";
+        wizComputedKeccak256 = "";
+
+        const lblSha = document.getElementById("lblWizSha256Hash");
+        const lblKec = document.getElementById("lblWizKeccakHash");
+        if (lblSha) {
+          lblSha.innerHTML = '<span style="color: #dc2626; font-weight: 700; font-size: 13px;">✖ BỊ TỪ CHỐI: Tệp này đã trùng với file đã được chứng nhận! Không xuất mã băm.</span>';
+        }
+        if (lblKec) {
+          lblKec.innerHTML = '<span style="color: #dc2626; font-weight: 700; font-size: 13px;">✖ BỊ TỪ CHỐI: Tệp này đã trùng với file đã được chứng nhận! Không xuất mã băm.</span>';
+        }
+
+        // YÊU CẦU 2: KHÔNG ĐƯỢC QUA BƯỚC 4 (Khóa nút điều hướng)
+        const btnNext4 = document.getElementById("btnGoToStep4");
+        if (btnNext4) {
+          btnNext4.disabled = true;
+          btnNext4.style.opacity = "0.5";
+          btnNext4.style.cursor = "not-allowed";
+          btnNext4.title = "Không thể tiếp tục vì tệp đã trùng với file đã được chứng nhận!";
+        }
+
+        // YÊU CẦU 3: HIỂN THỊ LỖI ĐÃ TRÙNG VỚI FILE ĐÃ ĐƯỢC CHỨNG NHẬN
+        showWizDuplicateBanner(duplicate);
+
+        if (dropzone) {
+          dropzone.style.borderColor = "#dc2626";
+          dropzone.style.background = "#fef2f2";
+        }
+        if (badgeEl) {
+          badgeEl.textContent = "TRÙNG LẶP";
+          badgeEl.style.color = "#dc2626";
+        }
+        if (emojiEl) emojiEl.textContent = "🛑";
+
+        const metaWrap = document.querySelector(".file-loaded-meta");
+        if (metaWrap) {
+          metaWrap.innerHTML = '<span style="color: #dc2626; font-weight: 800;">✖ LỖI BẢN QUYỀN: Trùng khớp 100% với tệp đã được chứng thực trên Sổ cái!</span>';
+        }
+
+        toast("❌ Lỗi: Tệp này đã trùng với file đã được chứng nhận bản quyền trước đó trên hệ thống!", "error");
+        return;
+      }
+
+      // TRƯỜNG HỢP TỆP HỢP LỆ VÀ NGUYÊN BẢN (KHÔNG TRÙNG LẶP):
+      isWizFileDuplicate = false;
+      duplicateWorkDetails = null;
+      hideWizDuplicateBanner();
+
+      wizComputedSha256 = rawSha256;
+      wizComputedKeccak256 = rawKeccak256;
 
       const lblSha = document.getElementById("lblWizSha256Hash");
       const lblKec = document.getElementById("lblWizKeccakHash");
       if (lblSha) lblSha.textContent = wizComputedSha256;
       if (lblKec) lblKec.textContent = wizComputedKeccak256;
-      toast("Đã trích xuất mã băm SHA-256 & Keccak-256 thành công!", "success");
+
+      // Kích hoạt nút Tiếp tục sang Bước 4
+      const btnNext4 = document.getElementById("btnGoToStep4");
+      if (btnNext4) {
+        btnNext4.disabled = false;
+        btnNext4.style.opacity = "1";
+        btnNext4.style.cursor = "pointer";
+        btnNext4.removeAttribute("title");
+      }
+
+      if (dropzone) {
+        dropzone.style.borderColor = "#10b981";
+        dropzone.style.background = "#f0fdf4";
+      }
+      const metaWrap = document.querySelector(".file-loaded-meta");
+      if (metaWrap) {
+        metaWrap.innerHTML = `
+          <span id="wizLoadedSize" style="font-weight: 700; color: var(--text-secondary);">${(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+          <span>&bull;</span>
+          <span style="font-weight: 600; color: #059669;">✓ Tệp hợp lệ &bull; Đã tính SHA-256 & Keccak-256 an toàn trong RAM</span>
+        `;
+      }
+      toast("✓ Tác phẩm nguyên bản hợp lệ! Đã xuất mã băm SHA-256 & Keccak-256.", "success");
     }
 
     function removeWizFile() {
       wizSelectedFile = null;
       wizComputedSha256 = "";
       wizComputedKeccak256 = "";
+      isWizFileDuplicate = false;
+      duplicateWorkDetails = null;
+
+      hideWizDuplicateBanner();
+
       const fi = document.getElementById("wizFileInput");
       if (fi) fi.value = "";
       const dropzone = document.getElementById("wizDropzone");
@@ -6365,6 +6601,15 @@
       const lblKec = document.getElementById("lblWizKeccakHash");
       if (lblSha) lblSha.textContent = "b4c3e8... (Vui lòng tải tệp lên để băm)";
       if (lblKec) lblKec.textContent = "0x8e4d... (Vui lòng tải tệp lên để băm)";
+
+      const btnNext4 = document.getElementById("btnGoToStep4");
+      if (btnNext4) {
+        btnNext4.disabled = true;
+        btnNext4.style.opacity = "0.5";
+        btnNext4.style.cursor = "not-allowed";
+        btnNext4.title = "Vui lòng tải tệp tác phẩm hợp lệ lên để tiếp tục";
+      }
+
       toast("Đã xóa bỏ tệp tác phẩm. Bạn có thể chọn tệp mới!", "info");
     }
 
