@@ -8,7 +8,7 @@
   1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Kỹ sư Hợp đồng & Đặc tả)
   2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp / Kỹ sư Kiểm thử & Giao diện DApp)
 * **Kho lưu trữ GitHub chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-* **Cổng DApp trực tuyến:** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
+* **Cổng DApp trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
 
 ---
 
@@ -35,11 +35,11 @@ graph TD
 - **Trình biên dịch:** Solidity `0.8.20+commit.a1b79de6`
 - **Tối ưu hóa (Optimization):** `Yes (200 runs)`
 - **Địa chỉ hợp đồng chính thức (Contract Address):**  
-  `0xa2f53106B3dFdF23b6b158022646d231A21e49Cb`
+  `0xa2F53106B3dFdf23b6b158022646d231A21e49cb`
 - **Địa chỉ ví triển khai (Deployer / Owner):**  
   `0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50`
 - **Đường dẫn Etherscan:**  
-  [https://sepolia.etherscan.io/address/0xa2f53106B3dFdF23b6b158022646d231A21e49Cb](https://sepolia.etherscan.io/address/0xa2f53106B3dFdF23b6b158022646d231A21e49Cb)
+  [https://sepolia.etherscan.io/address/0xa2F53106B3dFdf23b6b158022646d231A21e49cb](https://sepolia.etherscan.io/address/0xa2F53106B3dFdf23b6b158022646d231A21e49cb)
 - **Trạng thái mã nguồn:** ✅ **Verified Source Code (MIT License)**
 
 ### 2.2. Lộ trình mở rộng sang Layer 2 (Production Ready)
@@ -54,7 +54,7 @@ Theo kết quả nghiên cứu kinh tế học vi mô tại [`lab14.md`](./lab14
 ### 3.1. Chạy DApp trực tiếp trên GitHub Pages (Khuyến nghị cho Hội đồng)
 Người dùng và Hội đồng khoa học không cần cài đặt bất kỳ phần mềm môi trường nào:
 1. Mở trình duyệt Chrome/Brave/Edge đã cài tiện ích **MetaMask**.
-2. Truy cập cổng trực tuyến: [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
+2. Truy cập cổng trực tuyến: [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
 3. Hệ thống sẽ tự động kết nối và đề xuất chuyển sang mạng **Sepolia Testnet**.
 
 ### 3.2. Chạy DApp cục bộ (Local Development)
