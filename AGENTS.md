@@ -38,4 +38,7 @@
    - Luôn yêu cầu tối thiểu 3 ca kiểm thử (gồm ít nhất 1 ca kiểm thử gian lận hoặc gọi sai quyền). Không tự ý suy đoán quy tắc tài chính khi đặc tả chưa rõ ràng.
 4. **An toàn bảo mật tài sản số:**
    - Tuyệt đối không ghi mã khóa bí mật (Private Key), Seed Phrase, hoặc API Key trong mã nguồn. Chỉ sử dụng ví thử nghiệm trên mạng Sepolia Testnet.
+5. **Tự động ghi chép Nhật ký (Mandatory Auto-Journaling):**
+   - Mọi lần sửa lỗi, vá bảo mật hoặc bổ sung tính năng mới thành công, AI BẮT BUỘC PHẢI TỰ ĐỘNG cập nhật ngay vào `AI_JOURNAL.md` (và `README.md` nếu có thay đổi tính năng chính) trước khi hoàn tất phản hồi, tuyệt đối không được để sinh viên phải nhắc nhở.
+
 
