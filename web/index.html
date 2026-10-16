@@ -5844,6 +5844,42 @@
         return;
       }
 
+      // Kiểm tra trùng lặp tài khoản (Email, Số điện thoại hoặc CCCD đã đăng ký)
+      const cleanEmail = email.toLowerCase().trim();
+      const cleanPhone = phone.trim();
+      const cleanIdCard = idCard.trim();
+
+      const existingAccount = ALL_USERS.find(u =>
+        (u.email && u.email.toLowerCase().trim() === cleanEmail) ||
+        (cleanPhone && u.phone && u.phone.trim() === cleanPhone) ||
+        (cleanIdCard && u.idCard && u.idCard.trim() === cleanIdCard)
+      );
+
+      if (existingAccount) {
+        let fieldName = "Email";
+        if (existingAccount.phone === cleanPhone) fieldName = "Số điện thoại";
+        else if (existingAccount.idCard === cleanIdCard) fieldName = "Số CCCD";
+        toast(`⚠️ ${fieldName} này đã được đăng ký tài khoản (${existingAccount.fullName || existingAccount.name})! Vui lòng chọn "Đăng nhập".`, "warning");
+        return;
+      }
+
+      // Kiểm tra bổ sung trên Supabase Cloud Database (nếu có kết nối)
+      if (supabaseClient) {
+        try {
+          const { data: cloudExists } = await supabaseClient
+            .from("copychain_users")
+            .select("id, name, full_name, email, phone, id_card")
+            .or(`email.ilike.${cleanEmail},phone.eq.${cleanPhone},id_card.eq.${cleanIdCard}`);
+          if (Array.isArray(cloudExists) && cloudExists.length > 0) {
+            const acc = cloudExists[0];
+            toast(`⚠️ Email hoặc thông tin này đã được đăng ký tài khoản (${acc.full_name || acc.name}) trên hệ thống! Vui lòng chọn "Đăng nhập".`, "warning");
+            return;
+          }
+        } catch (sbCheckErr) {
+          console.warn("Supabase check email note:", sbCheckErr);
+        }
+      }
+
       pendingRegisterData = { name, idCard, email, phone, dob, address, pass };
 
       // Tạo mã OTP ngẫu nhiên 6 số
