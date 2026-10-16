@@ -5055,9 +5055,26 @@
               if (email === "23k4300010@hue.edu.vn" && parsed.some(x => (x.email || "").toLowerCase() === "lehuy10012005@gmail.com")) return false;
               return true;
             });
-            if (cleaned.length > 0) {
-              try { localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(cleaned)); } catch (e) { }
-              return cleaned;
+            // Khử trùng lặp tài khoản theo email / SĐT và bảo toàn mật khẩu đã thiết lập
+            const deduplicated = [];
+            cleaned.forEach(u => {
+              const uEmail = (u.email || "").toLowerCase().trim();
+              const uPhone = (u.phone || "").trim();
+              const existing = deduplicated.find(x =>
+                (uEmail && (x.email || "").toLowerCase().trim() === uEmail) ||
+                (uPhone && (x.phone || "").trim() === uPhone)
+              );
+              if (existing) {
+                if (u.password && u.password !== "123") existing.password = u.password;
+                if (u.wallet && !existing.wallet) existing.wallet = u.wallet;
+                if (u.fullName) existing.fullName = u.fullName;
+              } else {
+                deduplicated.push(u);
+              }
+            });
+            if (deduplicated.length > 0) {
+              try { localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(deduplicated)); } catch (e) { }
+              return deduplicated;
             }
           }
         }
@@ -5207,11 +5224,12 @@
         if (!uErr && Array.isArray(usersData) && usersData.length > 0) {
           let updated = false;
           usersData.forEach(row => {
-            const userObj = row.raw_data || {
+            const userObj = {
+              ...(row.raw_data || {}),
               id: row.id,
               mssv: row.mssv,
-              name: row.name,
-              fullName: row.full_name,
+              name: row.name || row.full_name,
+              fullName: row.full_name || row.name,
               idCard: row.id_card,
               email: row.email,
               phone: row.phone,
@@ -5220,15 +5238,22 @@
               class: row.class_name,
               faculty: row.faculty,
               wallet: row.wallet,
-              role: row.role,
-              roleName: row.role_name,
+              role: row.role || "AUTHOR",
+              roleName: row.role_name || "Tác Giả",
               badge: row.badge,
               avatar: row.avatar,
-              password: row.password
+              password: row.password || (row.raw_data && row.raw_data.password)
             };
-            const idx = ALL_USERS.findIndex(u => u.id === userObj.id || (u.email && u.email.toLowerCase() === (userObj.email || "").toLowerCase()));
+            const idx = ALL_USERS.findIndex(u =>
+              (u.id && u.id === userObj.id) ||
+              (u.email && userObj.email && u.email.toLowerCase().trim() === userObj.email.toLowerCase().trim()) ||
+              (u.phone && userObj.phone && u.phone.trim() === userObj.phone.trim())
+            );
             if (idx >= 0) {
-              ALL_USERS[idx] = { ...ALL_USERS[idx], ...userObj };
+              const currentPass = ALL_USERS[idx].password;
+              const incomingPass = userObj.password;
+              const bestPass = (incomingPass && incomingPass !== "123") ? incomingPass : (currentPass || incomingPass || "123");
+              ALL_USERS[idx] = { ...ALL_USERS[idx], ...userObj, password: bestPass };
             } else {
               ALL_USERS.push(userObj);
               updated = true;
@@ -5482,7 +5507,7 @@
       }
     }
 
-    function handleAccountLogin() {
+    async function handleAccountLogin() {
       const userVal = document.getElementById("loginUsername") ? document.getElementById("loginUsername").value.trim() : "";
       const passVal = document.getElementById("loginPassword") ? document.getElementById("loginPassword").value.trim() : "";
 
@@ -5490,68 +5515,131 @@
         toast("Vui lòng nhập Email, CCCD hoặc Số điện thoại!", "warning");
         return;
       }
+      if (!passVal) {
+        toast("Vui lòng nhập mật khẩu tài khoản!", "warning");
+        return;
+      }
 
-      const found = ALL_USERS.find(u =>
-        (u.email && u.email.toLowerCase() === userVal.toLowerCase()) ||
-        (u.idCard && u.idCard === userVal) ||
-        (u.phone && u.phone === userVal) ||
-        (u.mssv && u.mssv.toLowerCase() === userVal.toLowerCase()) ||
-        (u.id && u.id.toLowerCase() === userVal.toLowerCase())
+      const cleanUser = userVal.toLowerCase();
+
+      // 1. Tìm tất cả tài khoản ứng viên trong ALL_USERS
+      let candidates = ALL_USERS.filter(u =>
+        (u.email && u.email.toLowerCase().trim() === cleanUser) ||
+        (u.idCard && u.idCard.trim() === userVal) ||
+        (u.phone && u.phone.trim() === userVal) ||
+        (u.mssv && u.mssv.toLowerCase().trim() === cleanUser) ||
+        (u.id && u.id.toLowerCase().trim() === cleanUser)
       );
 
-      if (found) {
-        if (found.password === passVal || passVal === "123456" || passVal === "123" || !found.password) {
-          currentAuthUser = found;
-          currentActiveStudent = found;
-          currentPassportStudent = found;
+      // 2. Nếu có Supabase, truy vấn trực tiếp để đồng bộ mật khẩu mới nhất từ đám mây
+      if (supabaseClient) {
+        try {
+          const { data: cloudUsers, error: cErr } = await supabaseClient
+            .from("copychain_users")
+            .select("*")
+            .or(`email.ilike.${cleanUser},phone.eq.${userVal},id_card.eq.${userVal},mssv.ilike.${cleanUser},id.ilike.${cleanUser}`);
+          if (!cErr && Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+            cloudUsers.forEach(row => {
+              const uObj = {
+                ...(row.raw_data || {}),
+                id: row.id,
+                mssv: row.mssv,
+                name: row.name || row.full_name,
+                fullName: row.full_name || row.name,
+                idCard: row.id_card,
+                email: row.email,
+                phone: row.phone,
+                wallet: row.wallet,
+                password: row.password || (row.raw_data && row.raw_data.password)
+              };
+              candidates.push(uObj);
+              const idx = ALL_USERS.findIndex(x => x.id === uObj.id || (x.email && x.email.toLowerCase().trim() === (uObj.email || "").toLowerCase().trim()));
+              if (idx >= 0) {
+                ALL_USERS[idx] = { ...ALL_USERS[idx], ...uObj, password: uObj.password || ALL_USERS[idx].password };
+              } else {
+                ALL_USERS.unshift(uObj);
+              }
+            });
+            try { localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(ALL_USERS)); } catch (e) { }
+          }
+        } catch (sbErr) {
+          console.warn("Supabase login check note:", sbErr);
+        }
+      }
+
+      // 3. Kiểm tra mật khẩu trong danh sách ứng viên
+      if (candidates.length > 0) {
+        const matched = candidates.find(u =>
+          (u.password && String(u.password).trim() === passVal) ||
+          passVal === "123456" ||
+          passVal === "123" ||
+          !u.password
+        );
+
+        if (matched) {
+          // Chuẩn hóa và đồng bộ mật khẩu vừa đăng nhập thành công vào toàn bộ các bản ghi của tài khoản này
+          matched.password = passVal;
+          ALL_USERS.forEach(u => {
+            if ((u.email && matched.email && u.email.toLowerCase().trim() === matched.email.toLowerCase().trim()) ||
+                (u.id && u.id === matched.id)) {
+              u.password = passVal;
+            }
+          });
+          saveStoredUsers(ALL_USERS);
+
+          currentAuthUser = matched;
+          currentActiveStudent = matched;
+          currentPassportStudent = matched;
           try {
-            localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(found));
+            localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(matched));
           } catch (e) { }
           updateAuthUI();
           closeLoginAccountModal();
-          toast("Đăng nhập thành công! Xin chào tác giả " + (found.fullName || found.name), "success");
+          toast("Đăng nhập thành công! Xin chào tác giả " + (matched.fullName || matched.name), "success");
           if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
             const nextTab = pendingNavTabAfterLogin;
             pendingNavTabAfterLogin = null;
             setTimeout(() => switchNavTab(nextTab), 300);
           }
+          return;
         } else {
-          toast("Mật khẩu không chính xác!", "error");
+          toast("Mật khẩu không chính xác! Vui lòng kiểm tra lại mật khẩu bạn đã đăng ký.", "error");
+          return;
         }
-      } else {
-        // Tài khoản vãng lai tạo nhanh
-        const tempUser = {
-          id: "USR-" + Date.now().toString().slice(-4),
-          mssv: "USR-" + Date.now().toString().slice(-4),
-          name: userVal.split("@")[0] || "Tác giả mới",
-          fullName: userVal.split("@")[0] || "Tác giả mới",
-          email: userVal.includes("@") ? userVal : userVal + "@copychain.edu.vn",
-          phone: "0912 000 999",
-          idCard: "046205009999",
-          address: "Việt Nam",
-          role: "AUTHOR",
-          roleName: "Tác Giả Xác Thực",
-          badge: "✓ COPYCHAIN VERIFIED AUTHOR",
-          avatar: "TG",
-          password: passVal || "123",
-          wallet: (typeof currentWallet !== "undefined" && currentWallet) ? currentWallet : ""
-        };
-        ALL_USERS.unshift(tempUser);
-        saveStoredUsers(ALL_USERS);
-        currentAuthUser = tempUser;
-        currentActiveStudent = tempUser;
-        currentPassportStudent = tempUser;
-        try {
-          localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(tempUser));
-        } catch (e) { }
-        updateAuthUI();
-        closeLoginAccountModal();
-        toast("Đăng nhập thành công với tài khoản: " + tempUser.fullName, "success");
-        if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
-          const nextTab = pendingNavTabAfterLogin;
-          pendingNavTabAfterLogin = null;
-          setTimeout(() => switchNavTab(nextTab), 300);
-        }
+      }
+
+      // 4. Tài khoản vãng lai tạo nhanh nếu hoàn toàn chưa có trong hệ thống
+      const tempUser = {
+        id: "USR-" + Date.now().toString().slice(-4),
+        mssv: "USR-" + Date.now().toString().slice(-4),
+        name: userVal.split("@")[0] || "Tác giả mới",
+        fullName: userVal.split("@")[0] || "Tác giả mới",
+        email: userVal.includes("@") ? userVal : userVal + "@copychain.edu.vn",
+        phone: "0912 000 999",
+        idCard: "046205009999",
+        address: "Việt Nam",
+        role: "AUTHOR",
+        roleName: "Tác Giả Xác Thực",
+        badge: "✓ COPYCHAIN VERIFIED AUTHOR",
+        avatar: "TG",
+        password: passVal || "123",
+        wallet: (typeof currentWallet !== "undefined" && currentWallet) ? currentWallet : ""
+      };
+      ALL_USERS.unshift(tempUser);
+      saveStoredUsers(ALL_USERS);
+      currentAuthUser = tempUser;
+      currentActiveStudent = tempUser;
+      currentPassportStudent = tempUser;
+      try {
+        localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(tempUser));
+      } catch (e) { }
+      updateAuthUI();
+      closeLoginAccountModal();
+      toast("Đăng nhập thành công với tài khoản: " + tempUser.fullName, "success");
+      if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
+        const nextTab = pendingNavTabAfterLogin;
+        pendingNavTabAfterLogin = null;
+        setTimeout(() => switchNavTab(nextTab), 300);
       }
     }
 
@@ -6005,47 +6093,74 @@
           ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
           : rawName.substring(0, 2).toUpperCase();
 
-        const newId = "USR-" + (ALL_USERS.length + 1);
+        const regEmail = (pendingRegisterData.email || "").toLowerCase().trim();
+        const regPhone = (pendingRegisterData.phone || "").trim();
+        const regIdCard = (pendingRegisterData.idCard || "").trim();
+        const regPass = pendingRegisterData.pass || "123";
+
         const resolvedWallet = (typeof currentWallet !== "undefined" && currentWallet)
           ? currentWallet
           : ((typeof currentWalletAddress !== "undefined" && currentWalletAddress)
             ? currentWalletAddress
             : "");
 
-        const newUser = {
-          id: newId,
-          mssv: newId,
-          name: rawName,
-          fullName: rawName,
-          idCard: pendingRegisterData.idCard || "",
-          email: pendingRegisterData.email || "",
-          phone: pendingRegisterData.phone || "",
-          dob: pendingRegisterData.dob || "2005-01-01",
-          address: pendingRegisterData.address || "Việt Nam",
-          class: "Tác Giả Đăng Ký",
-          faculty: "Khoa HTTT Kinh tế &bull; HUE",
-          wallet: resolvedWallet,
-          role: "AUTHOR",
-          roleName: "Tác Giả Xác Thực",
-          badge: "✓ COPYCHAIN VERIFIED AUTHOR",
-          avatar: avatarLetters,
-          password: pendingRegisterData.pass || "123"
-        };
+        // Kiểm tra xem đã có tài khoản trùng Email, SĐT hoặc CCCD chưa
+        let targetUser = ALL_USERS.find(u =>
+          (regEmail && u.email && u.email.toLowerCase().trim() === regEmail) ||
+          (regPhone && u.phone && u.phone.trim() === regPhone) ||
+          (regIdCard && u.idCard && u.idCard.trim() === regIdCard)
+        );
 
-        ALL_USERS.unshift(newUser);
+        if (targetUser) {
+          // CẬP NHẬT TÀI KHOẢN ĐÃ CÓ VỚI MẬT KHẨU MỚI VỪA THIẾT LẬP
+          targetUser.name = rawName;
+          targetUser.fullName = rawName;
+          targetUser.password = regPass;
+          if (regIdCard) targetUser.idCard = regIdCard;
+          if (regEmail) targetUser.email = regEmail;
+          if (regPhone) targetUser.phone = regPhone;
+          if (pendingRegisterData.dob) targetUser.dob = pendingRegisterData.dob;
+          if (pendingRegisterData.address) targetUser.address = pendingRegisterData.address;
+          if (resolvedWallet) targetUser.wallet = resolvedWallet;
+          targetUser.avatar = avatarLetters;
+        } else {
+          // TẠO TÀI KHOẢN MỚI NẾU CHƯA TỒN TẠI
+          const newId = "USR-" + (ALL_USERS.length + 1);
+          targetUser = {
+            id: newId,
+            mssv: newId,
+            name: rawName,
+            fullName: rawName,
+            idCard: regIdCard,
+            email: regEmail,
+            phone: regPhone,
+            dob: pendingRegisterData.dob || "2005-01-01",
+            address: pendingRegisterData.address || "Việt Nam",
+            class: "Tác Giả Đăng Ký",
+            faculty: "Khoa HTTT Kinh tế &bull; HUE",
+            wallet: resolvedWallet,
+            role: "AUTHOR",
+            roleName: "Tác Giả Xác Thực",
+            badge: "✓ COPYCHAIN VERIFIED AUTHOR",
+            avatar: avatarLetters,
+            password: regPass
+          };
+          ALL_USERS.unshift(targetUser);
+        }
+
         saveStoredUsers(ALL_USERS);
 
-        // Đăng nhập luôn vào tài khoản mới và lưu session
-        currentActiveStudent = newUser;
-        currentAuthUser = newUser;
-        currentPassportStudent = newUser;
+        // Đăng nhập luôn vào tài khoản và lưu session
+        currentActiveStudent = targetUser;
+        currentAuthUser = targetUser;
+        currentPassportStudent = targetUser;
         try {
-          localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(newUser));
+          localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(targetUser));
         } catch (e) { }
 
         updateAuthUI();
         closeRegisterAccountModal();
-        toast("✓ Xác thực OTP thành công! Xin chào tác giả " + newUser.name, "success");
+        toast("✓ Xác thực OTP thành công! Xin chào tác giả " + targetUser.name, "success");
         if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
           const nextTab = pendingNavTabAfterLogin;
           pendingNavTabAfterLogin = null;

@@ -5,4 +5,5 @@ artifacts/
 cache/
 __pycache__/
 *.pyc
-
+*.bat
+KHOI_PHUC_BAN_GOC_HUY.bat
