@@ -8,7 +8,7 @@
   1. **Lê Văn Quang Huy** — MSSV: `23K4300010` (Trưởng nhóm / Kỹ sư Hợp đồng & Đặc tả)
   2. **Lại Vương Gia Bảo** — MSSV: `23K4300024` (Thành viên cặp / Kỹ sư Kiểm thử & Giao diện DApp)
 * **Kho lưu trữ GitHub chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-* **DApp trực tuyến (GitHub Pages):** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+* **DApp trực tuyến :** https://chungnhanquyentacgia.vercel.app/
 * **Sản phẩm bàn giao Lab 14:**
   - Báo cáo kiểm toán bảo mật độc lập: [`audit_report.md`](./audit_report.md)
   - Chương trình đo lường định mức Gas và kinh tế vi mô: [`scripts/gas_benchmark.py`](./scripts/gas_benchmark.py)
