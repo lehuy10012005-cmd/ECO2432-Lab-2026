@@ -366,3 +366,27 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 **Ai phát hiện:** Sinh viên Lê Huy chủ động rà soát, yêu cầu thanh lọc kho mã nguồn và chỉ đạo dọn dẹp dứt điểm.
 
 
+
+## Lần 18 (Triển khai Thực chiến & Xác minh Mã nguồn Smart Contract ScholarProof trên Mạng Sepolia Testnet)
+
+**Prompt:**
+> "0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87 này à" / Thao tác triển khai hợp đồng trên Remix Ethereum và giải đáp cơ chế đa ví Web3.
+
+**AI trả về:**
+- Giải đáp thắc mắc của sinh viên về tính bảo mật và sự phân lập dữ liệu khi nhiều người dùng sử dụng các ví Web3 khác nhau truy cập vào cùng một Smart Contract `ScholarProof`.
+- Khẳng định nguyên lý cốt lõi của Web3: Quyền sở hữu phi tập trung (Decentralized Ownership), Smart Contract tự động ghi nhận tác giả qua `msg.sender` và cơ chế chống ghi đè/đạo văn thông qua mã băm `docHash` bất biến (Immutability).
+- Hướng dẫn sinh viên kết nối ví MetaMask thông qua môi trường `Browser Extension` trên Remix IDE (v2.6.7) và ký giao dịch tạo hợp đồng thành công trên Ethereum Sepolia Testnet.
+- Cập nhật địa chỉ hợp đồng thông minh chính thức `0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87` vào toàn bộ hệ sinh thái DApp (`web/index.html`, `README.md`, `DEPLOYMENT.md`, `lab13.md`, `lab14.md`, `lab15.md`, `audit_report.md`).
+
+**Đánh giá:** Triển khai thành công 100%, mã nguồn hợp đồng đã được xác minh minh bạch (Source Code Verified - Exact Match) trên trình khám phá khối Blockscout / Etherscan Sepolia với trình biên dịch `v0.8.34+commit.80d5c536`, tối ưu hóa 200 lượt.
+
+**Chỗ sai & Phản biện sắc bén của sinh viên (Lê Huy - ECO2432):**
+1. **Phản biện về giao diện Remix IDE mới (UI/UX Evolution Gotcha):** AI ban đầu máy móc hướng dẫn sinh viên tìm chọn dòng `Injected Provider - MetaMask`. Sinh viên lập tức phản hồi sắc bén: *"ủa làm gì có dòng Injected Provider - MetaMask"*. Trên phiên bản mới nhất của Remix IDE (v2.6.7+), đội ngũ phát triển Ethereum Foundation đã chuẩn hóa tên gọi tùy chọn kết nối ví thành **`Browser Extension`** nằm ở dòng đầu tiên. Sinh viên đã nhanh chóng phát hiện điểm khác biệt này, giúp quy trình thao tác không bị gián đoạn.
+2. **Quản trị rủi ro đa ví (Multi-Wallet Access & Decentralized Authorization):** Sinh viên đặt câu hỏi quan trọng về mặt kinh tế và an toàn thông tin: *"nếu người khác vào và xài ví khác thì có bị gì không?"*. Đây là câu hỏi thể hiện tư duy quản trị rủi ro kiểm soát nội bộ (Internal Controls) rất cao trong môi trường kinh doanh phân tán. Hệ thống đã chứng minh được tính ưu việt: Không một thực thể trung tâm nào có thể thu hồi hay giả mạo tác quyền của người khác; ai sở hữu khóa bí mật của ví nào thì chỉ ký và chịu trách nhiệm pháp lý/học thuật trên ví đó.
+
+**Cách sửa:**
+- Sinh viên kết nối ví cá nhân MetaMask qua `Browser Extension` và tiến hành ký giao dịch triển khai hợp đồng `ScholarProof.sol` lên mạng Sepolia Testnet tại địa chỉ: `0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`.
+- Hợp đồng được tự động xác minh mã nguồn (Verified Contract), cho phép cộng đồng học thuật tra cứu hàm đọc `verifyIdea` và `isIdeaRegistered` hoàn toàn miễn phí gas trên Etherscan/Blockscout.
+- Đồng bộ hóa toàn diện mã nguồn Client và tài liệu học phần, ghi nhật ký giám sát tự động theo Quy tắc 5 (Mandatory Auto-Journaling).
+
+**Ai phát hiện:** Sinh viên Lê Huy trực tiếp thao tác triển khai thực tế trên Remix IDE, chỉ ra sự thay đổi tên gọi môi trường kết nối ví và đặt câu hỏi chuyên sâu về quản trị rủi ro truy cập đa ví.
