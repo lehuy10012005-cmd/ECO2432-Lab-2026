@@ -57,7 +57,7 @@
 ---
 
 ## 6. Kế hoạch phối hợp nhóm (Roadmap 4 Tuần)
-* **Tuần 1 (Lab 8 - 9):** Hoàn tất hồ sơ đăng ký đề tài, thiết lập quy ước nhóm `AGENTS.md`, hoàn thiện bản đặc tả nghiệp vụ `SPEC.md` và máy trạng thái quản lý ý tưởng. *(Phụ trách: Lê Văn Quang Huy)*
-* **Tuần 2 (Lab 10 - 11):** Lập trình hợp đồng thông minh `ScholarProof.sol` (Solidity ^0.8.20), áp dụng OpenZeppelin v5, CEI pattern, Custom Errors; xây dựng bộ kiểm thử tự động với tối thiểu 3 ca (chuẩn, gian lận tranh chấp, ca biên). *(Phụ trách: Lê Huy phối hợp Gia Bảo)*
-* **Tuần 3 (Lab 12 - 13):** Xây dựng giao diện Web3 DApp kết nối Ethers.js v6: băm file client-side, kết nối MetaMask, nộp hash và tra cứu thẩm định. *(Phụ trách: Lại Vương Gia Bảo)*
-* **Tuần 4 (Lab 14 - 15):** Triển khai hợp đồng lên Sepolia Testnet, thẩm định chi phí gas thực tế, xác thực mã nguồn trên Etherscan, hoàn thiện slide báo cáo và video demo. *(Cả hai thành viên)*
+* **Tuần 1 (Lab 8 - 9):** Hoàn tất hồ sơ đăng ký đề tài, thiết lập quy ước nhóm `AGENTS.md`, hoàn thiện bản đặc tả nghiệp vụ `SPEC.md` và máy trạng thái quản lý ý tưởng. 
+* **Tuần 2 (Lab 10 - 11):** Lập trình hợp đồng thông minh `ScholarProof.sol` (Solidity ^0.8.20), áp dụng OpenZeppelin v5, CEI pattern, Custom Errors; xây dựng bộ kiểm thử tự động với tối thiểu 3 ca (chuẩn, gian lận tranh chấp, ca biên). 
+* **Tuần 3 (Lab 12 - 13):** Xây dựng giao diện Web3 DApp kết nối Ethers.js v6: băm file client-side, kết nối MetaMask, nộp hash và tra cứu thẩm định. *
+* **Tuần 4 (Lab 14 - 15):** Triển khai hợp đồng lên Sepolia Testnet, thẩm định chi phí gas thực tế, xác thực mã nguồn trên Etherscan, hoàn thiện Web và báo cáo.
