@@ -14,12 +14,12 @@
    * Lớp: K57 Kinh Tế Số
    * Email: `lehuy10012005@gmail.com`
    * Địa chỉ ví thử nghiệm Sepolia: `0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50`
-   * Vai trò chính: Trưởng nhóm / Quản trị Repo GitHub / Kỹ sư Hợp đồng Thông minh & Đặc tả Nghiệp vụ
+   * Vai trò chính: Trưởng nhóm / Quản trị Repo GitHub / Kỹ sư Hợp đồng Thông minh & Đặc tả Nghiệp vụ, Xây dựng giao diện wed và tính năng Web.
 2. **Lại Vương Gia Bảo**
    * Mã sinh viên: **23K4300024**
    * Lớp: K57 Kinh Tế Số
    * Email: `bao9d4tpsh@gmail.com`
-   * Vai trò chính: Thành viên cặp / Kỹ sư Kiểm thử Tự động & Giao diện Web3 DApp
+   * Vai trò chính: Thành viên cặp / Kỹ sư Kiểm thử và sửa lỗi Tính năng & Giao diện Web3 DApp
 
 ---
 
