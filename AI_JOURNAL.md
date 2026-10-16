@@ -314,3 +314,28 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 2. **Lỗi 2 (Nhầm lẫn giữa Bằng chứng ưu tiên và Thẩm định nội dung gốc):** AI cho rằng ai băm file lên trước thì người đó đương nhiên là chủ sở hữu trí tuệ duy nhất. Sinh viên phản biện: Hợp đồng chỉ chứng minh được tính ưu tiên thời gian (Timestamping) và tính toàn vẹn (Integrity). Nếu kẻ gian đánh cắp bản thảo của người khác rồi băm lên trước, blockchain chỉ ghi nhận kẻ gian nộp trước tại thời điểm đó, nhưng nếu tác giả thực sự đưa ra các bằng chứng lịch sử commit git, email trao đổi với giảng viên hướng dẫn có mốc thời gian sớm hơn thì quyền tác giả vẫn thuộc về người sáng tạo ban đầu. Tính năng của HCE-ScholarProof là công cụ hỗ trợ phòng chống tranh chấp và thẩm định đạo văn sơ bộ, không phải thẩm phán tự động.
 
 **Ai phát hiện:** Sinh viên phát hiện cả 2 lỗ hổng nhận thức pháp lý của AI và trực tiếp hoàn thiện phần cơ sở lý luận trong slide bảo vệ đồ án `SLIDES.md`.
+
+## Lần 16 (Giai đoạn Vận hành Thực chiến: Khắc phục Lỗ hổng Xung đột Định danh & Chuẩn hóa Xác thực Đa tầng)
+
+**Prompt:**
+> "Tôi phát hiện lỗi mới: Hiện tại khi tác giả đăng xuất nhưng khi đăng nhập lại thì không vào được do 'lỗi mật khẩu không chính xác' mặc dù đã nhập mật khẩu đúng, bây giờ sửa lỗi đi; và kiểm tra nếu đăng ký 1 tài khoản khác nhưng cùng Gmail thì hệ thống có cảnh báo tồn tại hay không."
+
+**AI trả về:**
+- Phân tích mã nguồn và giải thích nguyên nhân: Do cơ chế đăng ký cũ tự động tạo bản ghi mới `USR-5` nhưng không cập nhật bản ghi có sẵn `USR-01`, dẫn đến sự tồn tại song song của hai bản ghi có cùng một Email nhưng mang 2 mật khẩu khác nhau (`123` và `111111`).
+- Nâng cấp hàm đăng nhập `handleAccountLogin()`: Chuyển sang tìm kiếm đa ứng viên (candidates), truy vấn trực tiếp bảng `copychain_users` trên Supabase Cloud Database để lấy mật khẩu mới nhất, đồng bộ mật khẩu chính xác về các bản ghi và hỗ trợ các mã kiểm thử an toàn.
+- Cập nhật hàm `verifyOtpAndCompleteRegister()`: Nếu người dùng đã có tài khoản thì cập nhật mật khẩu và hồ sơ vào tài khoản hiện tại thay vì sinh bản ghi trùng lặp.
+- Bổ sung chốt chặn tiền kiểm trong `goToOtpVerificationStep()`: Chặn đứng hành vi đăng ký tài khoản mới bằng Email/SĐT/CCCD đã tồn tại ngay tại Bước 1 trước khi gửi mã OTP.
+
+**Đánh giá:** Dùng được tốt sau khi sinh viên phát hiện lỗi nghiệp vụ thực tế và yêu cầu chuẩn hóa triệt để.
+
+**Chỗ sai & Phản biện sắc bén của sinh viên (Lê Huy - ECO2432):**
+1. **Lỗi 1 (Lỗ hổng xung đột định danh - User Record Collision & Hash Desync):** Ban đầu AI thiết kế hệ thống lưu trữ người dùng dạng mảng `ALL_USERS` không có ràng buộc khóa duy nhất (Unique Constraint) ở lớp Client. Khi tác giả đăng ký qua luồng OTP, AI chỉ dùng hàm `ALL_USERS.unshift(newUser)` sinh ID tự tăng cục bộ. Sinh viên chỉ trích gay gắt: Trong quản trị danh tính Web3 (Decentralized Identity - DID), **1 Email + 1 CCCD = 1 Chủ thể Danh tính duy nhất**. Việc cho phép tạo nhiều bản ghi cùng Email khiến hàm `find()` lấy nhầm mật khẩu mặc định của bản ghi cũ `USR-01`, từ chối người dùng hợp pháp và làm sai lệch số liệu đối soát sổ cái tác giả.
+2. **Lỗi 2 (Thiếu tiền kiểm chống gian lận nộp đè tài khoản trước khi gửi OTP):** AI ban đầu để người dùng nhập bất kỳ email nào cũng tự động gửi OTP, sau đó mới giải quyết việc ghi đè ở bước cuối. Sinh viên chấn chỉnh: Đây là lỗ hổng gây lãng phí tài nguyên và rủi ro mạo danh (Account Hijacking). Hệ thống bắt buộc phải kiểm tra trùng lặp trên cả LocalStorage lẫn Supabase ngay khi bấm "Tiếp tục & Nhận mã OTP". Nếu email đã có chủ, phải từ chối ngay lập tức bằng cảnh báo nghiệp vụ và hướng dẫn người dùng Đăng nhập, bảo vệ tính toàn vẹn của hồ sơ tác giả.
+
+**Cách sửa:**
+- Sinh viên yêu cầu AI tái cấu trúc hàm `getStoredUsers()` và `initSupabaseCloudSync()` với thuật toán khử trùng lặp (Deduplication) bảo toàn mật khẩu tùy biến mới nhất.
+- Bổ sung bộ lọc tiền kiểm trong `goToOtpVerificationStep()` chặn triệt để việc đăng ký đè email/SĐT/CCCD đã tồn tại.
+- Đồng bộ trực tiếp mật khẩu chuẩn xác lên cơ sở dữ liệu đám mây Supabase (`copychain_users`) và đẩy bản vá lên GitHub (`commit 741c8a7` và `0647993`).
+
+**Ai phát hiện:** Sinh viên Lê Huy trực tiếp thực nghiệm kịch bản đăng xuất/đăng nhập lại trên máy thực tế, phát hiện lỗi mật khẩu và đặt câu hỏi nghiệp vụ chuẩn xác để hoàn thiện quy trình bảo mật.
+
