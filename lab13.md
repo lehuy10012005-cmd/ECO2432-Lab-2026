@@ -187,7 +187,7 @@ Giao diện DApp [`web/index.html`](./web/index.html) đã được thiết kế
 ### 5.2. Hướng dẫn tạo `docHash` để kiểm thử
 
 **Phương pháp 1 — Dùng DApp (khuyến nghị):**
-1. Mở [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
+1. Mở https://chungnhanquyentacgia.vercel.app/
 2. Kéo thả một tệp PDF lên khung "Đăng ký ý tưởng".
 3. Sao chép chuỗi `Keccak-256 Hash` hiện ra — đây là `docHash` để gọi hợp đồng.
 
