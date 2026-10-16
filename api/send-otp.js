@@ -39,9 +39,9 @@ module.exports = async function handler(req, res) {
     });
 
     const mailOptions = {
-      from: `"HCE-ScholarProof" <${gmailUser}>`,
+      from: `"HUE-ScholarProof" <${gmailUser}>`,
       to: email,
-      subject: `[HCE-ScholarProof] Mã xác thực OTP đăng ký: ${otp}`,
+      subject: `[HUE-ScholarProof] Mã xác thực OTP đăng ký: ${otp}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; color: #1e293b;">
           <h2 style="color: #2563eb; margin-top: 0;">Xác Thực Tài Khoản HCE-ScholarProof</h2>
