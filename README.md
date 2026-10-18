@@ -5,7 +5,7 @@
 > **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
 > **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
 > **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
-
+> **Lưu trữ dữ liệu website (Supbase): https://supabase.com/dashboard/project/nolpfigqglmwcbfqoksq/sql/c909fd6a-d77e-4778-aff8-1f10bfafc65d
 ---
 
 ## 👥 Nhóm sinh viên thực hiện (Cặp 2 sinh viên)
