@@ -19,14 +19,47 @@
 
 ## 🎯 Giới thiệu Đề tài Đồ án Capstone
 
-* **Chủ đề lựa chọn:** **Chủ đề 8 — Ghi nhận quyền tác giả của ý tưởng nghiên cứu khoa học (Proof of Authorship & Idea Timestamping)**  
-  *(Căn cứ theo danh mục 10 chủ đề tại Phần N, Trang 48–49 — Sổ tay thực hành ECO2432)*
-* **Tên sản phẩm:** **HCE-ScholarProof** (Thương hiệu thực nghiệm: **HCE LEDGER**)
-* **Tuyên ngôn định vị giá trị (Value Proposition):**
-  > *“Nhóm sinh viên phát triển nền tảng DApp phi tập trung HCE-ScholarProof giúp sinh viên và giảng viên bảo hộ quyền sở hữu trí tuệ sơ khởi cho ý tưởng nghiên cứu khoa học, đề tài khoá luận bằng chứng minh sự tồn tại (Proof of Existence) và dấu thời gian khối (Block Timestamp) bất biến trên Blockchain Sepolia, giảm thiểu 100% rủi ro đạo văn và tranh chấp học thuật với chi phí lưu trữ tối ưu thông qua cơ chế băm nhị phân client-side.”*
-* **Địa chỉ Hợp đồng Thông minh chính thức (Sepolia Testnet):**  
-  [`0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`](https://sepolia.etherscan.io/address/0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87)
+## 1. Chủ đề lựa chọn
 
+**Chủ đề 8: Ghi nhận quyền tác giả của ý tưởng nghiên cứu khoa học (Proof of Authorship & Idea Timestamping).**
+
+Đề tài tập trung ứng dụng công nghệ Blockchain để ghi nhận sự tồn tại và dấu thời gian của các ý tưởng nghiên cứu khoa học, góp phần bảo vệ thành quả sáng tạo và hạn chế tranh chấp quyền tác giả trong môi trường học thuật.
+
+## 2. Tên sản phẩm
+
+**HCE-ScholarProof** – Nền tảng ghi nhận quyền tác giả ý tưởng nghiên cứu khoa học trên Blockchain.
+
+Thương hiệu thực nghiệm: **HCE LEDGER**.
+
+## 3. Bối cảnh và lý do lựa chọn
+
+Trong môi trường đại học, việc chứng minh thời điểm hình thành ý tưởng và quyền ưu tiên sáng tạo còn gặp nhiều khó khăn. Các phương thức lưu trữ truyền thống chưa luôn bảo đảm khả năng xác minh độc lập và tính toàn vẹn của dữ liệu. Vì vậy, nhóm lựa chọn Blockchain nhằm xây dựng giải pháp ghi nhận bằng chứng số minh bạch, có thể kiểm chứng và khó bị thay đổi trái phép.
+
+## 4. Mục tiêu dự án
+
+- Ghi nhận sự tồn tại của ý tưởng và tài liệu nghiên cứu tại một thời điểm cụ thể.
+- Sử dụng mã băm để kiểm tra tính toàn vẹn của tài liệu.
+- Ứng dụng hợp đồng thông minh để lưu trữ và xác minh bản ghi trên Blockchain.
+- Xây dựng giao diện DApp thân thiện, dễ sử dụng và tối ưu chi phí lưu trữ.
+
+## 5. Tuyên ngôn định vị giá trị (Value Proposition)
+
+HCE-ScholarProof là nền tảng DApp hỗ trợ sinh viên, giảng viên và nhà nghiên cứu tạo bằng chứng về sự tồn tại của ý tưởng khoa học thông qua mã băm và dấu thời gian trên Blockchain Sepolia. Giải pháp góp phần tăng tính minh bạch, hỗ trợ xác minh nội dung và bảo vệ quyền lợi của người sáng tạo.
+
+## 6. Công nghệ và cơ chế hoạt động
+
+Dự án sử dụng Blockchain Sepolia Testnet, hợp đồng thông minh (Smart Contract), hàm băm mật mã (Cryptographic Hashing) và giao diện DApp. Người dùng đăng ký tài liệu, hệ thống tạo mã băm, ghi nhận thông tin cần thiết lên Blockchain và cho phép đối chiếu mã băm để kiểm tra tính toàn vẹn của tài liệu.
+
+## 7. Địa chỉ hợp đồng thông minh
+
+- **Mạng triển khai:** Sepolia Testnet.
+- **Địa chỉ hợp đồng:** `0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`
+
+## 8. Ý nghĩa và định hướng phát triển
+
+HCE-ScholarProof minh họa khả năng ứng dụng Blockchain và Web3 trong bảo vệ bằng chứng học thuật. Trong tương lai, dự án có thể phát triển thêm tính năng xác minh bằng mã QR, cấp chứng nhận điện tử và tích hợp với hệ thống quản lý nghiên cứu của nhà trường.
+
+*Lưu ý: Blockchain cung cấp bằng chứng kỹ thuật về sự tồn tại và tính toàn vẹn của dữ liệu tại thời điểm ghi nhận, nhưng không tự động xác lập quyền sở hữu trí tuệ hợp pháp.*
 ---
 
 ## 📂 Danh mục sản phẩm & Lộ trình triển khai Đồ án (Lab 8 – 15)
