@@ -97,8 +97,9 @@
 ---
 
 ### SLIDE 10: MINH CHỨNG TRIỂN KHAI THỰC TẾ (LIVE DEPLOYMENT)
-- **Hợp đồng trên Sepolia Testnet:** `0xa2F53106B3dFdf23b6b158022646d231A21e49cb`
+- **Hợp đồng trên Sepolia Testnet:** [`0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`](https://sepolia.etherscan.io/address/0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87)
 - **Mã nguồn Verified 100% trên Etherscan Sepolia:** Minh bạch tuyệt đối, ai cũng có thể đọc và tương tác.
+- **Trình khám phá Etherscan:** [https://sepolia.etherscan.io/address/0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87](https://sepolia.etherscan.io/address/0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87)
 - **Cổng DApp trực tuyến:** [https://lehuy10012005-cmd.github.io/HCE-ScholarProof/](https://lehuy10012005-cmd.github.io/HCE-ScholarProof/)
 
 ---
