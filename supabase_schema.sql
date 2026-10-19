@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS public.copychain_users (
     address TEXT,
     class_name TEXT,
     faculty TEXT,
+    academic_status TEXT DEFAULT 'Sinh viên đang học tập (Chính quy)',
+    status TEXT DEFAULT 'ACTIVE',
+    is_revoked BOOLEAN DEFAULT FALSE,
+    revoke_reason TEXT,
     wallet TEXT,
     role TEXT DEFAULT 'AUTHOR',
     role_name TEXT DEFAULT 'Tác Giả',
@@ -34,12 +38,25 @@ CREATE TABLE IF NOT EXISTS public.copychain_users (
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
+-- Tự động bổ sung cột nếu bảng copychain_users đã được tạo trước đó
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS mssv TEXT;
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS class_name TEXT;
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS faculty TEXT;
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS academic_status TEXT DEFAULT 'Sinh viên đang học tập (Chính quy)';
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'ACTIVE';
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS is_revoked BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.copychain_users ADD COLUMN IF NOT EXISTS revoke_reason TEXT;
+
 -- 2. BẢNG TÁC PHẨM ĐĂNG KÝ BẢN QUYỀN (copychain_works)
 CREATE TABLE IF NOT EXISTS public.copychain_works (
     code TEXT PRIMARY KEY,
     title TEXT,
     type TEXT,
     department TEXT,
+    faculty TEXT,
+    author_mssv TEXT,
+    author_class TEXT,
+    author_faculty TEXT,
     authors_text TEXT,
     author_wallet TEXT,
     sha256 TEXT,
@@ -60,6 +77,11 @@ CREATE TABLE IF NOT EXISTS public.copychain_works (
 );
 
 -- Tự động bổ sung cột nếu bảng copychain_works đã được tạo trước đó
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS department TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS faculty TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS author_mssv TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS author_class TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS author_faculty TEXT;
 ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS is_revoked BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoke_reason TEXT;
 ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ;
@@ -75,6 +97,8 @@ CREATE TABLE IF NOT EXISTS public.copychain_records (
     type TEXT,
     advisor TEXT,
     authors TEXT,
+    author_mssv TEXT,
+    author_class TEXT,
     author_email TEXT,
     author_phone TEXT,
     hash TEXT,
@@ -87,6 +111,10 @@ CREATE TABLE IF NOT EXISTS public.copychain_records (
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()),
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW())
 );
+
+-- Tự động bổ sung cột nếu bảng copychain_records đã được tạo trước đó
+ALTER TABLE public.copychain_records ADD COLUMN IF NOT EXISTS author_mssv TEXT;
+ALTER TABLE public.copychain_records ADD COLUMN IF NOT EXISTS author_class TEXT;
 
 -- 4. BẢNG CHỨNG NHẬN KHÓA HỌC & QUẢN LÝ THU HỒI ON-CHAIN (copychain_certificates)
 CREATE TABLE IF NOT EXISTS public.copychain_certificates (
