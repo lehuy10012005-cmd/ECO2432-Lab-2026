@@ -2,9 +2,12 @@
 
 > **Đồ án Capstone môn học:** Tiền điện tử và Hợp đồng thông minh (ECO2432)  
 > **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế  
-> **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
-> **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
+> **Giảng viên hướng dẫn:** TS. Hà Ngọc Long
+
+> **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
+
 > **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
+
 > **Lưu trữ dữ liệu website (Supbase): https://supabase.com/dashboard/project/nolpfigqglmwcbfqoksq/sql/c909fd6a-d77e-4778-aff8-1f10bfafc65d
 ---
 
