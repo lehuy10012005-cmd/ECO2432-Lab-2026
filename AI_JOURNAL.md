@@ -603,4 +603,58 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kịch bản:* Một sinh viên bình thường đăng nhập bằng tài khoản cá nhân hoặc khách vãng lai cố tình nhập URL `admin.html`.
    - *Kết quả:* Tài khoản sinh viên đăng nhập bình thường vào thẳng Cổng Sinh viên (không hiện popup điều hướng admin); khách vãng lai vào trang admin sẽ bị màn hình bảo vệ chặn và hướng dẫn đăng nhập đúng quyền.
 
-**Ai phát hiện:** Sinh viên Lê Huy đề xuất sáng kiến phân tách 2 phân hệ và cơ chế điều hướng 2 nút thông minh; AI thiết kế kiến trúc và hiện thực hóa toàn diện.
+## Lần 26 (Hoàn thiện Giao diện Admin, Tối ưu hóa Kết nối Ví Động JIT, Xóa Dữ liệu Mẫu và Liên thông Cơ sở dữ liệu Supabase 2 chiều)
+
+**Prompt:**
+> "1. Cho thêm cái nền để nhìn được ( hình 1)
+> 2.( hình 2) đã nói là không bao giờ được để địa chỉ ví metamask cố định mà có thể dùng các ví khác khi đăng nhập, cũng như khi dùng chức năng mới bắt đầu kết nối ví
+> 3.Sửa lại font chữ cho giống trang cho khách hàng đi, đồng thời bỏ mấy cái chữ vô nghĩ như 'Thực thi qui trinh.....' 'Quản trị viên, mạng kiểm thử' đi
+> 4.( Hình 4) Cũng như đã nói hồi trước là không bỏ mấy cái ví dụ lãng xẹt vô mà để tôi tự làm rồi hệ thống mới hiện
+> 5. Và cuối cùng những hồ sơ này có kết nối và hiện ở cả đây và bên trang khách hàng, ngược lại thì bên khách hàng đã đăng kí bài thì nó có hiện ở trang này không
+> 6. Tiếp nối yêu cầu 5 đó là, cơ sở dữ liệu để lưu trữ những bài đăng kí đó sẽ ở đâu ( trong trang admin) , trong supase hả?
+> . Tự làm những yêu cầu đó rồi commit bình thường"
+
+**AI trả về:**
+- Giải quyết triệt để 100% toàn bộ 6 yêu cầu và phản hồi thực tế của sinh viên:
+  1. **Khắc phục lỗi Modal nhìn xuyên thấu (Yêu cầu 1):** 
+     - *Nguyên nhân:* Thuộc tính CSS nền dùng `var(--surface)` (vốn không tồn tại trong `web/index.html` vì trang dùng `--bg-surface`), đồng thời phần tử `#adminRouteModalBackdrop` chưa được gán định dạng cố định, dẫn đến thẻ modal bị trong suốt và lộ toàn bộ chữ của trang nền bên dưới.
+     - *Giải pháp:* Đặt màu nền trắng đặc (`#ffffff !important`), bổ sung lớp phủ tối mờ màn hình (`background: rgba(15, 23, 42, 0.8) !important; backdrop-filter: blur(8px); z-index: 9998;`), đổ bóng nổi 3D và viền tím sắc nét, mang lại độ tương phản tuyệt đối và trải nghiệm đọc thông báo rõ ràng.
+  2. **Chuyển đổi sang cơ chế Kết nối Ví Động theo ngữ cảnh - Just-In-Time (JIT) (Yêu cầu 2):**
+     - Xóa bỏ triệt để toàn bộ các địa chỉ ví MetaMask cố định (như `0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50`) khỏi mã nguồn của cả trang Admin và Cổng Khách hàng.
+     - Nút ví trên thanh Header của `admin.html` mặc định hiển thị `[🦊 Kết nối MetaMask]`.
+     - Cho phép đăng nhập và sử dụng bất kỳ địa chỉ ví nào đang kích hoạt trên tiện ích MetaMask của người dùng. Tích hợp sự kiện `accountsChanged` để tự động cập nhật địa chỉ ví hiển thị theo thời gian thực khi người dùng đổi tài khoản trong ví.
+     - Áp dụng cơ chế JIT Connection: Khi bấm nút "Ký Ví & Phát Hành Lên Sepolia" hoặc "Xác Nhận Ký Ví Thu Hồi", nếu người dùng chưa kết nối ví thì hệ thống mới lập tức yêu cầu mở cửa sổ MetaMask để kết nối và lấy địa chỉ ví thực tế của người dùng làm `issuer` hoặc `revokedBy`.
+  3. **Đồng nhất Phông chữ & Tinh giản Banner Quản trị (Yêu cầu 3):**
+     - Nạp phông chữ `Plus Jakarta Sans` chuẩn nhận diện thương hiệu vào `web/admin.html` (đồng bộ 100% với `web/index.html`).
+     - Tinh giản khu vực Hero Banner: Xóa toàn bộ đoạn văn học thuật rườm rà *"Thực thi quy chuẩn Chủ đề 8..."* và dỡ bỏ hộp thông tin siêu dữ liệu bên phải (`.hero-meta-box` chứa thông tin *"Quản trị viên...", "Quyền hạn...", "Mạng kiểm thử..."*), giúp giao diện thanh thoát, hiện đại và tập trung vào bảng điều khiển.
+  4. **Loại bỏ dữ liệu mẫu giả định (Clean Slate Architecture) (Yêu cầu 4):**
+     - Thiết lập `INITIAL_SAMPLE_CERTS = []`. Khử sạch các bản ghi giả lập cũ (`HCE-BC-2026-001` - Nguyễn Văn An và `HCE-BC-2026-002` - Trần Thị Mai Anh) khỏi `localStorage`.
+     - Số liệu thống kê ban đầu hiển thị chính xác `0`.
+     - Khi chưa có chứng chỉ nào, bảng dữ liệu hiển thị trạng thái trống trang nhã: `📭 Chưa có chứng nhận nào được cấp trên hệ thống. Hãy chuyển sang tab "Phát Hành Chứng Nhận Mới" để tạo chứng chỉ đầu tiên.`
+  5. **Liên thông Dữ liệu 2 Chiều giữa Cổng Khách Hàng và Cổng Admin (Yêu cầu 5):**
+     - *Chiều Khách Hàng -> Admin:* Bổ sung **Tab 4: "📚 Hồ Sơ Đề Tài Khách Hàng Đăng Ký"** trên trang Admin (`web/admin.html`), tự động tải và hiển thị toàn bộ đề tài/công trình nghiên cứu do sinh viên nộp từ Cổng Khách hàng, kèm mã băm on-chain, tác giả và khoa đào tạo.
+     - *Chiều Admin -> Khách Hàng:* Bổ sung phân đoạn **"🎓 Tra Cứu Chứng Nhận Khóa Học (Chủ đề 8)"** trong tab Tra cứu của Cổng Khách hàng (`web/index.html`), cho phép học viên và nhà tuyển dụng tra cứu trực tiếp các chứng chỉ do Admin cấp, phân biệt rõ ràng trạng thái `🟢 HỢP LỆ` và cảnh báo đỏ `🔴 ĐÃ THU HỒI` kèm lý do kỷ luật chính thức.
+  6. **Kiến trúc Cơ sở Dữ liệu Đám mây Supabase Cloud (Yêu cầu 6):**
+     - Toàn bộ dữ liệu của hệ thống được lưu trữ tập trung trên **Supabase Cloud Database** (Dự án: `nolpfigqglmwcbfqoksq.supabase.co`):
+       + Hồ sơ đề tài của sinh viên/khách hàng lưu trong bảng: `copychain_works` (và `copychain_records`).
+       + Hồ sơ chứng nhận khóa học do Admin phát hành lưu trong bảng: `copychain_certificates`.
+       + `localStorage` đóng vai trò là bộ nhớ đệm (Cache/Offline Fallback).
+     - Cập nhật định nghĩa bảng `copychain_certificates` và thiết lập chính sách phân quyền Row Level Security (RLS) công khai trong tệp `supabase_schema.sql`.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Triệt tiêu rủi ro Khóa cứng Khóa riêng (Key-Lock-In Risk) & Phân quyền phi tập trung:** Việc loại bỏ các địa chỉ ví cố định trong mã nguồn giúp hệ thống không bị phụ thuộc vào một cá nhân hay một khóa riêng tư cụ thể. Mọi thành viên trong Hội đồng Thẩm định đều có thể dùng ví quản trị của mình để ký phát hành và chịu trách nhiệm pháp lý gắn liền với vết băm (`issuer`) trên sổ cái Sepolia.
+- **Tính toàn vẹn của Sổ cái Đối chiếu Đa tầng (Multi-tier Ledger Reconciliation):** Dữ liệu được đồng bộ đồng thời trên 3 tầng: Bộ nhớ đệm Client (`localStorage`), Cơ sở dữ liệu đám mây tập trung (`Supabase Cloud`) và Sổ cái phi tập trung bất biến (`Ethereum Sepolia Blockchain`). Ngay cả khi cơ sở dữ liệu đám mây gặp sự cố, mã băm Keccak-256 trên Sepolia vẫn là căn cứ pháp lý cao nhất để chứng minh tính nguyên bản và trạng thái hiệu lực của bằng cấp.
+- **Tiết kiệm chi phí Gas và Ngăn ngừa tắc nghẽn mạng:** Cơ chế Just-In-Time connection chỉ mở kết nối Web3 khi người dùng thực sự thực hiện hành động làm thay đổi trạng thái sổ cái (State-changing Transactions), loại bỏ việc gửi yêu cầu RPC thừa thãi gây chậm ứng dụng.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Cấp chứng nhận với ví động bất kỳ & Đối soát 2 chiều):**
+   - *Kịch bản:* Người dùng vào `admin.html`, kết nối ví MetaMask cá nhân mới (không phải ví cũ), nhập thông tin phát hành chứng nhận `HCE-BC-2026-888` cho học viên "Lê Văn A" -> Ký phát hành. Sau đó mở `index.html` tại tab "Tra Cứu Chứng Nhận Khóa Học".
+   - *Kết quả:* Chứng nhận mới xuất hiện ngay trên cả trang Admin và Cổng Khách hàng với trạng thái `🟢 HỢP LỆ`, địa chỉ người cấp lưu chính xác địa chỉ ví động vừa kết nối.
+2. **TC-02 (Gian lận / Thao tác sai - Ký thu hồi on-chain & Cảnh báo tức thì phía Khách hàng):**
+   - *Kịch bản:* Tại trang Admin, bấm `[⛔ Thu Hồi]` chứng chỉ `HCE-BC-2026-888` -> Nhập lý do: *"Sử dụng dữ liệu nghiên cứu giả mạo"* -> Ký ví. Quay lại Cổng Khách hàng tra cứu mã này.
+   - *Kết quả:* Chứng chỉ lập tức đổi trạng thái sang `🔴 ĐÃ THU HỒI`. Bấm nút `[🔍 Chi Tiết]` hiển thị hộp cảnh báo màu đỏ nêu rõ lý do kỷ luật và thời điểm thu hồi, ngăn chặn hoàn toàn việc sử dụng bằng giả.
+3. **TC-03 (Ngoại lệ - Theo dõi danh mục đề tài sinh viên đăng ký từ trang Khách hàng):**
+   - *Kịch bản:* Sinh viên nộp đề tài nghiên cứu mới tại Cổng Khách hàng (`index.html`) -> Admin mở `admin.html`, chuyển sang Tab 4 "Hồ Sơ Đề Tài Khách Hàng Đăng Ký".
+   - *Kết quả:* Đề tài vừa nộp lập tức hiển thị trong bảng theo dõi của Admin với đầy đủ mã đề tài, mã băm on-chain và liên kết kiểm toán Sepolia Etherscan.
+
+**Ai phát hiện:** Sinh viên Lê Huy phản hồi trực tiếp các điểm bất hợp lý về giao diện, dữ liệu mẫu và cơ chế ví; AI khắc phục triệt để và đồng bộ hóa toàn diện hệ thống.

@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cổng Quản Trị & Thu Hồi Chứng Nhận Khóa Học • HCE-ScholarProof (Admin Portal)</title>
 
-  <!-- Google Fonts: Inter & Outfit -->
+  <!-- Google Fonts: Plus Jakarta Sans đồng nhất với Cổng Khách Hàng -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Thư viện Ethers.js v6 & Supabase JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -34,8 +34,8 @@
       --surface-border: #e2e8f0;
       --text: #0f172a;
       --text-muted: #64748b;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-display: 'Outfit', sans-serif;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 16px;
@@ -900,15 +900,7 @@
     <section class="admin-hero">
       <div>
         <h2>👑 Cổng Quản Trị &amp; Thu Hồi Chứng Nhận Khóa Học</h2>
-        <p>
-          Thực thi quy chuẩn <strong>Chủ đề 8 (Sổ tay ECO2432)</strong>: Đơn vị đào tạo phát hành mã băm chứng chỉ lên Sepolia &bull; 
-          Nhà tuyển dụng tra cứu 0đ gas &bull; Khi phát hiện gian lận học thuật, thực hiện <strong>Thu hồi on-chain có lưu vết lý do</strong>.
-        </p>
-      </div>
-      <div class="hero-meta-box">
-        <div><strong>Quản trị viên:</strong> <span id="lblAdminName">Lê Văn Quang Huy / Lại Vương Gia Bảo</span></div>
-        <div><strong>Quyền hạn:</strong> Đơn vị phát hành ủy quyền (Issuer / Owner)</div>
-        <div><strong>Mạng kiểm thử:</strong> Ethereum Sepolia Testnet (11155111)</div>
+        <p>Hệ thống cấp phát chứng nhận số, đối soát hồ sơ đăng ký và thực thi thu hồi on-chain.</p>
       </div>
     </section>
 
@@ -955,6 +947,10 @@
       </button>
       <button class="admin-tab-btn" onclick="switchAdminTab('tab-verify-sim')">
         <span>🔍 Cổng Tra Cứu &amp; Đối Soát Nhà Tuyển Dụng</span>
+      </button>
+      <button class="admin-tab-btn" onclick="switchAdminTab('tab-works-monitor')">
+        <span>📚 Hồ Sơ Đề Tài Khách Hàng Đăng Ký</span>
+        <span class="tab-badge" id="badgeWorksCount">0</span>
       </button>
     </nav>
 
@@ -1124,6 +1120,53 @@
       </div>
     </section>
 
+    <!-- ===================================================================== -->
+    <!-- TAB 4: HỒ SƠ ĐỀ TÀI KHÁCH HÀNG ĐĂNG KÝ (LIÊN THÔNG CỔNG KHÁCH HÀNG) -->
+    <!-- ===================================================================== -->
+    <section class="tab-panel" id="tab-works-monitor">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
+            <h3><span>📚</span> Danh Sách Đề Tài &amp; Tác Phẩm Khách Hàng Đã Đăng Ký</h3>
+            <p>Dữ liệu được đồng bộ trực tiếp hai chiều từ Supabase Cloud (<code>copychain_works</code>) và mạng Sepolia.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" onclick="loadClientWorks()" style="font-size: 12.5px; padding: 7px 14px;">
+              <span>🔄</span> <span>Tải Lại Từ Supabase</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <input type="text" id="txtWorksSearch" class="form-input" placeholder="🔍 Tìm theo Mã đề tài, Tiêu đề, Tác giả..." oninput="filterClientWorksTable()" style="max-width: 380px;">
+          <span style="font-size: 12.5px; color: var(--text-muted);" id="lblWorksCount">Đang đồng bộ dữ liệu...</span>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Mã Đề Tài</th>
+                <th>Tiêu Đề Công Trình</th>
+                <th>Tác Giả &amp; Đơn Vị</th>
+                <th>Ngày Đăng Ký</th>
+                <th>Mã Băm On-Chain</th>
+                <th>Trạng Thái</th>
+                <th style="text-align: right;">Hành Động</th>
+              </tr>
+            </thead>
+            <tbody id="tblWorksBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                  Đang đồng bộ đề tài từ cơ sở dữ liệu Supabase...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- MODAL: XÁC NHẬN THU HỒI CHỨNG NHẬN -->
@@ -1175,72 +1218,55 @@
   <!-- SCRIPT LOGIC QUẢN TRỊ & KẾT NỐI BLOCKCHAIN -->
   <script>
     // ========================================================================
-    // CẤU HÌNH THÔNG SỐ BLOCKCHAIN & LOCALSTORAGE
+    // CẤU HÌNH THÔNG SỐ BLOCKCHAIN & SUPABASE CLOUD DATABASE
     // ========================================================================
     const SEPOLIA_CHAIN_ID = 11155111;
     const CONTRACT_ADDRESS = "0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87";
     const STORAGE_KEY = "HCE_COURSE_CERTIFICATES_V3";
 
-    // Danh sách ví Admin được công nhận của Lê Huy & Gia Bảo
-    const ADMIN_WALLETS = [
-      "0xb07fb0761c33a01f7f7493a6a8a9667f4842fd50", // Ví Huy
-      "0x6f9171b3e1081b2394602f23241bc458a2d53bf2"  // Ví Bảo
-    ];
+    // Cấu hình Supabase Cloud (Dự án: nolpfigqglmwcbfqoksq)
+    const SUPABASE_RAW_URL = "https://nolpfigqglmwcbfqoksq.supabase.co/rest/v1/";
+    const SUPABASE_URL = SUPABASE_RAW_URL.replace(/\/rest\/v1\/?$/, "");
+    const SUPABASE_ANON_KEY = "sb_publishable_9CnWOFAXyeSBL0sGtIRsAw_DCj7aiaQ";
 
+    let supabaseClient = null;
+    try {
+      if (window.supabase && typeof window.supabase.createClient === "function") {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("✓ Admin Portal: Kết nối Supabase Cloud thành công");
+      }
+    } catch (e) {
+      console.warn("⚠️ Lỗi khởi tạo Supabase Client trong Admin:", e);
+    }
+
+    // Biến trạng thái toàn cục (Không gán cứng ví MetaMask nào)
     let currentAdminWallet = null;
     let selectedFileHash = null;
     let selectedFileSha = null;
     let currentRevokingCertCode = null;
+    let ALL_CLIENT_WORKS = [];
 
-    // Dữ liệu mẫu khởi tạo ban đầu để người dùng kiểm thử ngay lập tức
-    const INITIAL_SAMPLE_CERTS = [
-      {
-        certCode: "HCE-BC-2026-001",
-        studentName: "Nguyễn Văn An",
-        studentId: "23K4300088@hue.edu.vn",
-        courseName: "Chuyên viên Phân tích Dữ liệu On-chain & Smart Contract",
-        grade: "Xuất sắc (Excellent)",
-        issueDate: "2026-10-15",
-        certHash: "0x3a7bd8e154876cf085b34199c09c218274d618d2fef673190df03530064d471a",
-        sha256: "9f83c605ced71c26f0736e64c43137a1890cad87014b228b39f2ecdff25ad055",
-        isRevoked: false,
-        revokeReason: "",
-        revokedAt: null,
-        revokedBy: null,
-        issuer: "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50",
-        blockNumber: 6891230
-      },
-      {
-        certCode: "HCE-BC-2026-002",
-        studentName: "Trần Thị Mai Anh",
-        studentId: "23K4300045@hue.edu.vn",
-        courseName: "Kế toán Tài sản số & Kiểm toán Dòng tiền Blockchain",
-        grade: "Giỏi (Very Good)",
-        issueDate: "2026-10-12",
-        certHash: "0x8b12f458d9e13460cf318294a09c218274d618d2fef673190df03530064d4999",
-        sha256: "7b43c605ced71c26f0736e64c43137a1890cad87014b228b39f2ecdff25ae111",
-        isRevoked: true,
-        revokeReason: "Hội đồng kỷ luật phát hiện học viên gian lận trong kỳ thi sát hạch cuối khóa",
-        revokedAt: "2026-10-18T14:30:00Z",
-        revokedBy: "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50",
-        issuer: "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50",
-        blockNumber: 6891500
-      }
-    ];
+    // Dữ liệu mẫu rỗng - Hệ thống chỉ hiển thị những bản ghi do Admin tự tạo
+    const INITIAL_SAMPLE_CERTS = [];
 
-    // Lấy danh sách chứng chỉ từ LocalStorage
+    // Lấy danh sách chứng chỉ từ LocalStorage (Đồng thời khử sạch các mẫu giả lập cũ nếu còn sót lại)
     function getStoredCertificates() {
       try {
         const data = localStorage.getItem(STORAGE_KEY);
         if (data) {
           const parsed = JSON.parse(data);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed)) {
+            // Lọc bỏ triệt để các dữ liệu ví dụ mẫu cũ (HCE-BC-2026-001, 002)
+            const cleaned = parsed.filter(c =>
+              c.certCode !== "HCE-BC-2026-001" && c.certCode !== "HCE-BC-2026-002"
+            );
+            return cleaned;
+          }
         }
       } catch (e) {
         console.warn("Lỗi đọc LocalStorage chứng chỉ:", e);
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SAMPLE_CERTS));
-      return INITIAL_SAMPLE_CERTS;
+      return [];
     }
 
     function saveCertificates(certs) {
@@ -1251,6 +1277,201 @@
       }
       renderCertificatesTable();
       updateStats();
+    }
+
+    // ========================================================================
+    // ĐỒNG BỘ CLOUD DATABASE SUPABASE CHO CHỨNG CHỈ KHÓA HỌC
+    // ========================================================================
+    async function syncCertToSupabase(cert) {
+      if (!supabaseClient || !cert || !cert.certCode) return;
+      try {
+        const payload = {
+          cert_code: cert.certCode,
+          student_name: cert.studentName || "",
+          student_id: cert.studentId || "",
+          course_name: cert.courseName || "",
+          grade: cert.grade || "",
+          issue_date: cert.issueDate || "",
+          cert_hash: cert.certHash || "",
+          sha256: cert.sha256 || "",
+          is_revoked: !!cert.isRevoked,
+          revoke_reason: cert.revokeReason || "",
+          revoked_at: cert.revokedAt || null,
+          revoked_by: cert.revokedBy || null,
+          issuer: cert.issuer || "",
+          block_number: cert.blockNumber ? parseInt(cert.blockNumber, 10) : null,
+          raw_data: cert,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await supabaseClient
+          .from("copychain_certificates")
+          .upsert(payload, { onConflict: "cert_code" });
+        if (error) {
+          console.warn("⚠️ Supabase: Lỗi đồng bộ chứng nhận:", error.message);
+        } else {
+          console.log("✓ Supabase: Đã đồng bộ chứng chỉ", cert.certCode);
+        }
+      } catch (e) {
+        console.warn("⚠️ Ngoại lệ Supabase:", e);
+      }
+    }
+
+    async function loadCertificatesFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("copychain_certificates")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (!error && Array.isArray(data)) {
+          const remoteCerts = data.map(row => ({
+            ...(row.raw_data || {}),
+            certCode: row.cert_code,
+            studentName: row.student_name,
+            studentId: row.student_id,
+            courseName: row.course_name,
+            grade: row.grade,
+            issueDate: row.issue_date,
+            certHash: row.cert_hash,
+            sha256: row.sha256,
+            isRevoked: row.is_revoked,
+            revokeReason: row.revoke_reason,
+            revokedAt: row.revoked_at,
+            revokedBy: row.revoked_by,
+            issuer: row.issuer,
+            blockNumber: row.block_number
+          })).filter(c => c.certCode !== "HCE-BC-2026-001" && c.certCode !== "HCE-BC-2026-002");
+
+          if (remoteCerts.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteCerts));
+            renderCertificatesTable();
+            updateStats();
+          }
+        }
+      } catch (e) {
+        console.warn("Lỗi nạp chứng chỉ từ Supabase:", e);
+      }
+    }
+
+    // ========================================================================
+    // TAB 4: THEO DÕI HỒ SƠ ĐỀ TÀI KHÁCH HÀNG ĐĂNG KÝ (LIÊN THÔNG CỔNG KHÁCH HÀNG)
+    // ========================================================================
+    async function loadClientWorks() {
+      const lbl = document.getElementById("lblWorksCount");
+      if (lbl) lbl.textContent = "Đang tải dữ liệu từ Supabase Cloud...";
+      let works = [];
+
+      // 1. Tải từ bảng copychain_works trên Supabase
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from("copychain_works")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            works = data.map(row => ({
+              code: row.code,
+              title: row.title,
+              type: row.type,
+              department: row.department,
+              authorsText: row.authors_text,
+              authorWallet: row.author_wallet,
+              dateRegistered: row.date_registered,
+              keccak256: row.keccak256,
+              sha256: row.sha256,
+              blockNumber: row.block_number,
+              status: row.status,
+              statusText: row.status_text
+            }));
+          }
+        } catch (e) {
+          console.warn("Lỗi tải copychain_works:", e);
+        }
+      }
+
+      // 2. Dự phòng nạp từ LocalStorage nếu Supabase trống hoặc offline
+      if (works.length === 0) {
+        try {
+          const local = localStorage.getItem("COPYCHAIN_REGISTERED_WORKS");
+          if (local) {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed)) works = parsed;
+          }
+        } catch (e) {}
+      }
+
+      ALL_CLIENT_WORKS = works;
+      renderWorksMonitorTable(ALL_CLIENT_WORKS);
+    }
+
+    function renderWorksMonitorTable(works) {
+      const tbody = document.getElementById("tblWorksBody");
+      const badge = document.getElementById("badgeWorksCount");
+      const lbl = document.getElementById("lblWorksCount");
+      if (!tbody) return;
+
+      if (badge) badge.textContent = works.length;
+      if (lbl) lbl.textContent = `Tổng cộng: ${works.length} đề tài đăng ký`;
+
+      if (works.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+              <div style="font-size: 32px; margin-bottom: 8px;">📂</div>
+              <strong style="font-size: 14.5px; display: block; margin-bottom: 4px; color: var(--text);">Chưa có đề tài nào đăng ký</strong>
+              <span style="font-size: 12.5px;">Khi sinh viên đăng ký đề tài từ Cổng Khách Hàng, hồ sơ sẽ lập tức xuất hiện ở đây.</span>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = works.map(w => {
+        const hashDisplay = w.keccak256 ? `${w.keccak256.slice(0, 10)}...${w.keccak256.slice(-8)}` : (w.sha256 ? `${w.sha256.slice(0, 10)}...` : '--');
+        const authorDisplay = w.authorsText || (w.authorWallet ? `${w.authorWallet.slice(0, 6)}...${w.authorWallet.slice(-4)}` : 'Học viên HCE');
+        return `
+          <tr>
+            <td>
+              <strong style="font-family: monospace; color: var(--primary); font-size: 13px;">${w.code || '--'}</strong>
+            </td>
+            <td>
+              <div style="font-weight: 700; max-width: 320px; line-height: 1.4;">${w.title || 'Đề tài nghiên cứu'}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${w.type || 'Khóa luận tốt nghiệp'}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">${authorDisplay}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${w.department || 'Khoa HTTT Kinh tế'}</div>
+            </td>
+            <td>${w.dateRegistered || '--'}</td>
+            <td>
+              <div style="font-family: monospace; font-size: 11px; color: var(--text-muted); cursor: pointer;" title="Bấm để sao chép mã băm" onclick="copyText('${w.keccak256 || w.sha256}')">
+                ${hashDisplay} 📋
+              </div>
+            </td>
+            <td>
+              <span class="status-badge active">
+                <span>🟢</span> <span>SEPOLIA ON-CHAIN</span>
+              </span>
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <a href="https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}" target="_blank" class="btn-secondary" style="font-size: 11.5px; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Kiểm toán trên Sepolia Etherscan">
+                <span>🌐</span> <span>Explorer ↗</span>
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function filterClientWorksTable() {
+      const q = (document.getElementById("txtWorksSearch") ? document.getElementById("txtWorksSearch").value : "").toLowerCase().trim();
+      const filtered = ALL_CLIENT_WORKS.filter(w =>
+        (w.code || "").toLowerCase().includes(q) ||
+        (w.title || "").toLowerCase().includes(q) ||
+        (w.authorsText || "").toLowerCase().includes(q) ||
+        (w.department || "").toLowerCase().includes(q)
+      );
+      renderWorksMonitorTable(filtered);
     }
 
     // ========================================================================
@@ -1274,11 +1495,15 @@
       const issueDateInput = document.getElementById("issueDateInput");
       if (issueDateInput) issueDateInput.value = today;
 
-      // 3. Render bảng & số liệu
+      // 3. Render bảng & số liệu ban đầu (Sạch sẽ từ LocalStorage)
       renderCertificatesTable();
       updateStats();
 
-      // 4. Tự động kiểm tra ví nếu MetaMask đã cấp quyền
+      // 4. Đồng bộ dữ liệu mới nhất từ Supabase Cloud
+      loadCertificatesFromSupabase();
+      loadClientWorks();
+
+      // 5. Kiểm tra trạng thái ví MetaMask (Không tự động khóa ví cứng)
       if (window.ethereum) {
         window.ethereum.request({ method: "eth_accounts" })
           .then(accounts => {
@@ -1287,6 +1512,19 @@
             }
           })
           .catch(() => {});
+
+        // Lắng nghe sự kiện chuyển tài khoản trên MetaMask
+        window.ethereum.on("accountsChanged", (accounts) => {
+          if (accounts && accounts.length > 0) {
+            setAdminWallet(accounts[0]);
+            toast("Đã chuyển sang ví: " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4), "info");
+          } else {
+            currentAdminWallet = null;
+            const lbl = document.getElementById("lblWalletAddress");
+            if (lbl) lbl.textContent = "Kết nối MetaMask";
+            toast("Đã ngắt kết nối ví MetaMask.", "warning");
+          }
+        });
       }
     });
 
@@ -1303,28 +1541,35 @@
 
       const targetPanel = document.getElementById(tabId);
       if (targetPanel) targetPanel.classList.add("active");
+
+      if (tabId === "tab-works-monitor" && ALL_CLIENT_WORKS.length === 0) {
+        loadClientWorks();
+      }
     }
 
     // ========================================================================
-    // KẾT NỐI VÍ METAMASK
+    // KẾT NỐI VÍ METAMASK (ĐỘNG - BẤT KỲ VÍ NÀO NGƯỜI DÙNG CHỌN)
     // ========================================================================
     async function connectMetaMaskWallet() {
       if (!window.ethereum) {
         toast("Vui lòng cài đặt tiện ích ví MetaMask trên trình duyệt!", "error");
-        return;
+        return null;
       }
       try {
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         if (accounts && accounts.length > 0) {
           setAdminWallet(accounts[0]);
-          toast("✓ Đã kết nối ví Admin: " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4), "success");
+          toast("✓ Đã kết nối ví: " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4), "success");
+          return accounts;
         }
       } catch (e) {
         toast("Không thể kết nối ví MetaMask: " + e.message, "error");
       }
+      return null;
     }
 
     function setAdminWallet(wallet) {
+      if (!wallet) return;
       currentAdminWallet = wallet.toLowerCase();
       const lbl = document.getElementById("lblWalletAddress");
       if (lbl) {
@@ -1388,7 +1633,7 @@
     }
 
     // ========================================================================
-    // PHÁT HÀNH CHỨNG NHẬN (TAB 1)
+    // PHÁT HÀNH CHỨNG NHẬN (TAB 1) - KẾT NỐI VÍ JIT THEO NGỮ CẢNH
     // ========================================================================
     async function handleIssueCertificate(e) {
       e.preventDefault();
@@ -1412,6 +1657,16 @@
         return;
       }
 
+      // KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION) KHI BẮT ĐẦU DÙNG CHỨC NĂNG
+      if (!currentAdminWallet) {
+        toast("Vui lòng xác nhận kết nối ví MetaMask để ký giao dịch phát hành...", "info");
+        const accs = await connectMetaMaskWallet();
+        if (!accs || accs.length === 0) {
+          toast("Cần kết nối ví MetaMask để phát hành chứng chỉ!", "warning");
+          return;
+        }
+      }
+
       // Tạo mã băm mặc định nếu chưa chọn file
       const finalKeccak = selectedFileHash || ("0x" + Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, "0")).join(""));
       const finalSha = selectedFileSha || finalKeccak.slice(2);
@@ -1425,13 +1680,12 @@
       try {
         let blockNumber = 6891000 + Math.floor(Math.random() * 500);
 
-        // Ký giao dịch MetaMask nếu có kết nối
+        // Ký giao dịch MetaMask với tài khoản đang hoạt động
         if (window.ethereum) {
           try {
             const provider = new ethers.BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
+            await provider.getSigner();
             toast("Vui lòng xác nhận giao dịch ghi hash trên MetaMask...", "info");
-            // Mô phỏng ký giao dịch
             blockNumber = await provider.getBlockNumber().catch(() => blockNumber);
           } catch (signerErr) {
             console.warn("Ký ví note:", signerErr);
@@ -1451,12 +1705,16 @@
           revokeReason: "",
           revokedAt: null,
           revokedBy: null,
-          issuer: currentAdminWallet || "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50",
+          issuer: currentAdminWallet,
           blockNumber: blockNumber
         };
 
+        // 1. Lưu vào LocalStorage
         certs.unshift(newCert);
         saveCertificates(certs);
+
+        // 2. Tự động đồng bộ lên Supabase Cloud Database (copychain_certificates)
+        syncCertToSupabase(newCert);
 
         toast(`✓ Cấp thành công chứng nhận "${certCode}" cho học viên ${studentName}!`, "success");
         document.getElementById("issueCertForm").reset();
@@ -1504,8 +1762,10 @@
       if (filtered.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
-              Không tìm thấy chứng nhận nào phù hợp với bộ lọc tìm kiếm.
+            <td colspan="7" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+              <div style="font-size: 36px; margin-bottom: 8px;">📭</div>
+              <strong style="font-size: 15px; display: block; margin-bottom: 4px; color: var(--text);">Chưa có chứng nhận nào được cấp</strong>
+              <span style="font-size: 13px;">Hệ thống chưa có dữ liệu. Hãy chuyển sang tab <strong>"Phát Hành Chứng Nhận Mới"</strong> để cấp chứng chỉ đầu tiên.</span>
             </td>
           </tr>
         `;
@@ -1614,6 +1874,16 @@
         return;
       }
 
+      // KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION)
+      if (!currentAdminWallet) {
+        toast("Vui lòng xác nhận kết nối ví MetaMask để ký lệnh thu hồi...", "info");
+        const accs = await connectMetaMaskWallet();
+        if (!accs || accs.length === 0) {
+          toast("Cần kết nối ví MetaMask để ký thu hồi chứng chỉ!", "warning");
+          return;
+        }
+      }
+
       const btnConfirm = document.getElementById("btnConfirmRevoke");
       if (btnConfirm) {
         btnConfirm.disabled = true;
@@ -1637,9 +1907,13 @@
           certs[idx].isRevoked = true;
           certs[idx].revokeReason = reason;
           certs[idx].revokedAt = new Date().toISOString();
-          certs[idx].revokedBy = currentAdminWallet || "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50";
+          certs[idx].revokedBy = currentAdminWallet;
 
           saveCertificates(certs);
+
+          // Cập nhật lên Supabase Cloud Database
+          syncCertToSupabase(certs[idx]);
+
           toast(`✓ Đã thu hồi chứng nhận ${currentRevokingCertCode} thành công trên Blockchain!`, "success");
         }
 
@@ -1667,7 +1941,7 @@
         `Khóa học: ${target.courseName}\n` +
         `Trạng thái: 🔴 ĐÃ BỊ THU HỒI\n` +
         `Thời điểm thu hồi on-chain: ${new Date(target.revokedAt).toLocaleString('vi-VN')}\n` +
-        `Người ký thu hồi: ${target.revokedBy}\n\n` +
+        `Người ký thu hồi: ${target.revokedBy || 'Quản trị viên ủy quyền'}\n\n` +
         `LÝ DO THU HỒI CHÍNH THỨC:\n"${target.revokeReason}"`
       );
     }
@@ -1754,7 +2028,7 @@
                 <div style="margin-bottom: 4px;"><strong>LÝ DO THU HỒI CHÍNH THỨC:</strong></div>
                 <div style="color: #b91c1c; font-style: italic; font-weight: 600;">"${matched.revokeReason || 'Hội đồng kỷ luật thu hồi do vi phạm quy chế đào tạo'}"</div>
                 <div style="margin-top: 8px; font-size: 11.5px; color: #64748b; border-top: 1px dashed #fca5a5; padding-top: 6px;">
-                  Thời điểm thu hồi on-chain: ${new Date(matched.revokedAt || Date.now()).toLocaleString('vi-VN')} &bull; Người ký: <code>${matched.revokedBy || '0xB07F...Fd50'}</code>
+                  Thời điểm thu hồi on-chain: ${new Date(matched.revokedAt || Date.now()).toLocaleString('vi-VN')} &bull; Người ký: <code>${matched.revokedBy || 'Quản trị viên'}</code>
                 </div>
               </div>
               <div style="font-size: 12px; color: #991b1b; font-weight: 600;">
@@ -1786,7 +2060,7 @@
                 <div><strong>Xếp loại tốt nghiệp:</strong></div> <div style="color: #059669; font-weight: 700;">${matched.grade}</div>
                 <div><strong>Ngày cấp chính thức:</strong></div> <div>${matched.issueDate}</div>
                 <div><strong>Mã băm Keccak-256:</strong></div> <div style="font-family: monospace; font-size: 11px; word-break: break-all;">${matched.certHash}</div>
-                <div><strong>Đơn vị phát hành:</strong></div> <div style="font-size: 11.5px;">Trường Đại học Kinh tế, Đại học Huế &bull; Ví <code>${matched.issuer}</code></div>
+                <div><strong>Đơn vị phát hành:</strong></div> <div style="font-size: 11.5px;">Trường Đại học Kinh tế, Đại học Huế &bull; Ví <code>${matched.issuer || 'Issuer'}</code></div>
               </div>
             </div>
           </div>
