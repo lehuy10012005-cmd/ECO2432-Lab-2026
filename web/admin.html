@@ -885,10 +885,11 @@
 
         <button class="btn-theme-toggle" id="btnTheme" onclick="toggleTheme()" title="Chuyển chế độ Sáng / Tối">🌙</button>
 
-        <!-- Nút kết nối ví MetaMask -->
-        <button id="btnConnectWallet" class="btn-secondary" onclick="connectMetaMaskWallet()" style="font-weight: 700; gap: 6px; display: inline-flex; align-items: center;">
-          <span>🦊</span> <span id="lblWalletAddress">Kết nối MetaMask</span>
-        </button>
+        <!-- Trạng thái ví JIT: Tuyệt đối không gắn cứng địa chỉ ví, chỉ popup chọn ví khi thực hiện giao dịch -->
+        <div id="adminWalletStatusBadge" style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--surface-border); font-size: 12.5px; font-weight: 600;">
+          <span>🦊</span> <span id="lblWalletStatus" style="color: var(--text-muted);">MetaMask: Chờ giao dịch (JIT)</span>
+          <button id="btnSwitchWallet" type="button" onclick="handleSwitchAdminWalletManual()" title="Đổi tài khoản ví MetaMask" style="display: none; background: none; border: none; cursor: pointer; color: var(--primary); font-weight: 700; text-decoration: underline; margin-left: 6px; font-size: 11.5px;">[Đổi ví]</button>
+        </div>
       </div>
     </div>
   </header>
@@ -1212,6 +1213,53 @@
     </div>
   </div>
 
+  <!-- MODAL THU HỒI BẢN QUYỀN ĐỀ TÀI / TÁC PHẨM ĐẠO VĂN (TAB 4) -->
+  <div id="revokeWorkModalBackdrop" class="modal-backdrop" onclick="closeRevokeWorkModal()"></div>
+  <div id="revokeWorkModal" class="modal-dialog">
+    <div class="modal-header">
+      <h4 style="color: #dc2626;"><span>⛔</span> Thu Hồi Bản Quyền &amp; Hủy Bỏ Đề Tài</h4>
+      <button type="button" class="btn-close-modal" onclick="closeRevokeWorkModal()">&times;</button>
+    </div>
+    <div>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+        Quyết định thu hồi bản quyền tác phẩm sẽ được <strong>ký số và phát sóng on-chain lên Sepolia</strong>. Bản ghi học thuật của sinh viên sẽ bị gắn cờ <strong>ĐÃ THU HỒI DO ĐẠO VĂN / GIAN LẬN HỌC THUẬT</strong> vĩnh viễn trên toàn hệ thống.
+      </p>
+
+      <div class="form-group">
+        <label>Mã Đề Tài / Tác Phẩm:</label>
+        <input type="text" id="modalRevokeWorkCode" class="form-control" readonly style="background: var(--bg); font-weight: 700; font-family: monospace;">
+      </div>
+
+      <div class="form-group">
+        <label>Tên Đề Tài &amp; Tác Giả:</label>
+        <input type="text" id="modalRevokeWorkTitle" class="form-control" readonly style="background: var(--bg);">
+      </div>
+
+      <div class="form-group">
+        <label>Mã Băm Keccak-256 Gốc On-Chain:</label>
+        <input type="text" id="modalRevokeWorkHash" class="form-control" readonly style="background: var(--bg); font-size: 11.5px; font-family: monospace;">
+      </div>
+
+      <div class="form-group">
+        <label>Lý Do Thu Hồi Bản Quyền Học Thuật <span style="color: #dc2626;">*</span>:</label>
+        <textarea id="modalRevokeWorkReason" class="form-control" rows="3" placeholder="Ghi rõ kết luận của Hội đồng kỷ luật (VD: Đạo văn trên 40% công trình khoa học tiền nhiệm, sao chép dữ liệu thực nghiệm không trích dẫn...)" required></textarea>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickWorkReason('Phát hiện sao chép nguyên văn trên 40% công trình nghiên cứu tiền nhiệm không trích dẫn')">Đạo văn &gt;40%</button>
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickWorkReason('Giả mạo số liệu khảo sát và kết quả chạy mô hình định lượng')">Giả mạo số liệu</button>
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickWorkReason('Tranh chấp quyền tác giả không giải quyết được theo kết luận của Hội đồng')">Tranh chấp tác giả</button>
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickWorkReason('Hủy bỏ bản quyền theo Quyết định kỷ luật của Hội đồng Thẩm định HCE')">QĐ Hội đồng thẩm định</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn-secondary" onclick="closeRevokeWorkModal()">Hủy Bỏ</button>
+        <button type="button" id="btnConfirmRevokeWork" class="btn-danger" style="padding: 10px 18px; font-size: 13.5px;" onclick="confirmRevokeWork()">
+          <span>⛔</span> <span>Xác Nhận Ký Ví Thu Hồi On-Chain</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST CONTAINER -->
   <div id="toastContainer"></div>
 
@@ -1223,6 +1271,14 @@
     const SEPOLIA_CHAIN_ID = 11155111;
     const CONTRACT_ADDRESS = "0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87";
     const STORAGE_KEY = "HCE_COURSE_CERTIFICATES_V3";
+
+    // ABI Chuẩn mực của Smart Contract HCE-ScholarProof trên Sepolia
+    const SCHOLAR_PROOF_ABI = [
+      "function registerIdea(bytes32 docHash, string title, string category) external returns (bool)",
+      "function isIdeaRegistered(bytes32 docHash) external view returns (bool)",
+      "function verifyIdea(bytes32 docHash) external view returns (address, uint256, uint256, string, string)",
+      "event IdeaRegistered(bytes32 indexed docHash, address indexed author, uint256 timestamp, string title, string category)"
+    ];
 
     // Cấu hình Supabase Cloud (Dự án: nolpfigqglmwcbfqoksq)
     const SUPABASE_RAW_URL = "https://nolpfigqglmwcbfqoksq.supabase.co/rest/v1/";
@@ -1239,12 +1295,147 @@
       console.warn("⚠️ Lỗi khởi tạo Supabase Client trong Admin:", e);
     }
 
-    // Biến trạng thái toàn cục (Không gán cứng ví MetaMask nào)
+    // Biến trạng thái toàn cục (TUYỆT ĐỐI KHÔNG GÁN CỨNG ĐỊA CHỈ VÍ METAMASK NÀO)
     let currentAdminWallet = null;
     let selectedFileHash = null;
     let selectedFileSha = null;
     let currentRevokingCertCode = null;
+    let currentRevokingWorkCode = null; // Quản lý thu hồi bản quyền tác phẩm đạo văn (Tab 4)
     let ALL_CLIENT_WORKS = [];
+
+    // Helper: Chuẩn hóa địa chỉ Checksum Ethereum
+    function toChecksumAddress(address) {
+      if (!address) return address;
+      try {
+        if (typeof ethers !== "undefined" && ethers.getAddress) {
+          return ethers.getAddress(address);
+        }
+      } catch (e) {}
+      return address;
+    }
+
+    // Trình cung cấp Web3 / MetaMask Provider
+    function getMetaMaskProvider() {
+      if (typeof window.ethereum === "undefined") return null;
+      if (window.ethereum.providers && window.ethereum.providers.length) {
+        return window.ethereum.providers.find(p => p.isMetaMask) || window.ethereum.providers[0];
+      }
+      return window.ethereum;
+    }
+
+    // Chuyển mạng Sepolia Testnet tự động nếu người dùng đang ở mạng khác
+    async function ensureMetaMaskSepolia(eth) {
+      if (!eth) return false;
+      try {
+        const chainId = await eth.request({ method: 'eth_chainId' });
+        if (chainId !== '0xaa36a7') {
+          try {
+            await eth.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xaa36a7' }]
+            });
+          } catch (switchErr) {
+            if (switchErr.code === 4902) {
+              await eth.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: '0xaa36a7',
+                  chainName: 'Sepolia Testnet',
+                  nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: ['https://rpc.sepolia.org'],
+                  blockExplorerUrls: ['https://sepolia.etherscan.io']
+                }]
+              });
+            } else {
+              throw switchErr;
+            }
+          }
+        }
+        return true;
+      } catch (err) {
+        console.warn("Sepolia switch error:", err);
+        throw err;
+      }
+    }
+
+    // ========================================================================
+    // JUST-IN-TIME (JIT) WALLET REQUEST - CHỈ POPUP CHỌN VÍ KHI BẮT ĐẦU GIAO DỊCH
+    // ========================================================================
+    async function requestAdminWalletJustInTime(forcePrompt = true) {
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        if (window.location.protocol === "file:") {
+          toast("Trình duyệt chặn tiện ích trên file://. Vui lòng mở trang trên server nội bộ hoặc GitHub Pages!", "error");
+        } else {
+          toast("Không tìm thấy tiện ích MetaMask! Vui lòng cài đặt MetaMask trên trình duyệt.", "error");
+        }
+        return null;
+      }
+
+      toast("🦊 Đang mở MetaMask để bạn chọn tài khoản ví Admin thực thi giao dịch...", "info");
+
+      try {
+        let accounts = [];
+        // Bắt buộc MetaMask bật giao diện popup để Admin chọn tài khoản (Account 1, Account 2, Ví Bảo, Ví Huy...)
+        if (forcePrompt) {
+          try {
+            await eth.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            });
+            accounts = await eth.request({ method: 'eth_accounts' });
+          } catch (permErr) {
+            if (permErr.code === 4001) {
+              toast("Bạn đã hủy kết nối hoặc đóng cửa sổ MetaMask.", "info");
+              return null;
+            }
+            if (permErr.code === -32002) {
+              toast("MetaMask đang mở chờ bạn thao tác! Hãy bấm vào biểu tượng con cáo trên thanh tiện ích.", "warning");
+              return null;
+            }
+            // Fallback nếu tiện ích ví chưa hỗ trợ requestPermissions
+            accounts = await eth.request({ method: 'eth_requestAccounts' });
+          }
+        } else {
+          accounts = await eth.request({ method: 'eth_requestAccounts' });
+        }
+
+        if (!accounts || accounts.length === 0) {
+          toast("Chưa chọn được tài khoản nào từ ví MetaMask.", "warning");
+          return null;
+        }
+
+        const realAddr = accounts[0];
+        // Đảm bảo mạng Sepolia Testnet
+        await ensureMetaMaskSepolia(eth);
+
+        currentAdminWallet = realAddr.toLowerCase();
+
+        // Cập nhật hiển thị trên Header
+        const lbl = document.getElementById("lblWalletStatus");
+        const btnSwitch = document.getElementById("btnSwitchWallet");
+        if (lbl) lbl.innerHTML = `Ví ký: <strong>${realAddr.slice(0, 6)}...${realAddr.slice(-4)}</strong>`;
+        if (btnSwitch) btnSwitch.style.display = "inline";
+
+        toast(`✓ Đã kết nối ví Admin: ${realAddr.slice(0, 6)}...${realAddr.slice(-4)}`, "success");
+        return realAddr;
+      } catch (err) {
+        console.error("Lỗi requestAdminWalletJustInTime:", err);
+        if (err.code === 4001) {
+          toast("Bạn đã hủy chọn tài khoản ví trên MetaMask.", "info");
+        } else if (err.code === -32002) {
+          toast("MetaMask đang chờ! Hãy bấm vào biểu tượng con cáo trên thanh tiện ích.", "warning");
+        } else {
+          toast("Lỗi kết nối ví: " + (err.message || err), "error");
+        }
+        return null;
+      }
+    }
+
+    // Nút [Đổi ví] trên header cho phép chủ động đổi tài khoản ví MetaMask
+    function handleSwitchAdminWalletManual() {
+      requestAdminWalletJustInTime(true);
+    }
 
     // Dữ liệu mẫu rỗng - Hệ thống chỉ hiển thị những bản ghi do Admin tự tạo
     const INITIAL_SAMPLE_CERTS = [];
@@ -1381,7 +1572,12 @@
               sha256: row.sha256,
               blockNumber: row.block_number,
               status: row.status,
-              statusText: row.status_text
+              statusText: row.status_text,
+              isRevoked: !!row.is_revoked || (row.status === 'REVOKED'),
+              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
+              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
+              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
+              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || ""
             }));
           }
         } catch (e) {
@@ -1395,7 +1591,16 @@
           const local = localStorage.getItem("COPYCHAIN_REGISTERED_WORKS");
           if (local) {
             const parsed = JSON.parse(local);
-            if (Array.isArray(parsed)) works = parsed;
+            if (Array.isArray(parsed)) {
+              works = parsed.map(w => ({
+                ...w,
+                isRevoked: !!w.isRevoked || !!w.is_revoked || (w.status === 'REVOKED'),
+                revokeReason: w.revokeReason || w.revoke_reason || "",
+                revokedAt: w.revokedAt || w.revoked_at || null,
+                revokedBy: w.revokedBy || w.revoked_by || null,
+                revokeTxHash: w.revokeTxHash || w.revoke_tx_hash || ""
+              }));
+            }
           }
         } catch (e) {}
       }
@@ -1429,6 +1634,8 @@
       tbody.innerHTML = works.map(w => {
         const hashDisplay = w.keccak256 ? `${w.keccak256.slice(0, 10)}...${w.keccak256.slice(-8)}` : (w.sha256 ? `${w.sha256.slice(0, 10)}...` : '--');
         const authorDisplay = w.authorsText || (w.authorWallet ? `${w.authorWallet.slice(0, 6)}...${w.authorWallet.slice(-4)}` : 'Học viên HCE');
+        const isRevoked = !!w.isRevoked || (w.status === 'REVOKED');
+
         return `
           <tr>
             <td>
@@ -1449,14 +1656,31 @@
               </div>
             </td>
             <td>
-              <span class="status-badge active">
-                <span>🟢</span> <span>SEPOLIA ON-CHAIN</span>
-              </span>
+              ${isRevoked ? `
+                <span class="status-badge revoked" title="${w.revokeReason || 'Đã bị thu hồi do đạo văn/gian lận học thuật'}">
+                  <span>🔴</span> <span>ĐÃ THU HỒI (ĐẠO VĂN)</span>
+                </span>
+              ` : `
+                <span class="status-badge active">
+                  <span>🟢</span> <span>SEPOLIA ON-CHAIN</span>
+                </span>
+              `}
             </td>
             <td style="text-align: right; white-space: nowrap;">
-              <a href="https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}" target="_blank" class="btn-secondary" style="font-size: 11.5px; padding: 4px 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Kiểm toán trên Sepolia Etherscan">
-                <span>🌐</span> <span>Explorer ↗</span>
-              </a>
+              ${isRevoked ? `
+                <button type="button" class="btn-secondary" style="font-size: 11.5px; padding: 4px 10px;" onclick="viewWorkRevocationDetails('${w.code}')" title="Xem quyết định kỷ luật thu hồi">
+                  <span>📜</span> <span>Xem Lý Do</span>
+                </button>
+              ` : `
+                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn-danger" style="font-size: 11.5px; padding: 4px 10px;" onclick="openRevokeWorkModal('${w.code}')" title="Thu hồi bản quyền tác phẩm on-chain nếu phát hiện đạo văn">
+                    <span>⛔</span> <span>Thu Hồi</span>
+                  </button>
+                  <a href="https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}" target="_blank" class="btn-secondary" style="font-size: 11px; padding: 4px 8px; text-decoration: none;" title="Kiểm toán trên Sepolia Etherscan">
+                    <span>🌐</span>
+                  </a>
+                </div>
+              `}
             </td>
           </tr>
         `;
@@ -1472,6 +1696,202 @@
         (w.department || "").toLowerCase().includes(q)
       );
       renderWorksMonitorTable(filtered);
+    }
+
+    // ========================================================================
+    // QUY TRÌNH THU HỒI BẢN QUYỀN ĐỀ TÀI / TÁC PHẨM ĐẠO VĂN (TAB 4)
+    // ========================================================================
+    function openRevokeWorkModal(workCode) {
+      const target = ALL_CLIENT_WORKS.find(w => w.code === workCode);
+      if (!target) {
+        toast("Không tìm thấy thông tin đề tài " + workCode, "error");
+        return;
+      }
+
+      currentRevokingWorkCode = workCode;
+      document.getElementById("modalRevokeWorkCode").value = target.code;
+      document.getElementById("modalRevokeWorkTitle").value = target.title + " - Tác giả: " + (target.authorsText || target.authorWallet || 'Học viên HCE');
+      document.getElementById("modalRevokeWorkHash").value = target.keccak256 || target.sha256 || '--';
+      document.getElementById("modalRevokeWorkReason").value = "";
+
+      document.getElementById("revokeWorkModalBackdrop").style.display = "block";
+      document.getElementById("revokeWorkModal").style.display = "block";
+    }
+
+    function closeRevokeWorkModal() {
+      document.getElementById("revokeWorkModalBackdrop").style.display = "none";
+      document.getElementById("revokeWorkModal").style.display = "none";
+      currentRevokingWorkCode = null;
+    }
+
+    function setQuickWorkReason(text) {
+      const textarea = document.getElementById("modalRevokeWorkReason");
+      if (textarea) textarea.value = text;
+    }
+
+    async function confirmRevokeWork() {
+      const reason = document.getElementById("modalRevokeWorkReason").value.trim();
+      if (!reason) {
+        toast("Vui lòng nhập lý do thu hồi bản quyền trước khi ký lệnh!", "warning");
+        return;
+      }
+
+      // 1. KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION) - METAMASK POPUP CHỌN VÍ
+      toast("🦊 Mở MetaMask: Vui lòng chọn tài khoản ví Admin để ký lệnh thu hồi bản quyền...", "info");
+      const adminWallet = await requestAdminWalletJustInTime(true);
+      if (!adminWallet) {
+        toast("Cần kết nối ví MetaMask để thực hiện giao dịch thu hồi!", "warning");
+        return;
+      }
+
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        toast("Không tìm thấy tiện ích MetaMask trên trình duyệt!", "error");
+        return;
+      }
+
+      let provider;
+      try {
+        provider = new ethers.BrowserProvider(eth);
+        await ensureMetaMaskSepolia(eth);
+      } catch (netErr) {
+        toast("Lỗi chuyển sang Sepolia Testnet: " + (netErr.message || netErr), "error");
+        return;
+      }
+
+      const btnConfirm = document.getElementById("btnConfirmRevokeWork");
+      if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = `<span>⚙️</span> <span>Đang ký lệnh thu hồi on-chain...</span>`;
+      }
+
+      try {
+        const signer = await provider.getSigner();
+
+        // Kiểm tra số dư ví Sepolia
+        const balance = await provider.getBalance(adminWallet);
+        if (balance === 0n) {
+          toast("Số dư ví " + adminWallet.slice(0, 6) + "..." + adminWallet.slice(-4) + " là 0 SepoliaETH! Vui lòng nạp gas testnet để gửi giao dịch.", "error");
+          return;
+        }
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch thu hồi bản quyền lên Sepolia...", "info");
+
+        // Phát sóng giao dịch thật sự lên Sepolia Blockchain
+        const payloadCalldata = ethers.hexlify(ethers.toUtf8Bytes(
+          "HCE_WORK_REVOKE:" + currentRevokingWorkCode + ":" + reason.slice(0, 36)
+        ));
+
+        const tx = await signer.sendTransaction({
+          to: toChecksumAddress(CONTRACT_ADDRESS),
+          value: 0n,
+          data: payloadCalldata
+        });
+
+        toast("⏳ Giao dịch thu hồi bản quyền đang được ghi vào khối Sepolia...", "info");
+        const receipt = await tx.wait(1);
+
+        if (!receipt || !receipt.hash) {
+          throw new Error("Không nhận được biên lai giao dịch từ mạng Sepolia.");
+        }
+
+        const revokeTxHash = receipt.hash;
+        const nowIso = new Date().toISOString();
+
+        // 1. Cập nhật bảng copychain_works trên Supabase Cloud
+        if (supabaseClient) {
+          try {
+            await supabaseClient
+              .from("copychain_works")
+              .update({
+                status: "REVOKED",
+                status_text: "ĐÃ THU HỒI DO ĐẠO VĂN",
+                is_revoked: true,
+                revoke_reason: reason,
+                revoked_at: nowIso,
+                revoked_by: adminWallet,
+                revoke_tx_hash: revokeTxHash,
+                updated_at: nowIso
+              })
+              .eq("code", currentRevokingWorkCode);
+            console.log("✓ Supabase: Đã cập nhật trạng thái thu hồi cho tác phẩm", currentRevokingWorkCode);
+          } catch (supErr) {
+            console.warn("Lỗi Supabase khi thu hồi tác phẩm:", supErr);
+          }
+        }
+
+        // 2. Cập nhật LocalStorage COPYCHAIN_REGISTERED_WORKS
+        try {
+          const raw = localStorage.getItem("COPYCHAIN_REGISTERED_WORKS");
+          if (raw) {
+            const list = JSON.parse(raw);
+            const it = list.find(w => w.code === currentRevokingWorkCode);
+            if (it) {
+              it.status = "REVOKED";
+              it.statusText = "ĐÃ THU HỒI DO ĐẠO VĂN";
+              it.is_revoked = true;
+              it.isRevoked = true;
+              it.revoke_reason = reason;
+              it.revokeReason = reason;
+              it.revoked_at = nowIso;
+              it.revokedAt = nowIso;
+              it.revoked_by = adminWallet;
+              it.revokedBy = adminWallet;
+              it.revoke_tx_hash = revokeTxHash;
+              it.revokeTxHash = revokeTxHash;
+              localStorage.setItem("COPYCHAIN_REGISTERED_WORKS", JSON.stringify(list));
+            }
+          }
+        } catch (localErr) {}
+
+        // 3. Cập nhật mảng đang hiển thị
+        const targetMem = ALL_CLIENT_WORKS.find(w => w.code === currentRevokingWorkCode);
+        if (targetMem) {
+          targetMem.status = "REVOKED";
+          targetMem.statusText = "ĐÃ THU HỒI DO ĐẠO VĂN";
+          targetMem.isRevoked = true;
+          targetMem.revokeReason = reason;
+          targetMem.revokedAt = nowIso;
+          targetMem.revokedBy = adminWallet;
+          targetMem.revokeTxHash = revokeTxHash;
+        }
+
+        renderWorksMonitorTable(ALL_CLIENT_WORKS);
+        toast(`✓ Đã thu hồi bản quyền tác phẩm ${currentRevokingWorkCode} thành công trên Blockchain Sepolia!`, "success");
+        closeRevokeWorkModal();
+
+      } catch (err) {
+        console.error("Lỗi confirmRevokeWork:", err);
+        if (err.code === 4001 || (err.message && err.message.includes("rejected"))) {
+          toast("Bạn đã hủy ký giao dịch thu hồi trên MetaMask.", "warning");
+        } else {
+          toast("Lỗi thu hồi bản quyền: " + (err.reason || err.message || err), "error");
+        }
+      } finally {
+        if (btnConfirm) {
+          btnConfirm.disabled = false;
+          btnConfirm.innerHTML = `<span>⛔</span> <span>Xác Nhận Ký Ví Thu Hồi On-Chain</span>`;
+        }
+      }
+    }
+
+    function viewWorkRevocationDetails(workCode) {
+      const target = ALL_CLIENT_WORKS.find(w => w.code === workCode);
+      if (!target) return;
+
+      alert(
+        `📜 QUYẾT ĐỊNH THU HỒI BẢN QUYỀN HỌC THUẬT (ON-CHAIN)\n` +
+        `--------------------------------------------------\n` +
+        `Mã đề tài: ${target.code}\n` +
+        `Tên đề tài: ${target.title}\n` +
+        `Tác giả / Sinh viên: ${target.authorsText || target.authorWallet || 'Học viên HCE'}\n` +
+        `Khoa phụ trách: ${target.department || 'Khoa HTTT Kinh tế'}\n` +
+        `Trạng thái: 🔴 ĐÃ BỊ THU HỒI DO ĐẠO VĂN / GIAN LẬN\n` +
+        `Thời điểm ký thu hồi: ${target.revokedAt ? new Date(target.revokedAt).toLocaleString('vi-VN') : 'Đã ghi nhận on-chain'}\n` +
+        `Ví Admin thi hành: ${target.revokedBy || 'Hội đồng Thẩm định HCE'}\n` +
+        `Mã TxHash thu hồi: ${target.revokeTxHash ? target.revokeTxHash.slice(0, 16) + '...' : 'Sepolia Confirmed'}\n\n` +
+        `KẾT LUẬN & LÝ DO THU HỒI CHÍNH THỨC:\n"${target.revokeReason || 'Vi phạm nghiêm trọng quy chế liêm chính học thuật và quyền sở hữu trí tuệ.'}"`
+      );
     }
 
     // ========================================================================
@@ -1503,25 +1923,23 @@
       loadCertificatesFromSupabase();
       loadClientWorks();
 
-      // 5. Kiểm tra trạng thái ví MetaMask (Không tự động khóa ví cứng)
+      // 5. TUYỆT ĐỐI KHÔNG TỰ ĐỘNG GỌI eth_accounts KHI LOAD TRANG ĐỂ TRÁNH GẮN CỨNG VÍ
+      // Chỉ lắng nghe sự kiện đổi tài khoản nếu người dùng tự đổi trên MetaMask
       if (window.ethereum) {
-        window.ethereum.request({ method: "eth_accounts" })
-          .then(accounts => {
-            if (accounts && accounts.length > 0) {
-              setAdminWallet(accounts[0]);
-            }
-          })
-          .catch(() => {});
-
-        // Lắng nghe sự kiện chuyển tài khoản trên MetaMask
         window.ethereum.on("accountsChanged", (accounts) => {
           if (accounts && accounts.length > 0) {
-            setAdminWallet(accounts[0]);
+            currentAdminWallet = accounts[0].toLowerCase();
+            const lbl = document.getElementById("lblWalletStatus");
+            const btnSwitch = document.getElementById("btnSwitchWallet");
+            if (lbl) lbl.innerHTML = `Ví ký: <strong>${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}</strong>`;
+            if (btnSwitch) btnSwitch.style.display = "inline";
             toast("Đã chuyển sang ví: " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4), "info");
           } else {
             currentAdminWallet = null;
-            const lbl = document.getElementById("lblWalletAddress");
-            if (lbl) lbl.textContent = "Kết nối MetaMask";
+            const lbl = document.getElementById("lblWalletStatus");
+            const btnSwitch = document.getElementById("btnSwitchWallet");
+            if (lbl) lbl.textContent = "MetaMask: Chờ giao dịch (JIT)";
+            if (btnSwitch) btnSwitch.style.display = "none";
             toast("Đã ngắt kết nối ví MetaMask.", "warning");
           }
         });
@@ -1544,36 +1962,6 @@
 
       if (tabId === "tab-works-monitor" && ALL_CLIENT_WORKS.length === 0) {
         loadClientWorks();
-      }
-    }
-
-    // ========================================================================
-    // KẾT NỐI VÍ METAMASK (ĐỘNG - BẤT KỲ VÍ NÀO NGƯỜI DÙNG CHỌN)
-    // ========================================================================
-    async function connectMetaMaskWallet() {
-      if (!window.ethereum) {
-        toast("Vui lòng cài đặt tiện ích ví MetaMask trên trình duyệt!", "error");
-        return null;
-      }
-      try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        if (accounts && accounts.length > 0) {
-          setAdminWallet(accounts[0]);
-          toast("✓ Đã kết nối ví: " + accounts[0].slice(0, 6) + "..." + accounts[0].slice(-4), "success");
-          return accounts;
-        }
-      } catch (e) {
-        toast("Không thể kết nối ví MetaMask: " + e.message, "error");
-      }
-      return null;
-    }
-
-    function setAdminWallet(wallet) {
-      if (!wallet) return;
-      currentAdminWallet = wallet.toLowerCase();
-      const lbl = document.getElementById("lblWalletAddress");
-      if (lbl) {
-        lbl.textContent = wallet.slice(0, 6) + "..." + wallet.slice(-4);
       }
     }
 
@@ -1633,7 +2021,7 @@
     }
 
     // ========================================================================
-    // PHÁT HÀNH CHỨNG NHẬN (TAB 1) - KẾT NỐI VÍ JIT THEO NGỮ CẢNH
+    // PHÁT HÀNH CHỨNG NHẬN (TAB 1) - KẾT NỐI VÍ JIT & GIAO DỊCH ON-CHAIN THẬT SỰ
     // ========================================================================
     async function handleIssueCertificate(e) {
       e.preventDefault();
@@ -1657,17 +2045,30 @@
         return;
       }
 
-      // KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION) KHI BẮT ĐẦU DÙNG CHỨC NĂNG
-      if (!currentAdminWallet) {
-        toast("Vui lòng xác nhận kết nối ví MetaMask để ký giao dịch phát hành...", "info");
-        const accs = await connectMetaMaskWallet();
-        if (!accs || accs.length === 0) {
-          toast("Cần kết nối ví MetaMask để phát hành chứng chỉ!", "warning");
-          return;
-        }
+      // 1. KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION) - BẮT BUỘC METAMASK POPUP CHỌN VÍ
+      toast("🦊 Mở MetaMask: Vui lòng chọn tài khoản ví Admin để ký phát hành chứng chỉ...", "info");
+      const adminWallet = await requestAdminWalletJustInTime(true);
+      if (!adminWallet) {
+        toast("Cần kết nối ví MetaMask để phát hành chứng chỉ!", "warning");
+        return;
       }
 
-      // Tạo mã băm mặc định nếu chưa chọn file
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        toast("Không tìm thấy tiện ích MetaMask!", "error");
+        return;
+      }
+
+      let provider;
+      try {
+        provider = new ethers.BrowserProvider(eth);
+        await ensureMetaMaskSepolia(eth);
+      } catch (netErr) {
+        toast("Không thể chuyển sang mạng Sepolia Testnet: " + (netErr.message || netErr), "error");
+        return;
+      }
+
+      // Tạo mã băm tài liệu chứng nhận
       const finalKeccak = selectedFileHash || ("0x" + Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, "0")).join(""));
       const finalSha = selectedFileSha || finalKeccak.slice(2);
 
@@ -1678,19 +2079,60 @@
       }
 
       try {
-        let blockNumber = 6891000 + Math.floor(Math.random() * 500);
+        const signer = await provider.getSigner();
 
-        // Ký giao dịch MetaMask với tài khoản đang hoạt động
-        if (window.ethereum) {
-          try {
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            await provider.getSigner();
-            toast("Vui lòng xác nhận giao dịch ghi hash trên MetaMask...", "info");
-            blockNumber = await provider.getBlockNumber().catch(() => blockNumber);
-          } catch (signerErr) {
-            console.warn("Ký ví note:", signerErr);
-          }
+        // 2. Kiểm tra số dư ví Sepolia
+        const balance = await provider.getBalance(adminWallet);
+        if (balance === 0n) {
+          toast("Số dư ví " + adminWallet.slice(0, 6) + "..." + adminWallet.slice(-4) + " là 0 SepoliaETH! Vui lòng nạp gas testnet để phát hành chứng chỉ.", "error");
+          return;
         }
+
+        // 3. Chuẩn hóa mã băm docHash bytes32
+        let docHashBytes32 = "";
+        if (finalKeccak.startsWith("0x") && finalKeccak.length === 66) {
+          docHashBytes32 = finalKeccak;
+        } else {
+          docHashBytes32 = ethers.keccak256(ethers.toUtf8Bytes(finalKeccak || certCode));
+        }
+
+        const validContractAddress = toChecksumAddress(CONTRACT_ADDRESS);
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch phát hành lên Smart Contract Sepolia...", "info");
+
+        // 4. Phát sóng giao dịch thật sự lên Sepolia Blockchain
+        let tx = null;
+        try {
+          const contractWrite = new ethers.Contract(validContractAddress, SCHOLAR_PROOF_ABI, signer);
+          tx = await contractWrite.registerIdea(
+            docHashBytes32,
+            (`HCE-CERT:${certCode}:${studentName}`).slice(0, 190),
+            (`Chứng Nhận Khóa Học`).slice(0, 90)
+          );
+        } catch (contractErr) {
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            throw contractErr; // Admin chủ động hủy trên MetaMask
+          }
+          console.warn("Fallback direct transaction with calldata:", contractErr);
+          const certPayload = ethers.hexlify(ethers.toUtf8Bytes(
+            `HCE_CERT_ISSUE:${certCode}:${studentName}:${docHashBytes32.slice(0, 24)}`
+          ));
+          tx = await signer.sendTransaction({
+            to: validContractAddress,
+            value: 0n,
+            data: certPayload
+          });
+        }
+
+        toast("⏳ Giao dịch phát hành đang được xác nhận trên Sepolia Testnet...", "info");
+        const receipt = await tx.wait(1);
+
+        if (!receipt || !receipt.hash) {
+          throw new Error("Không nhận được biên lai giao dịch từ mạng Sepolia.");
+        }
+
+        const onChainTxHash = receipt.hash;
+        const onChainBlock = Number(receipt.blockNumber);
 
         const newCert = {
           certCode: certCode,
@@ -1705,8 +2147,9 @@
           revokeReason: "",
           revokedAt: null,
           revokedBy: null,
-          issuer: currentAdminWallet,
-          blockNumber: blockNumber
+          issuer: adminWallet,
+          txHash: onChainTxHash,
+          blockNumber: onChainBlock
         };
 
         // 1. Lưu vào LocalStorage
@@ -1716,7 +2159,7 @@
         // 2. Tự động đồng bộ lên Supabase Cloud Database (copychain_certificates)
         syncCertToSupabase(newCert);
 
-        toast(`✓ Cấp thành công chứng nhận "${certCode}" cho học viên ${studentName}!`, "success");
+        toast(`✓ Cấp chứng nhận "${certCode}" thành công on-chain (Khối #${onChainBlock})!`, "success");
         document.getElementById("issueCertForm").reset();
         selectedFileHash = null;
         selectedFileSha = null;
@@ -1726,7 +2169,12 @@
         // Chuyển sang Tab Quản lý để xem ngay
         setTimeout(() => switchAdminTab("tab-manage"), 600);
       } catch (err) {
-        toast("Lỗi phát hành chứng nhận: " + err.message, "error");
+        console.error("Lỗi handleIssueCertificate:", err);
+        if (err.code === 4001 || (err.message && err.message.includes("rejected"))) {
+          toast("Bạn đã hủy ký giao dịch phát hành trên MetaMask.", "warning");
+        } else {
+          toast("Lỗi phát hành chứng nhận: " + (err.reason || err.message || err), "error");
+        }
       } finally {
         if (btnSubmit) {
           btnSubmit.disabled = false;
@@ -1840,7 +2288,7 @@
     }
 
     // ========================================================================
-    // QUY TRÌNH THU HỒI CHỨNG NHẬN (REVOCATION WORKFLOW)
+    // QUY TRÌNH THU HỒI CHỨNG NHẬN (REVOCATION WORKFLOW) - ON-CHAIN SIGNING
     // ========================================================================
     function openRevokeModal(certCode) {
       const certs = getStoredCertificates();
@@ -1874,14 +2322,27 @@
         return;
       }
 
-      // KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION)
-      if (!currentAdminWallet) {
-        toast("Vui lòng xác nhận kết nối ví MetaMask để ký lệnh thu hồi...", "info");
-        const accs = await connectMetaMaskWallet();
-        if (!accs || accs.length === 0) {
-          toast("Cần kết nối ví MetaMask để ký thu hồi chứng chỉ!", "warning");
-          return;
-        }
+      // 1. KẾT NỐI VÍ TỨC THÌ (JUST-IN-TIME CONNECTION) - BẮT BUỘC METAMASK POPUP CHỌN VÍ
+      toast("🦊 Mở MetaMask: Vui lòng chọn tài khoản ví Admin để ký lệnh thu hồi chứng chỉ...", "info");
+      const adminWallet = await requestAdminWalletJustInTime(true);
+      if (!adminWallet) {
+        toast("Cần kết nối ví MetaMask để ký thu hồi chứng chỉ!", "warning");
+        return;
+      }
+
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        toast("Không tìm thấy tiện ích MetaMask!", "error");
+        return;
+      }
+
+      let provider;
+      try {
+        provider = new ethers.BrowserProvider(eth);
+        await ensureMetaMaskSepolia(eth);
+      } catch (netErr) {
+        toast("Không thể chuyển sang mạng Sepolia Testnet: " + (netErr.message || netErr), "error");
+        return;
       }
 
       const btnConfirm = document.getElementById("btnConfirmRevoke");
@@ -1891,35 +2352,63 @@
       }
 
       try {
-        if (window.ethereum) {
-          try {
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            await provider.getSigner();
-            toast("Vui lòng xác nhận giao dịch thu hồi trên MetaMask...", "info");
-          } catch (e) {
-            console.warn("Ký ví note:", e);
-          }
+        const signer = await provider.getSigner();
+
+        // 2. Kiểm tra số dư ví Sepolia
+        const balance = await provider.getBalance(adminWallet);
+        if (balance === 0n) {
+          toast("Số dư ví không đủ SepoliaETH để chi trả phí gas giao dịch thu hồi!", "error");
+          return;
         }
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch thu hồi chứng nhận lên Sepolia...", "info");
+
+        // 3. Phát sóng giao dịch thật sự lên Sepolia Blockchain
+        const revokePayload = ethers.hexlify(ethers.toUtf8Bytes(
+          `HCE_CERT_REVOKE:${currentRevokingCertCode}:${reason.slice(0, 36)}`
+        ));
+
+        const tx = await signer.sendTransaction({
+          to: toChecksumAddress(CONTRACT_ADDRESS),
+          value: 0n,
+          data: revokePayload
+        });
+
+        toast("⏳ Đang ghi nhận quyết định thu hồi chứng nhận lên mạng Sepolia...", "info");
+        const receipt = await tx.wait(1);
+
+        if (!receipt || !receipt.hash) {
+          throw new Error("Không nhận được biên lai giao dịch từ mạng Sepolia.");
+        }
+
+        const revokeTxHash = receipt.hash;
+        const nowIso = new Date().toISOString();
 
         const certs = getStoredCertificates();
         const idx = certs.findIndex(c => c.certCode === currentRevokingCertCode);
         if (idx >= 0) {
           certs[idx].isRevoked = true;
           certs[idx].revokeReason = reason;
-          certs[idx].revokedAt = new Date().toISOString();
-          certs[idx].revokedBy = currentAdminWallet;
+          certs[idx].revokedAt = nowIso;
+          certs[idx].revokedBy = adminWallet;
+          certs[idx].revokeTxHash = revokeTxHash;
 
           saveCertificates(certs);
 
           // Cập nhật lên Supabase Cloud Database
           syncCertToSupabase(certs[idx]);
 
-          toast(`✓ Đã thu hồi chứng nhận ${currentRevokingCertCode} thành công trên Blockchain!`, "success");
+          toast(`✓ Đã thu hồi chứng nhận ${currentRevokingCertCode} thành công trên Blockchain Sepolia!`, "success");
         }
 
         closeRevokeModal();
       } catch (err) {
-        toast("Lỗi thu hồi chứng nhận: " + err.message, "error");
+        console.error("Lỗi confirmRevokeCertificate:", err);
+        if (err.code === 4001 || (err.message && err.message.includes("rejected"))) {
+          toast("Bạn đã hủy ký giao dịch thu hồi trên MetaMask.", "warning");
+        } else {
+          toast("Lỗi thu hồi chứng nhận: " + (err.reason || err.message || err), "error");
+        }
       } finally {
         if (btnConfirm) {
           btnConfirm.disabled = false;

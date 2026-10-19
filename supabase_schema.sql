@@ -48,11 +48,23 @@ CREATE TABLE IF NOT EXISTS public.copychain_works (
     block_number TEXT,
     status TEXT DEFAULT 'VERIFIED',
     status_text TEXT,
+    is_revoked BOOLEAN DEFAULT FALSE,
+    revoke_reason TEXT,
+    revoked_at TIMESTAMPTZ,
+    revoked_by TEXT,
+    revoke_tx_hash TEXT,
     date_registered TEXT,
     raw_data JSONB,
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()),
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW())
 );
+
+-- Tự động bổ sung cột nếu bảng copychain_works đã được tạo trước đó
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS is_revoked BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoke_reason TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoked_by TEXT;
+ALTER TABLE public.copychain_works ADD COLUMN IF NOT EXISTS revoke_tx_hash TEXT;
 
 -- 3. BẢNG SỔ CÁI HỌC THUẬT & BẢN GHI XÁC THỰC (copychain_records)
 CREATE TABLE IF NOT EXISTS public.copychain_records (

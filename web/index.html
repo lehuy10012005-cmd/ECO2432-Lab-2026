@@ -6007,6 +6007,16 @@
               blockNumber: row.block_number,
               status: row.status,
               statusText: row.status_text,
+              isRevoked: !!row.is_revoked || (row.status === 'REVOKED'),
+              is_revoked: !!row.is_revoked || (row.status === 'REVOKED'),
+              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
+              revoke_reason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
+              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
+              revoked_at: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
+              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
+              revoked_by: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
+              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
+              revoke_tx_hash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
               dateRegistered: row.date_registered,
               file_url: row.file_url || (row.raw_data && row.raw_data.file_url) || "",
               fileUrl: row.file_url || (row.raw_data && row.raw_data.fileUrl) || "",
@@ -6046,6 +6056,7 @@
         if (!rErr && Array.isArray(recData) && recData.length > 0) {
           let hasNew = false;
           recData.forEach(row => {
+            const isRowRevoked = (row.status === 'REVOKED') || !!row.is_revoked || (row.raw_data && (row.raw_data.status === 'REVOKED' || row.raw_data.isRevoked));
             const recObj = {
               ...(row.raw_data || {}),
               code: row.code,
@@ -6063,6 +6074,18 @@
               time: row.time,
               wallet: row.wallet,
               txHash: row.tx_hash,
+              status: isRowRevoked ? "REVOKED" : (row.status || "AUTHENTICATED"),
+              statusText: isRowRevoked ? "ĐÃ THU HỒI DO ĐẠO VĂN" : (row.status_text || "Đã xác thực On-chain"),
+              isRevoked: isRowRevoked,
+              is_revoked: isRowRevoked,
+              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || (row.raw_data && row.raw_data.revokeReason) || "",
+              revoke_reason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
+              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || (row.raw_data && row.raw_data.revokedAt) || null,
+              revoked_at: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
+              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || (row.raw_data && row.raw_data.revokedBy) || null,
+              revoked_by: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
+              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || (row.raw_data && row.raw_data.revokeTxHash) || "",
+              revoke_tx_hash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
               file_url: row.file_url || (row.raw_data && row.raw_data.file_url) || "",
               fileUrl: row.file_url || (row.raw_data && row.raw_data.fileUrl) || "",
               file_name: row.file_name || (row.raw_data && row.raw_data.file_name) || "",
@@ -9138,11 +9161,20 @@
         document.getElementById("auditMatchedSha256").textContent = calculatedSha256 || matchedWork.sha256 || "--";
         document.getElementById("auditMatchedBlock").textContent = "#" + (matchedWork.blockNumber || matchedWork.block || "6821940");
 
-        document.getElementById("memoVerdict").textContent = "Xác thực 100% Khớp Bản Ghi On-chain";
-        document.getElementById("memoVerdict").style.color = "var(--success)";
-        document.getElementById("memoCode").textContent = "BB-XTTT/" + (matchedWork.code || "CC-2026-0010");
+        const isRevoked = !!matchedWork.isRevoked || !!matchedWork.is_revoked || (matchedWork.status === "REVOKED");
+        const revokeReason = matchedWork.revokeReason || matchedWork.revoke_reason || "Phát hiện vi phạm liêm chính học thuật / đạo văn công trình nghiên cứu";
 
-        toast("✓ Tác phẩm khớp với bản ghi trên Blockchain. Quyền tác giả và tính toàn vẹn được xác thực.", "success");
+        if (isRevoked) {
+          document.getElementById("memoVerdict").textContent = "CẢNH BÁO ĐỎ: TÁC PHẨM ĐÃ BỊ THU HỒI BẢN QUYỀN (ĐẠO VĂN)";
+          document.getElementById("memoVerdict").style.color = "var(--danger)";
+          document.getElementById("memoCode").textContent = "BB-THBQ/" + (matchedWork.code || "CC-REVOKED");
+          toast("⚠️ CẢNH BÁO: Tác phẩm này đã bị Hội đồng Thẩm định THU HỒI BẢN QUYỀN do vi phạm liêm chính học thuật / đạo văn!", "error");
+        } else {
+          document.getElementById("memoVerdict").textContent = "Xác thực 100% Khớp Bản Ghi On-chain";
+          document.getElementById("memoVerdict").style.color = "var(--success)";
+          document.getElementById("memoCode").textContent = "BB-XTTT/" + (matchedWork.code || "CC-2026-0010");
+          toast("✓ Tác phẩm khớp với bản ghi trên Blockchain. Quyền tác giả và tính toàn vẹn được xác thực.", "success");
+        }
       } else {
         // KHÔNG KHỚP: CẢNH BÁO
         currentMatchedAuditWork = null;
@@ -9632,7 +9664,10 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
         return;
       }
 
-      tbody.innerHTML = records.map((r, i) => `
+      tbody.innerHTML = records.map((r, i) => {
+        const isRevoked = r.status === "REVOKED" || r.isRevoked || r.is_revoked || (r.statusText && r.statusText.includes("THU HỒI"));
+        const revokeReason = r.revokeReason || r.revoke_reason || "Đã thu hồi do vi phạm liêm chính học thuật/đạo văn";
+        return `
         <tr>
           <td><code style="font-family: var(--font-mono); color: var(--primary); font-weight: 700;">${r.code}</code></td>
           <td><span style="font-weight: 600;">${r.date}</span></td>
@@ -9646,15 +9681,28 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
             <a href="javascript:void(0)" onclick="openBlockDetail(${i})" style="font-family: var(--font-mono); color: var(--primary); font-weight: 700; text-decoration: underline;" title="Xem chi tiết đối soát khối Sepolia">#${r.block}</a>
           </td>
           <td><span style="font-size: 11px; font-family: var(--font-mono);">${r.time}</span></td>
-          <td><span class="badge-pill-auth">AUTHENTICATED</span></td>
+          <td>
+            ${isRevoked ? `
+              <span style="display: inline-flex; align-items: center; gap: 4px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 9999px; padding: 2px 8px; font-size: 11px; font-weight: 800;" title="Lý do thu hồi: ${revokeReason}">
+                <span>🔴</span> <span>ĐÃ THU HỒI</span>
+              </span>
+            ` : `
+              <span class="badge-pill-auth">AUTHENTICATED</span>
+            `}
+          </td>
           <td style="white-space: nowrap;">
             <button class="btn-detail" onclick="openDigitalLibraryModal('${r.code}')" style="background: #0284c7; color: #ffffff; font-weight: 700; border: none; padding: 4px 9px; border-radius: 4px; cursor: pointer; margin-right: 4px;" title="Mở Thư viện số ĐHKT Huế (Xem trực tuyến &amp; Tải tệp)">📖 Chi tiết</button>
             <button class="btn-detail" onclick="openAuthorPassportForRecord(${i})" style="background: #ffffff; border: 1.5px solid var(--primary); color: var(--primary); font-weight: 700; margin-right: 4px;" title="Xem Hồ sơ Tác giả &amp; Danh mục Công trình">👤 Hồ sơ</button>
             <button class="btn-detail" onclick="openBlockDetail(${i})" title="Xem chi tiết khối &amp; giao dịch">Khối</button>
-            <button class="btn-detail" style="background: var(--primary-subtle); color: var(--primary); font-weight: 700; margin-left: 4px;" onclick="viewDeedForRecord(${i})" title="Xem phôi Chứng thư số của công trình này">📜 Chứng thư</button>
+            ${isRevoked ? `
+              <button class="btn-detail" style="background: #fee2e2; color: #dc2626; font-weight: 700; margin-left: 4px; border: 1px solid #fca5a5;" onclick="alert('🔴 QUYẾT ĐỊNH THU HỒI BẢN QUYỀN ĐỀ TÀI\\n---------------------------------------\\nMã đề tài: ${r.code}\\nTiêu đề: ${r.title}\\nTác giả: ${r.authors}\\nTrạng thái: ĐÃ THU HỒI DO ĐẠO VĂN / GIAN LẬN HỌC THUẬT\\n\\nLÝ DO CHÍNH THỨC:\\n\"${revokeReason}\"')" title="Xem quyết định thu hồi bản quyền">⚠️ QĐ Thu hồi</button>
+            ` : `
+              <button class="btn-detail" style="background: var(--primary-subtle); color: var(--primary); font-weight: 700; margin-left: 4px;" onclick="viewDeedForRecord(${i})" title="Xem phôi Chứng thư số của công trình này">📜 Chứng thư</button>
+            `}
           </td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
     }
     renderLedgerTable();
 
