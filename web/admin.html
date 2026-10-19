@@ -1857,6 +1857,43 @@
         }
 
         renderWorksMonitorTable(ALL_CLIENT_WORKS);
+
+        // 4. Đồng bộ đình chỉ quyền học thuật của tài khoản tác giả vi phạm liêm chính
+        try {
+          const rawUsers = localStorage.getItem("COPYCHAIN_REGISTERED_USERS");
+          if (rawUsers && targetMem) {
+            const uList = JSON.parse(rawUsers);
+            const wWallet = (targetMem.authorWallet || targetMem.author_wallet || "").trim().toLowerCase();
+            const wAuth = (targetMem.authorsText || targetMem.author || "").trim().toLowerCase();
+            let changedUser = false;
+            uList.forEach(u => {
+              const uWallet = (u.wallet || "").trim().toLowerCase();
+              const uName = (u.fullName || u.name || "").trim().toLowerCase();
+              const uMssv = (u.mssv || u.id || "").trim().toLowerCase();
+              if ((wWallet && uWallet === wWallet) || (uName && wAuth.includes(uName)) || (uMssv && wAuth.includes(uMssv))) {
+                u.status = "SUSPENDED";
+                u.isRevoked = true;
+                u.revokeReason = "Bị đình chỉ quyền đăng ký do có tác phẩm bị thu hồi vì đạo văn: " + reason;
+                u.revokedAt = nowIso;
+                u.badge = "🔴 ĐÃ BỊ THU HỒI / ĐÌNH CHỈ HỌC THUẬT";
+                changedUser = true;
+                if (supabaseClient) {
+                  supabaseClient.from("copychain_users").update({
+                    role: "SUSPENDED",
+                    badge: "🔴 ĐÃ BỊ THU HỒI / ĐÌNH CHỈ HỌC THUẬT",
+                    updated_at: nowIso
+                  }).eq("id", u.id).then(() => {}).catch(() => {});
+                }
+              }
+            });
+            if (changedUser) {
+              localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(uList));
+            }
+          }
+        } catch (eUserSync) {
+          console.warn("Lỗi đồng bộ đình chỉ tài khoản tác giả:", eUserSync);
+        }
+
         toast(`✓ Đã thu hồi bản quyền tác phẩm ${currentRevokingWorkCode} thành công trên Blockchain Sepolia!`, "success");
         closeRevokeWorkModal();
 
@@ -2397,6 +2434,41 @@
 
           // Cập nhật lên Supabase Cloud Database
           syncCertToSupabase(certs[idx]);
+
+          // Đồng bộ đình chỉ quyền học thuật của tài khoản sinh viên vi phạm quy chế đào tạo
+          try {
+            const rawUsers = localStorage.getItem("COPYCHAIN_REGISTERED_USERS");
+            if (rawUsers) {
+              const uList = JSON.parse(rawUsers);
+              const targetStudentId = (certs[idx].studentId || "").trim().toLowerCase();
+              const targetStudentName = (certs[idx].studentName || "").trim().toLowerCase();
+              let changedUser = false;
+              uList.forEach(u => {
+                const uMssv = (u.mssv || u.id || "").trim().toLowerCase();
+                const uName = (u.fullName || u.name || "").trim().toLowerCase();
+                if ((targetStudentId && uMssv === targetStudentId) || (targetStudentName && uName === targetStudentName)) {
+                  u.status = "SUSPENDED";
+                  u.isRevoked = true;
+                  u.revokeReason = "Bị thu hồi chứng chỉ đào tạo do vi phạm quy chế học thuật: " + reason;
+                  u.revokedAt = nowIso;
+                  u.badge = "🔴 ĐÃ BỊ THU HỒI / ĐÌNH CHỈ HỌC THUẬT";
+                  changedUser = true;
+                  if (supabaseClient) {
+                    supabaseClient.from("copychain_users").update({
+                      role: "SUSPENDED",
+                      badge: "🔴 ĐÃ BỊ THU HỒI / ĐÌNH CHỈ HỌC THUẬT",
+                      updated_at: nowIso
+                    }).eq("id", u.id).then(() => {}).catch(() => {});
+                  }
+                }
+              });
+              if (changedUser) {
+                localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(uList));
+              }
+            }
+          } catch (eCertUserSync) {
+            console.warn("Lỗi đồng bộ đình chỉ tài khoản sinh viên:", eCertUserSync);
+          }
 
           toast(`✓ Đã thu hồi chứng nhận ${currentRevokingCertCode} thành công trên Blockchain Sepolia!`, "success");
         }

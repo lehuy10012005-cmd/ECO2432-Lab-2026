@@ -3760,6 +3760,34 @@
 
       <!-- KHUNG NỘI DUNG WIZARD ĐĂNG KÝ (CHỈ HIỂN THỊ KHI ĐÃ ĐĂNG NHẬP) -->
       <div id="regWizardMainContent" style="display: none;">
+        <!-- BANNER CẢNH BÁO KỶ LUẬT / THU HỒI LIÊM CHÍNH HỌC THUẬT -->
+        <div id="academicRevocationAlertBanner" style="display: none; background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #ef4444; border-radius: 12px; padding: 18px 22px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);">
+          <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="font-size: 28px; line-height: 1;">⛔</div>
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <h4 style="margin: 0; color: #b91c1c; font-size: 15px; font-weight: 800; text-transform: uppercase;">
+                  TÀI KHOẢN ĐANG BỊ ĐÌNH CHỈ / TƯỚC QUYỀN HỌC THUẬT ON-CHAIN
+                </h4>
+                <span style="background: #b91c1c; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 9999px;">
+                  HỘI ĐỒNG THẨM ĐỊNH HCE
+                </span>
+              </div>
+              <p style="margin: 6px 0 8px; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
+                Hệ thống kiểm toán đối soát phát hiện hồ sơ học thuật của bạn đang chịu chế tài kỷ luật / thu hồi bằng cấp hoặc tác phẩm do vi phạm liêm chính khoa học:
+              </p>
+              <div style="background: #ffffff; border: 1px dashed #f87171; border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #991b1b; margin-bottom: 10px;">
+                <strong>Lý do chế tài:</strong> <span id="revocationBannerReason">--</span><br>
+                <strong>Mã văn bản / Bản ghi:</strong> <code id="revocationBannerCode" style="color: #b91c1c; font-weight: 700;">--</code> &bull; 
+                <strong>Thi hành bởi:</strong> <span id="revocationBannerIssuer">--</span>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #b91c1c; font-weight: 700;">
+                ⚠️ Theo Quy chế Quản trị Bản quyền Trường Đại học Kinh tế Huế, bạn không thể tạo mới hoặc ký giao dịch bảo chứng tác phẩm lên Sepolia. Vui lòng liên hệ Phòng Đào tạo & NCKH để khiếu nại hoặc đối soát.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="wizard-wrap">
           <div class="wizard-progress-bar">
             <div class="wizard-progress-line" id="wizardProgressLine" style="width: 0%;"></div>
@@ -3908,6 +3936,28 @@
                 <div class="f-group">
                   <label>Số điện thoại *:</label>
                   <input type="tel" id="wizAuthorPhone" class="f-input" placeholder="Số điện thoại...">
+                </div>
+              </div>
+
+              <div class="f-row">
+                <div class="f-group">
+                  <label>Mã số sinh viên (MSSV) *:</label>
+                  <input type="text" id="wizAuthorMssv" class="f-input" placeholder="Ví dụ: 23K4300099..." style="background: rgba(37,99,235,0.05); font-weight: 700; color: var(--primary);" readonly>
+                </div>
+                <div class="f-group">
+                  <label>Khoa đào tạo HCE *:</label>
+                  <input type="text" id="wizAuthorFaculty" class="f-input" placeholder="Khoa trực thuộc..." style="background: rgba(37,99,235,0.05); font-weight: 600;" readonly>
+                </div>
+              </div>
+
+              <div class="f-row">
+                <div class="f-group">
+                  <label>Lớp sinh hoạt / Niên khóa:</label>
+                  <input type="text" id="wizAuthorClass" class="f-input" placeholder="Lớp học..." style="background: rgba(37,99,235,0.05);" readonly>
+                </div>
+                <div class="f-group">
+                  <label>Tình trạng học thuật:</label>
+                  <input type="text" id="wizAuthorAcademicStatus" class="f-input" placeholder="Trạng thái sinh viên..." style="background: rgba(37,99,235,0.05);" readonly>
                 </div>
               </div>
 
@@ -5451,6 +5501,38 @@
         </div>
         <div class="f-row">
           <div class="f-group">
+            <label>Mã số sinh viên (MSSV) *:</label>
+            <input type="text" id="regAccMssv" class="f-input" placeholder="Ví dụ: 23K4300099 hoặc 22K4080..." required>
+          </div>
+          <div class="f-group">
+            <label>Lớp sinh hoạt / Niên khóa *:</label>
+            <input type="text" id="regAccClassName" class="f-input" placeholder="Ví dụ: K57 HTTTKT, K56 TCNH..." required>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label>Khoa đào tạo HCE *:</label>
+            <select id="regAccFaculty" class="f-select" required>
+              <option value="Khoa Hệ thống Thông tin Kinh tế" selected>Khoa Hệ thống Thông tin Kinh tế</option>
+              <option value="Khoa Quản trị Kinh doanh">Khoa Quản trị Kinh doanh</option>
+              <option value="Khoa Tài chính - Ngân hàng">Khoa Tài chính - Ngân hàng</option>
+              <option value="Khoa Kế toán - Kiểm toán">Khoa Kế toán - Kiểm toán</option>
+              <option value="Khoa Kinh tế học">Khoa Kinh tế học</option>
+              <option value="Khoa Kinh doanh Thương mại">Khoa Kinh doanh Thương mại</option>
+              <option value="Khoa Lý luận Chính trị">Khoa Lý luận Chính trị</option>
+            </select>
+          </div>
+          <div class="f-group">
+            <label>Tình trạng học thuật *:</label>
+            <select id="regAccAcademicStatus" class="f-select" required>
+              <option value="Sinh viên đang học tập (Chính quy)" selected>Sinh viên đang học tập (Chính quy)</option>
+              <option value="Cựu sinh viên HCE (Alumni)">Cựu sinh viên HCE (Alumni)</option>
+              <option value="Học viên Cao học / Nghiên cứu sinh">Học viên Cao học / Nghiên cứu sinh</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
             <label>Mật khẩu tạo mới *:</label>
             <input type="password" id="regAccPassword" class="f-input" placeholder="Tối thiểu 6 ký tự..." required>
           </div>
@@ -6646,7 +6728,7 @@
       return { ok: false, error: "Cloud Auto Mode" };
     }
 
-    // Luồng OTP Đăng Ký Tự Động 100%
+    // Luồng OTP Đăng Ký Tự Động 100% (Đầy đủ thông tin Sinh viên HCE)
     async function goToOtpVerificationStep() {
       const name = document.getElementById("regAccFullName").value.trim();
       const idCard = document.getElementById("regAccIdCard").value.trim();
@@ -6654,11 +6736,15 @@
       const phone = document.getElementById("regAccPhone").value.trim();
       const dob = document.getElementById("regAccDob").value;
       const address = document.getElementById("regAccAddress").value.trim();
+      const mssv = (document.getElementById("regAccMssv") ? document.getElementById("regAccMssv").value.trim() : "");
+      const className = (document.getElementById("regAccClassName") ? document.getElementById("regAccClassName").value.trim() : "");
+      const faculty = (document.getElementById("regAccFaculty") ? document.getElementById("regAccFaculty").value : "Khoa Hệ thống Thông tin Kinh tế");
+      const academicStatus = (document.getElementById("regAccAcademicStatus") ? document.getElementById("regAccAcademicStatus").value : "Sinh viên đang học tập (Chính quy)");
       const pass = document.getElementById("regAccPassword").value;
       const passConf = document.getElementById("regAccPasswordConfirm").value;
 
-      if (!name || !idCard || !email || !phone) {
-        toast("Vui lòng điền đầy đủ thông tin bắt buộc!", "warning");
+      if (!name || !idCard || !email || !phone || !mssv || !className) {
+        toast("Vui lòng điền đầy đủ thông tin bắt buộc (bao gồm MSSV và Lớp sinh hoạt)!", "warning");
         return;
       }
       if (pass !== passConf) {
@@ -6666,21 +6752,24 @@
         return;
       }
 
-      // Kiểm tra trùng lặp tài khoản (Email, Số điện thoại hoặc CCCD đã đăng ký)
+      // Kiểm tra trùng lặp tài khoản (Email, Số điện thoại, CCCD hoặc MSSV đã đăng ký)
       const cleanEmail = email.toLowerCase().trim();
       const cleanPhone = phone.trim();
       const cleanIdCard = idCard.trim();
+      const cleanMssv = mssv.toUpperCase().trim();
 
       const existingAccount = ALL_USERS.find(u =>
         (u.email && u.email.toLowerCase().trim() === cleanEmail) ||
         (cleanPhone && u.phone && u.phone.trim() === cleanPhone) ||
-        (cleanIdCard && u.idCard && u.idCard.trim() === cleanIdCard)
+        (cleanIdCard && u.idCard && u.idCard.trim() === cleanIdCard) ||
+        (cleanMssv && u.mssv && u.mssv.toUpperCase().trim() === cleanMssv)
       );
 
       if (existingAccount) {
         let fieldName = "Email";
         if (existingAccount.phone === cleanPhone) fieldName = "Số điện thoại";
         else if (existingAccount.idCard === cleanIdCard) fieldName = "Số CCCD";
+        else if (existingAccount.mssv && existingAccount.mssv.toUpperCase().trim() === cleanMssv) fieldName = "Mã số sinh viên (MSSV)";
         toast(`⚠️ ${fieldName} này đã được đăng ký tài khoản (${existingAccount.fullName || existingAccount.name})! Vui lòng chọn "Đăng nhập".`, "warning");
         return;
       }
@@ -6690,19 +6779,19 @@
         try {
           const { data: cloudExists } = await supabaseClient
             .from("copychain_users")
-            .select("id, name, full_name, email, phone, id_card")
-            .or(`email.ilike.${cleanEmail},phone.eq.${cleanPhone},id_card.eq.${cleanIdCard}`);
+            .select("id, mssv, name, full_name, email, phone, id_card")
+            .or(`email.ilike.${cleanEmail},phone.eq.${cleanPhone},id_card.eq.${cleanIdCard},mssv.ilike.${cleanMssv}`);
           if (Array.isArray(cloudExists) && cloudExists.length > 0) {
             const acc = cloudExists[0];
-            toast(`⚠️ Email hoặc thông tin này đã được đăng ký tài khoản (${acc.full_name || acc.name}) trên hệ thống! Vui lòng chọn "Đăng nhập".`, "warning");
+            toast(`⚠️ Thông tin/MSSV (${acc.mssv || cleanMssv}) đã được đăng ký tài khoản (${acc.full_name || acc.name}) trên CSDL HCE! Vui lòng chọn "Đăng nhập".`, "warning");
             return;
           }
         } catch (sbCheckErr) {
-          console.warn("Supabase check email note:", sbCheckErr);
+          console.warn("Supabase check email/mssv note:", sbCheckErr);
         }
       }
 
-      pendingRegisterData = { name, idCard, email, phone, dob, address, pass };
+      pendingRegisterData = { name, idCard, email, phone, dob, address, pass, mssv: cleanMssv, className, faculty, academicStatus };
 
       // Tạo mã OTP ngẫu nhiên 6 số
       simulatedOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -6962,11 +7051,17 @@
             ? currentWalletAddress
             : "");
 
-        // Kiểm tra xem đã có tài khoản trùng Email, SĐT hoặc CCCD chưa
+        const regMssv = (pendingRegisterData.mssv || "").toUpperCase().trim();
+        const regFaculty = pendingRegisterData.faculty || "Khoa Hệ thống Thông tin Kinh tế";
+        const regClassName = pendingRegisterData.className || "K57 HTTTKT";
+        const regAcademicStatus = pendingRegisterData.academicStatus || "Sinh viên đang học tập (Chính quy)";
+
+        // Kiểm tra xem đã có tài khoản trùng Email, SĐT, CCCD hoặc MSSV chưa
         let targetUser = ALL_USERS.find(u =>
           (regEmail && u.email && u.email.toLowerCase().trim() === regEmail) ||
           (regPhone && u.phone && u.phone.trim() === regPhone) ||
-          (regIdCard && u.idCard && u.idCard.trim() === regIdCard)
+          (regIdCard && u.idCard && u.idCard.trim() === regIdCard) ||
+          (regMssv && u.mssv && u.mssv.toUpperCase().trim() === regMssv)
         );
 
         if (targetUser) {
@@ -6974,6 +7069,13 @@
           targetUser.name = rawName;
           targetUser.fullName = rawName;
           targetUser.password = regPass;
+          if (regMssv) targetUser.mssv = regMssv;
+          if (regFaculty) targetUser.faculty = regFaculty;
+          if (regClassName) {
+            targetUser.class = regClassName;
+            targetUser.className = regClassName;
+          }
+          if (regAcademicStatus) targetUser.academicStatus = regAcademicStatus;
           if (regIdCard) targetUser.idCard = regIdCard;
           if (regEmail) targetUser.email = regEmail;
           if (regPhone) targetUser.phone = regPhone;
@@ -6983,10 +7085,10 @@
           targetUser.avatar = avatarLetters;
         } else {
           // TẠO TÀI KHOẢN MỚI NẾU CHƯA TỒN TẠI
-          const newId = "USR-" + (ALL_USERS.length + 1);
+          const newId = regMssv || ("USR-" + (ALL_USERS.length + 1));
           targetUser = {
             id: newId,
-            mssv: newId,
+            mssv: regMssv || newId,
             name: rawName,
             fullName: rawName,
             idCard: regIdCard,
@@ -6994,12 +7096,14 @@
             phone: regPhone,
             dob: pendingRegisterData.dob || "2005-01-01",
             address: pendingRegisterData.address || "Việt Nam",
-            class: "Tác Giả Đăng Ký",
-            faculty: "Khoa HTTT Kinh tế &bull; HUE",
+            class: regClassName,
+            className: regClassName,
+            faculty: regFaculty,
+            academicStatus: regAcademicStatus,
             wallet: resolvedWallet,
             role: "AUTHOR",
-            roleName: "Tác Giả Xác Thực",
-            badge: "✓ COPYCHAIN VERIFIED AUTHOR",
+            roleName: "Tác Giả HCE Xác Thực",
+            badge: "✓ HCE-SCHOLARPROOF VERIFIED STUDENT",
             avatar: avatarLetters,
             password: regPass
           };
@@ -7141,6 +7245,86 @@
       if (typeof renderAdminDashboard === "function") renderAdminDashboard();
     }
 
+    // ========================================================================
+    // QUẢN TRỊ RỦI RO & KIỂM TOÁN LIÊM CHÍNH HỌC THUẬT (ACADEMIC INTEGRITY CHECK)
+    // Tự động kiểm tra chế tài thu hồi khóa học hoặc thu hồi tác phẩm do đạo văn
+    // ========================================================================
+    function checkAcademicIntegrityStatus(user) {
+      if (!user) return { isClean: true };
+
+      const mssv = (user.mssv || user.id || "").trim().toLowerCase();
+      const email = (user.email || "").trim().toLowerCase();
+      const wallet = (user.wallet || "").trim().toLowerCase();
+      const name = (user.fullName || user.name || "").trim().toLowerCase();
+
+      // 1. Kiểm tra trực tiếp trạng thái cờ tài khoản
+      if (user.status === "SUSPENDED" || user.status === "REVOKED" || user.isRevoked || user.is_revoked) {
+        return {
+          isClean: false,
+          type: "ACCOUNT_SUSPENDED",
+          code: user.mssv || user.id,
+          reason: user.revokeReason || user.revoke_reason || "Tài khoản sinh viên đang chịu quyết định kỷ luật từ Nhà trường",
+          issuer: "Hội đồng Kỷ luật & Thẩm định HCE"
+        };
+      }
+
+      // 2. Kiểm tra trong Danh bạ Chứng chỉ Khóa học (ALL_CLIENT_CERTS)
+      if (Array.isArray(ALL_CLIENT_CERTS)) {
+        const revokedCert = ALL_CLIENT_CERTS.find(c => {
+          if (!c.isRevoked && !c.is_revoked) return false;
+          const cId = (c.studentId || c.student_id || "").trim().toLowerCase();
+          const cName = (c.studentName || c.student_name || "").trim().toLowerCase();
+          return (mssv && cId === mssv) || (email && cId === email) || (name && cName === name);
+        });
+        if (revokedCert) {
+          return {
+            isClean: false,
+            type: "CERTIFICATE_REVOKED",
+            code: revokedCert.certCode || revokedCert.cert_code,
+            reason: revokedCert.revokeReason || revokedCert.revoke_reason || "Bị thu hồi chứng chỉ đào tạo do vi phạm quy chế học thuật HCE",
+            issuer: revokedCert.revokedBy || revokedCert.revoked_by || "Hội đồng Thẩm định Khóa học HCE"
+          };
+        }
+      }
+
+      // 3. Kiểm tra trong Danh mục Tác phẩm bị thu hồi do đạo văn (COPYCHAIN_WORKS)
+      if (Array.isArray(COPYCHAIN_WORKS)) {
+        const revokedWork = COPYCHAIN_WORKS.find(w => {
+          if (!w.is_revoked && !w.isRevoked && w.status !== "REVOKED") return false;
+          const wWallet = (w.author_wallet || w.authorWallet || w.wallet || "").trim().toLowerCase();
+          const wAuth = (w.authors_text || w.author || w.authors || "").trim().toLowerCase();
+          return (wallet && wWallet && wWallet === wallet) || (name && wAuth.includes(name)) || (mssv && wAuth.includes(mssv));
+        });
+        if (revokedWork) {
+          return {
+            isClean: false,
+            type: "WORK_REVOKED",
+            code: revokedWork.code,
+            reason: revokedWork.revoke_reason || revokedWork.revokeReason || "Bị thu hồi tác quyền do vi phạm liêm chính khoa học / đạo văn",
+            issuer: revokedWork.revoked_by || revokedWork.revokedBy || "Hội đồng Thẩm định Bản quyền HCE"
+          };
+        }
+      }
+
+      return { isClean: true };
+    }
+
+    function showAcademicRevocationBanner(integrity) {
+      const banner = document.getElementById("academicRevocationAlertBanner");
+      if (!banner) return;
+      if (!integrity || integrity.isClean) {
+        banner.style.display = "none";
+        return;
+      }
+      banner.style.display = "block";
+      const reasonEl = document.getElementById("revocationBannerReason");
+      const codeEl = document.getElementById("revocationBannerCode");
+      const issuerEl = document.getElementById("revocationBannerIssuer");
+      if (reasonEl) reasonEl.textContent = integrity.reason || "Vi phạm quy chế liêm chính học thuật";
+      if (codeEl) codeEl.textContent = integrity.code || "HCE-REVOKED";
+      if (issuerEl) issuerEl.textContent = integrity.issuer || "Hội đồng Thẩm định HCE";
+    }
+
     // --- ĐIỀU HƯỚNG WIZARD 6 BƯỚC ---
     function goToWizardStep(step) {
       if (typeof isUserAuthenticated === "function" && !isUserAuthenticated()) {
@@ -7149,6 +7333,15 @@
         return;
       }
       if (step < 1 || step > 6) return;
+
+      // Kiểm tra kỷ luật liêm chính học thuật on-chain khi mở wizard
+      const integrityCheck = checkAcademicIntegrityStatus(currentAuthUser);
+      showAcademicRevocationBanner(integrityCheck);
+
+      if (!integrityCheck.isClean && step > 2) {
+        toast(`⛔ TÀI KHOẢN BỊ ĐÌNH CHỈ: ${integrityCheck.reason}. Không thể chuyển sang các bước kế tiếp!`, "error");
+        return;
+      }
 
       // Kiểm tra tính hợp lệ cơ bản nếu nhảy bước
       if (step > 1 && !document.getElementById("wizWorkTitle").value.trim()) {
@@ -7196,6 +7389,10 @@
         line.style.width = percent + "%";
       }
 
+      // Khi vào Bước 2: Tự động đồng bộ thông tin nếu chưa điền
+      if (step === 2 && currentAuthUser) {
+        autofillMainAuthorWithCurrentUser(true);
+      }
       // Khi vào Bước 4: Đồng bộ dữ liệu tóm tắt
       if (step === 4) {
         syncWizardStep4Review();
@@ -7214,6 +7411,15 @@
         openLoginAccountModal();
         return;
       }
+
+      // Kiểm tra kỷ luật liêm chính học thuật
+      const integrityCheck = checkAcademicIntegrityStatus(currentAuthUser);
+      if (!integrityCheck.isClean && currentWizardStep >= 2) {
+        toast(`⛔ TÀI KHOẢN BỊ ĐÌNH CHỈ: ${integrityCheck.reason}. Không thể tiếp tục!`, "error");
+        showAcademicRevocationBanner(integrityCheck);
+        return;
+      }
+
       if (currentWizardStep === 3) {
         if (typeof isWizFileDuplicate !== "undefined" && isWizFileDuplicate) {
           toast("❌ Không thể tiếp tục! Tệp này đã trùng với file đã được chứng nhận bản quyền trước đó trên hệ thống.", "error");
@@ -7242,17 +7448,35 @@
     }
 
     // Đồng bộ thông tin Tác giả chính từ tài khoản
-    function autofillMainAuthorWithCurrentUser() {
+    function autofillMainAuthorWithCurrentUser(silent = false) {
       if (!currentAuthUser) {
-        toast("Vui lòng đăng nhập tài khoản trước!", "info");
-        openLoginAccountModal();
+        if (!silent) {
+          toast("Vui lòng đăng nhập tài khoản trước!", "info");
+          openLoginAccountModal();
+        }
         return;
       }
-      document.getElementById("wizAuthorName").value = currentAuthUser.fullName;
-      document.getElementById("wizAuthorIdCard").value = currentAuthUser.idCard;
-      document.getElementById("wizAuthorEmail").value = currentAuthUser.email;
-      document.getElementById("wizAuthorPhone").value = currentAuthUser.phone;
-      toast("Đã đồng bộ thông tin của " + currentAuthUser.fullName, "success");
+      const nameInp = document.getElementById("wizAuthorName");
+      const idInp = document.getElementById("wizAuthorIdCard");
+      const emInp = document.getElementById("wizAuthorEmail");
+      const phInp = document.getElementById("wizAuthorPhone");
+      const mssvInp = document.getElementById("wizAuthorMssv");
+      const facInp = document.getElementById("wizAuthorFaculty");
+      const classInp = document.getElementById("wizAuthorClass");
+      const statusInp = document.getElementById("wizAuthorAcademicStatus");
+
+      if (nameInp) nameInp.value = currentAuthUser.fullName || currentAuthUser.name || "";
+      if (idInp) idInp.value = currentAuthUser.idCard || "";
+      if (emInp) emInp.value = currentAuthUser.email || "";
+      if (phInp) phInp.value = currentAuthUser.phone || "";
+      if (mssvInp) mssvInp.value = currentAuthUser.mssv || currentAuthUser.id || "";
+      if (facInp) facInp.value = currentAuthUser.faculty || "Khoa Hệ thống Thông tin Kinh tế";
+      if (classInp) classInp.value = currentAuthUser.class || currentAuthUser.className || "K57 HTTTKT";
+      if (statusInp) statusInp.value = currentAuthUser.academicStatus || "Sinh viên đang học tập (Chính quy)";
+
+      if (!silent) {
+        toast("✓ Đã đồng bộ thông tin sinh viên " + (currentAuthUser.fullName || currentAuthUser.name), "success");
+      }
     }
 
     // Quản lý Đồng tác giả
@@ -7671,9 +7895,13 @@
       const type = document.getElementById("wizWorkType").value;
       const dateComp = document.getElementById("wizDateCompleted").value;
       const mainName = document.getElementById("wizAuthorName").value.trim() || "--";
+      const mainMssv = document.getElementById("wizAuthorMssv") ? document.getElementById("wizAuthorMssv").value.trim() : "";
+      const mainFaculty = document.getElementById("wizAuthorFaculty") ? document.getElementById("wizAuthorFaculty").value.trim() : "";
       const mainShare = document.getElementById("wizAuthorShare").value || "100";
 
-      let authorsSum = mainName + " (" + mainShare + "%)";
+      let mainLabel = mainName;
+      if (mainMssv) mainLabel += ` [MSSV: ${mainMssv}${mainFaculty ? ' - ' + mainFaculty : ''}]`;
+      let authorsSum = mainLabel + " (" + mainShare + "%)";
       if (wizCoAuthors.length > 0) {
         const coList = wizCoAuthors.map(c => c.name + " (" + c.share + "%)").join(", ");
         authorsSum += ", " + coList;
@@ -7691,6 +7919,14 @@
     async function handleExecuteWizardRegistration() {
       const btn = document.getElementById("btnExecuteWizardRegister");
       const loadingState = document.getElementById("wizSigningLoadingState");
+
+      // 0. KIỂM SOÁT LIÊM CHÍNH HỌC THUẬT & TRẠNG THÁI THU HỒI (RECONCILIATION & REVOCATION SLASHING)
+      const integrityCheck = checkAcademicIntegrityStatus(currentAuthUser);
+      if (!integrityCheck.isClean) {
+        toast(`⛔ TÀI KHOẢN BỊ ĐÌNH CHỈ: ${integrityCheck.reason} (${integrityCheck.code}). Bạn không có quyền khởi tạo giao dịch bảo chứng tác phẩm mới!`, "error");
+        alert(`⛔ HỘI ĐỒNG THẨM ĐỊNH HCE CẢNH BÁO:\n\nTài khoản sinh viên [${currentAuthUser ? (currentAuthUser.mssv || currentAuthUser.name) : 'Tác giả'}] đang chịu quyết định thu hồi/kỷ luật:\n- Lý do: ${integrityCheck.reason}\n- Mã quyết định/vi phạm: ${integrityCheck.code}\n- Cơ quan thi hành: ${integrityCheck.issuer}\n\nTheo quy chế học thuật của Đại học Kinh tế Huế, bạn tạm thời bị tước quyền đăng ký bảo chứng quyền tác giả trên mạng Blockchain Sepolia!`);
+        return;
+      }
 
       // 1. Kiểm tra ví MetaMask - Nếu chưa có ví thì yêu cầu kết nối trước (Just-in-Time)
       let activeWallet = (typeof currentWallet !== "undefined" && currentWallet)
@@ -7736,9 +7972,15 @@
       const mainName = document.getElementById("wizAuthorName").value.trim() || (currentAuthUser ? currentAuthUser.fullName : "Tác giả");
       const mainEmail = document.getElementById("wizAuthorEmail").value.trim();
       const mainPhone = document.getElementById("wizAuthorPhone").value.trim();
+      const mainMssv = document.getElementById("wizAuthorMssv") ? document.getElementById("wizAuthorMssv").value.trim() : (currentAuthUser ? (currentAuthUser.mssv || "") : "");
+      const mainFaculty = document.getElementById("wizAuthorFaculty") ? document.getElementById("wizAuthorFaculty").value.trim() : (currentAuthUser ? (currentAuthUser.faculty || "") : "");
+      const mainClass = document.getElementById("wizAuthorClass") ? document.getElementById("wizAuthorClass").value.trim() : (currentAuthUser ? (currentAuthUser.class || currentAuthUser.className || "") : "");
+      const mainAcademicStatus = document.getElementById("wizAuthorAcademicStatus") ? document.getElementById("wizAuthorAcademicStatus").value.trim() : (currentAuthUser ? (currentAuthUser.academicStatus || "") : "");
       const mainShare = document.getElementById("wizAuthorShare").value || "100";
 
-      let authorsFormatted = mainName + " (" + mainShare + "%)";
+      let mainLabel = mainName;
+      if (mainMssv) mainLabel += ` [MSSV: ${mainMssv}]`;
+      let authorsFormatted = mainLabel + " (" + mainShare + "%)";
       if (wizCoAuthors.length > 0) {
         authorsFormatted += " & " + wizCoAuthors.map(c => c.name + " (" + c.share + "%)").join(" & ");
       }
@@ -7897,7 +8139,12 @@
         code: newCode,
         title: title,
         type: type,
-        department: dept,
+        department: mainFaculty || dept,
+        faculty: mainFaculty || dept,
+        authorMssv: mainMssv,
+        authorClass: mainClass,
+        authorFaculty: mainFaculty,
+        authorAcademicStatus: mainAcademicStatus,
         dateCompleted: document.getElementById("wizDateCompleted").value,
         dateRegistered: dateStr,
         authorsText: authorsFormatted,
@@ -7936,6 +8183,9 @@
         type: lastRegisteredWork.type,
         advisor: "Hội đồng Thẩm định HUE-ScholarProof",
         authors: lastRegisteredWork.authorsText,
+        authorMssv: mainMssv,
+        authorClass: mainClass,
+        authorFaculty: mainFaculty,
         authorEmail: lastRegisteredWork.authorEmail,
         authorPhone: lastRegisteredWork.authorPhone,
         hash: lastRegisteredWork.keccak256,

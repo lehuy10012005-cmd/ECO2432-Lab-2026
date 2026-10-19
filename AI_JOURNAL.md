@@ -707,3 +707,52 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kết quả:* Hệ thống bắt kịp mã lỗi `4001` (User rejected), hiển thị thông báo cảnh báo thân thiện `"Bạn đã hủy ký giao dịch trên MetaMask"`, phục hồi trạng thái nút bấm ban đầu và TUYỆT ĐỐI KHÔNG lưu bản ghi rác vào cơ sở dữ liệu Supabase khi giao dịch on-chain chưa hoàn tất.
 
 **Ai phát hiện:** Sinh viên Lê Huy phản ánh trực tiếp việc MetaMask chưa bật popup khi thao tác và yêu cầu cơ chế JIT chọn ví linh hoạt cùng tính năng thu hồi bản quyền đề tài đạo văn; AI thiết kế và hoàn thiện toàn diện hệ thống.
+
+## Lần 28 (Bổ sung Định danh Sinh viên HCE, Chống Trùng lặp MSSV & Chế tài Tước Quyền Đăng ký Bản quyền khi Bị Thu hồi/Đình chỉ Học thuật)
+
+**Prompt:**
+> "Nếu vậy phần đăng nhập với đăng kí tác phẩm thì cũng phải làm thêm đăng kí thông tin sinh viên như phần trả cứu khoá học đúng không nhỉ tại kiểu ví dụ như đã thu hồi khóa học hay ra trường rồi thì làm sao mà đăng kí tác phẩm được nữa đúng không. nói cho tôi biết trước đã"
+> *(Kèm chỉ đạo triển khai sau khi AI phân tích kiến trúc: "ờ làm đi")*
+
+**AI trả về:**
+- Nâng cấp toàn diện cơ chế định danh học thuật và quản trị liêm chính on-chain giữa hai phân hệ Cổng Sinh Viên (`web/index.html`) và Cổng Quản Trị Admin (`web/admin.html`):
+  1. **Bổ sung Trường Thông Tin Sinh Viên HCE vào Modal Đăng ký Tài khoản:**
+     - Bổ sung 4 trường dữ liệu học thuật bắt buộc trong Form đăng ký:
+       + `Mã số sinh viên (MSSV) *`: Ví dụ `23K4300099`.
+       + `Lớp sinh hoạt / Niên khóa *`: Ví dụ `K57 HTTTKT`, `K56 TCNH`.
+       + `Khoa đào tạo HCE *`: Dropdown chọn 7 Khoa chuyên ngành thuộc Trường ĐH Kinh tế – ĐH Huế.
+       + `Tình trạng học thuật *`: *Sinh viên đang học tập (Chính quy)*, *Cựu sinh viên HCE (Alumni)*, *Học viên Cao học / NCS*.
+     - Bổ sung cơ chế chống trùng lặp định danh (Sybil Identity Protection): Hệ thống kiểm tra đối soát MSSV trên cả danh sách tài khoản cục bộ (`ALL_USERS`) và cơ sở dữ liệu đám mây Supabase (`copychain_users`). Nếu MSSV đã tồn tại, hệ thống từ chối đăng ký và yêu cầu đăng nhập.
+  2. **Liên thông & Khóa An toàn tại Bước 2 Wizard Đăng ký Tác quyền:**
+     - Bổ sung các ô hiển thị: *Mã số sinh viên (MSSV), Khoa đào tạo HCE, Lớp sinh hoạt, Tình trạng học thuật*.
+     - Chế độ chỉ đọc (`readonly`) và phong cách giao diện xác thực: Khi sinh viên đăng nhập hoặc bấm `[⚡ Đồng bộ từ Tài khoản]`, toàn bộ thông tin sinh viên được điền tự động chính xác 100% từ hồ sơ đã xác minh OTP, ngăn chặn việc sinh viên tự ý gõ mạo danh MSSV của người khác.
+     - Tự động đồng bộ ngầm khi sinh viên chuyển từ Bước 1 sang Bước 2.
+  3. **Cơ chế Kiểm soát Liêm chính Học thuật & Chế tài On-Chain (Academic Slashing Gatekeeper):**
+     - Xây dựng hàm kiểm toán `checkAcademicIntegrityStatus(user)` đối soát chéo trên 3 nguồn dữ liệu thời gian thực:
+       + Trạng thái cờ tài khoản trong `copychain_users` (`status === 'SUSPENDED'` hoặc `isRevoked`).
+       + Danh bạ Chứng chỉ Khóa học bị thu hồi trong `copychain_certificates` (`isRevoked === true`).
+       + Danh mục Tác phẩm bị thu hồi do đạo văn trong `copychain_works` (`status === 'REVOKED'`).
+     - Bổ sung Banner cảnh báo đỏ `#academicRevocationAlertBanner` nổi bật ở đầu trang Đăng ký khi tài khoản sinh viên nằm trong danh sách đen/chế tài kỷ luật.
+     - **Chặn đứng giao dịch on-chain:** Nếu sinh viên đang chịu quyết định thu hồi/kỷ luật, hệ thống lập tức khóa quyền chuyển bước (`goToWizardStep`), vô hiệu hóa nút bấm và từ chối phát lệnh giao dịch sang MetaMask trong `handleExecuteWizardRegistration()`.
+  4. **Đồng bộ Đình chỉ 2 Chiều từ Admin Console (`web/admin.html`):**
+     - Khi Admin ký thu hồi chứng chỉ (`confirmRevokeCertificate`) hoặc thu hồi tác phẩm do đạo văn (`confirmRevokeWork`):
+     - Hệ thống tự động truy tìm tài khoản sinh viên tương ứng qua MSSV/Email/Ví và cập nhật trạng thái `status: 'SUSPENDED'`, `badge: '🔴 ĐÃ BỊ THU HỒI / ĐÌNH CHỈ HỌC THUẬT'` trên cả LocalStorage và Supabase Cloud, hoàn thiện chu trình quản trị liêm chính khép kín.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Triệt tiêu Rủi ro Mạo danh & Tấn công Sybil (Sybil Identity Fraud Risk):** Việc không ràng buộc MSSV cho phép bất kỳ đối tượng bên ngoài nào cũng có thể tự tạo tài khoản rác để mint hash tác phẩm rác lên Sepolia dưới danh nghĩa "Sinh viên Đại học Kinh tế Huế". Ràng buộc MSSV duy nhất kết hợp OTP email và mã băm CCCD bảo vệ trọn vẹn thương hiệu học thuật của Nhà trường.
+- **Cơ chế Trừng phạt Liêm chính On-Chain (Academic Slashing & Integrity Enforcement):** Trong kinh tế học Web3, chế tài tước đoạt quyền lợi (Slashing) là vũ khí tối thượng để duy trì sự trung thực của mạng lưới. Khi một học viên bị thu hồi chứng chỉ hoặc phát hiện sao chép đề tài, việc tước quyền bảo chứng công trình mới trên Sepolia là biện pháp phòng ngừa rủi ro thất thoát uy tín học thuật của Nhà trường (Institutional Reputation Risk).
+- **Trách nhiệm Tài chính & Kinh tế học Phí Gas (Gas Economics & Economic Responsibility):** Mỗi giao dịch xác thực tác quyền on-chain tiêu tốn gas SepoliaETH. Việc kiểm soát trước giao dịch (Pre-flight Gatekeeper Check) giúp ngân sách mạng lưới không bị lãng phí vào các giao dịch từ các tài khoản vi phạm đã bị vô hiệu hóa tư cách học thuật.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Đăng ký tài khoản sinh viên HCE, liên thông Bước 2 và ký on-chain thành công):**
+   - *Kịch bản:* Người dùng đăng ký tài khoản mới với MSSV `23K4300099`, Lớp `K57 HTTTKT`, Khoa `Hệ thống Thông tin Kinh tế`, xác thực OTP thành công. Sau đó vào trang "Đăng ký tác phẩm".
+   - *Kết quả:* Chuyển sang Bước 2, các trường MSSV, Khoa, Lớp tự động được nạp đầy đủ và khóa ở chế độ readonly. Bước 4 hiển thị tóm tắt tác giả kèm `[MSSV: 23K4300099]`. Bước 5 ký ví MetaMask thành công lên Sepolia, lưu đầy đủ thông tin học thuật vào Sổ cái.
+2. **TC-02 (Gian lận / Trùng lặp danh tính - Cố tình đăng ký trùng MSSV đã có trên hệ thống):**
+   - *Kịch bản:* Một người dùng khác cố tình nhập lại MSSV `23K4300099` trong Form Đăng ký tài khoản mới.
+   - *Kết quả:* Hệ thống phát hiện trùng lặp trên CSDL HCE, chặn đứng quá trình gửi OTP và hiển thị cảnh báo: `"⚠️ Mã số sinh viên (MSSV) này đã được đăng ký tài khoản! Vui lòng chọn Đăng nhập."`
+3. **TC-03 (Chế tài kỷ luật / Thu hồi - Tài khoản bị thu hồi chứng chỉ/đạo văn bị khóa quyền nộp tác phẩm mới):**
+   - *Kịch bản:* Admin trong `admin.html` thực hiện thu hồi chứng chỉ khóa học hoặc thu hồi tác phẩm do đạo văn của sinh viên mang MSSV `23K4300099`. Sau đó sinh viên này đăng nhập vào `index.html` và truy cập mục "Đăng ký tác phẩm".
+   - *Kết quả:* Hệ thống lập tức kích hoạt Banner cảnh báo đỏ `⛔ TÀI KHOẢN ĐANG BỊ ĐÌNH CHỈ / TƯỚC QUYỀN HỌC THUẬT ON-CHAIN`, nêu rõ lý do và mã văn bản kỷ luật. Sinh viên bấm "Tiếp tục" hoặc "Ký On-Chain" đều bị chặn đứng hoàn toàn, không thể khởi tạo giao dịch bảo chứng mới.
+
+**Ai phát hiện:** Sinh viên Lê Huy đưa ra quan sát sắc bén về mặt quản trị rủi ro danh tính học thuật; AI thiết kế mô hình phân loại tài khoản và hoàn thiện toàn bộ tính năng kiểm soát liêm chính học thuật.
+
