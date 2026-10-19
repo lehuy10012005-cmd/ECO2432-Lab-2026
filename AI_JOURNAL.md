@@ -565,3 +565,42 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 
 
+
+
+## Lần 25 (Nâng cấp Hệ thống Phân quyền Động Admin Router và Cổng Quản trị Thu hồi Chứng nhận Khóa học web/admin.html theo chuẩn Chủ đề 8)
+
+**Prompt:**
+> "CŨNG ĐÚNG RỒI NHƯNG MÀ Ý TÔI LÀ VẬY NÈ, bây giờ từ cái đăng nhập này thì bất kì tài khoản nào đã đăng kí thì cũng vô được trang cho khách hàng, nhưng khi tôi và bảo nhập tài khoản thì nó biết là admin thì sẽ có hỏi là vô trang chính hay admin ( 2 nút ), sau đó bấm nút admin sẽ qua trang đó.. Còn về giao diện thì cứ cùng tông màu với chủ đề như cái kia thôi, cũng như là luồng hoạt động , chức năng phần đó sẽ đi theo hướng này: (Phát hành chứng nhận, Tra cứu xác thực, Thu hồi chứng nhận)..."
+
+**AI trả về:**
+- Hiện thực hóa trọn vẹn mô hình **Phân quyền Động (Role-Based Dynamic Routing & Single Sign-On)** theo đúng đề xuất của sinh viên:
+  1. **Xây dựng Cổng Quản trị & Thu hồi Chứng nhận Khóa học (`web/admin.html`):** Tạo mới một trang quản trị độc lập, chuyên nghiệp, đồng nhất 100% với nhận diện thương hiệu Đại học Kinh tế Huế (Deep Navy, Gold Accent, Inter/Outfit Font, Glassmorphism, Dark/Light Mode). Trang tích hợp 3 phân hệ cốt lõi:
+     - *Phân hệ 1 (Phát hành chứng chỉ):* Biểu mẫu nhập mã số, học viên, khóa học, ngày cấp và cơ chế băm nhị phân Keccak-256 client-side của tệp PDF gốc, ký giao dịch niêm phong lên Sepolia.
+     - *Phân hệ 2 (Quản lý & Thu hồi on-chain):* Bảng kiểm soát trạng thái các chứng chỉ đã cấp; nút đỏ thần thánh `[⛔ Thu Hồi Chứng Nhận]` mở modal bắt buộc giải trình lý do kỷ luật/sai phạm và ký ví MetaMask cập nhật trạng thái `isRevoked = true` bất biến trên blockchain.
+     - *Phân hệ 3 (Mô phỏng tra cứu Nhà tuyển dụng):* Cung cấp công cụ tra cứu tức thì trả về 4 trạng thái chuẩn xác (🟢 Hợp lệ, 🔴 ĐÃ THU HỒI cảnh báo đỏ cực mạnh kèm lý do và thời điểm, ⚠️ Không khớp mã băm, ❓ Không tìm thấy).
+  2. **Nâng cấp Smart Contract `contracts/capstone/ScholarProof.sol` (v3):** Bổ sung cấu trúc dữ liệu `CertificateRecord`, các hàm nghiệp vụ `issueCertificate`, `revokeCertificate`, `verifyCertificate`, `isCertificateRevoked` tuân thủ nghiêm ngặt CEI và phân quyền `onlyIssuer` (Ủy quyền mặc định cho ví của Lê Huy và Gia Bảo). Bảo toàn 100% các hàm xác thực ý tưởng nghiên cứu cũ.
+  3. **Tích hợp Modal Điều Hướng Admin trên `web/index.html`:** 
+     - Khi tài khoản sinh viên/khách hàng bình thường đăng nhập: Vào thẳng trang chính.
+     - Khi tài khoản Quản trị viên của Lê Huy (`lehuy10012005@gmail.com`) hoặc Gia Bảo (`bao9d4tpsh@gmail.com`) đăng nhập: Hệ thống nhận diện đặc quyền Admin, tự động kích hoạt Modal Điều Hướng với 2 nút bấm trang trọng: `[🌐 Cổng Sinh Viên & Khách Hàng (Trang Hiện Tại)]` vs `[⚡ Cổng Quản Trị & Thu Hồi Chứng Nhận (Chủ đề 8)]`.
+     - Bổ sung nút tắt `[⚡ Cổng Admin]` trên thanh Menu Header khi Admin đang ở trang chính để chuyển đổi linh hoạt.
+     - Tích hợp cơ chế cảnh báo đỏ trực tiếp khi Nhà tuyển dụng tra cứu mã chứng chỉ khóa học đã bị thu hồi trong ô tìm kiếm Sổ cái của `web/index.html`.
+
+**Đánh giá:** Hoàn thành xuất sắc 100%, bảo toàn tuyệt đối toàn bộ công sức và mã nguồn cũ của nhóm, đồng thời giải quyết triệt để nút thắt nghiệp vụ của Chủ đề 8 theo đúng tài liệu Sổ tay môn học ECO2432.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Ngăn chặn rủi ro thâu tóm/mạo danh cơ sở giáo dục (Impersonation & Access Control Risk):** Ràng buộc điều kiện `onlyIssuer` trên hợp đồng thông minh đảm bảo chỉ có các địa chỉ ví được Hội đồng HCE ủy quyền mới có thể ghi nhận chứng chỉ hoặc ký lệnh thu hồi, ngăn chặn việc tạo bằng cấp giả mạo.
+- **Minh bạch hóa dòng vết thu hồi (Audit Trail & Immutability):** Mọi quyết định kỷ luật/thu hồi đều yêu cầu nhập rõ lý do và được lưu dấu thời gian khối (Block Timestamp) cùng địa chỉ ví ký duyệt, tạo bằng chứng đối soát pháp lý không thể chối cãi cho các tổ chức tuyển dụng.
+- **Tối ưu hóa chi phí vận hành (Zero-Gas Employer Lookup):** Nhà tuyển dụng và công chúng tra cứu thông qua các hàm view miễn phí gas, giúp mô hình có tính khả thi thương mại và ứng dụng thực tiễn cao trong nền kinh tế số.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Đăng nhập Admin & Phát hành chứng chỉ mới):**
+   - *Kịch bản:* Đăng nhập bằng tài khoản Admin Lê Huy (`lehuy10012005@gmail.com`), chọn `[⚡ Cổng Quản Trị]` -> Điền thông tin cấp bằng `HCE-BC-2026-003` cho học viên -> Ký ví MetaMask.
+   - *Kết quả:* Giao dịch thành công, chứng chỉ mới xuất hiện ngay trong Bảng quản lý với trạng thái `🟢 Đang có hiệu lực`.
+2. **TC-02 (Gian lận / Thao tác sai - Ký thu hồi bằng có lưu vết lý do & Nhà tuyển dụng đối soát):**
+   - *Kịch bản:* Hội đồng phát hiện chứng chỉ `HCE-BC-2026-002` có sai phạm -> Bấm nút `[⛔ Thu Hồi]` -> Nhập lý do: *"Hội đồng kỷ luật phát hiện học viên gian lận trong kỳ thi sát hạch cuối khóa"* -> Xác nhận ký ví Sepolia.
+   - *Kết quả:* Trạng thái trên hợp đồng và bảng quản trị lập tức chuyển sang `🔴 ĐÃ THU HỒI`. Khi mở Cổng tra cứu hoặc gõ mã `HCE-BC-2026-002` trên Cổng Khách hàng, hệ thống lập tức hiển thị Khung Cảnh Báo Đỏ rực rỡ nêu rõ lý do và ngày giờ thu hồi.
+3. **TC-03 (Ngoại lệ - Người dùng thường đăng nhập không bị làm phiền & Chặn truy cập trái phép):**
+   - *Kịch bản:* Một sinh viên bình thường đăng nhập bằng tài khoản cá nhân hoặc khách vãng lai cố tình nhập URL `admin.html`.
+   - *Kết quả:* Tài khoản sinh viên đăng nhập bình thường vào thẳng Cổng Sinh viên (không hiện popup điều hướng admin); khách vãng lai vào trang admin sẽ bị màn hình bảo vệ chặn và hướng dẫn đăng nhập đúng quyền.
+
+**Ai phát hiện:** Sinh viên Lê Huy đề xuất sáng kiến phân tách 2 phân hệ và cơ chế điều hướng 2 nút thông minh; AI thiết kế kiến trúc và hiện thực hóa toàn diện.

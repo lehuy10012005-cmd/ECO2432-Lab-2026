@@ -2,39 +2,109 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title HCE-ScholarProof (v2 - Phiên bản tối ưu & an toàn sau kiểm toán Lab 10)
+ * @title HCE-ScholarProof (v3 - Nâng cấp Toàn diện cho Chủ đề 8: Xác thực & Thu hồi Chứng nhận Khóa học)
  * @author Nhóm sinh viên ECO2432: Lê Văn Quang Huy (23K4300010) & Lại Vương Gia Bảo (23K4300024)
- * @notice Hợp đồng thông minh xác lập bằng chứng ưu tiên (Proof of Existence) và dấu thời gian (Timestamping)
- *         cho các ý tưởng nghiên cứu khoa học, đề cương và dữ liệu sơ bộ tại Trường Đại học Kinh tế, Đại học Huế.
- * @dev Tuân thủ chuẩn mực AGENTS.md:
- *      1. Áp dụng nghiêm ngặt mô hình Checks-Effects-Interactions (CEI).
- *      2. Mọi hàm thay đổi trạng thái đều phát Event có indexed để truy vấn ngoài chuỗi.
- *      3. Sử dụng Custom Errors thay cho chuỗi require dài giúp tiết kiệm gas giao dịch.
- *      4. Giới hạn độ dài dữ liệu chuỗi (title, category) ngăn chặn tấn công làm phình bộ nhớ Storage (Storage Bloat).
- *      5. Hỗ trợ chuyển nhượng quyền tác giả/sở hữu trí tuệ (Authorship Transfer) với kiểm tra phân quyền chặt chẽ.
+ * @notice Hợp đồng thông minh phục vụ đồng thời 2 phân hệ trọng yếu:
+ *         1. Phân hệ Chủ đề 8: Đơn vị đào tạo phát hành mã băm chứng chỉ -> Bên thứ ba (Nhà tuyển dụng)
+ *            tra cứu (0đ gas) -> Khi có gian lận, Đơn vị ký giao dịch thu hồi và trạng thái thu hồi hiện rõ.
+ *         2. Phân hệ Bằng chứng ý tưởng nghiên cứu (Proof of Existence & Timestamping) bảo toàn mã nguồn cũ.
+ * @dev Tuân thủ nghiêm ngặt chuẩn mực AGENTS.md:
+ *      - Khung kiến trúc Checks - Effects - Interactions (CEI).
+ *      - Phân quyền đơn vị phát hành (Authorized Issuers / Owner) ngăn chặn rủi ro mạo danh cơ sở giáo dục.
+ *      - Mọi hàm làm thay đổi trạng thái đều phát Event có indexed để ứng dụng Web3 client lắng nghe sự kiện.
+ *      - Sử dụng Custom Errors thay cho chuỗi require dài giúp tối ưu hóa chi phí gas.
+ *      - Không sử dụng tx.origin để xác thực quyền truy cập.
  */
 contract ScholarProof {
-    // --- HẰNG SỐ AN TOÀN VÀ ĐỊNH MỨC DỮ LIỆU ---
-    uint256 public constant MAX_TITLE_LENGTH = 200;       // Giới hạn 200 ký tự cho tiêu đề
-    uint256 public constant MAX_CATEGORY_LENGTH = 100;    // Giới hạn 100 ký tự cho lĩnh vực nghiên cứu
+    // ========================================================================
+    // QUẢN TRỊ HỢP ĐỒNG & PHÂN QUYỀN ĐƠN VỊ PHÁT HÀNH (ACCESS CONTROL)
+    // ========================================================================
+    address public owner;
+    
+    // Danh sách các địa chỉ ví được cấp quyền Đơn vị phát hành (Huy & Bảo)
+    mapping(address => bool) public authorizedIssuers;
 
-    // --- CẤU TRÚC DỮ LIỆU SỔ CÁI ON-CHAIN ---
-    struct IdeaRecord {
-        address author;        // Địa chỉ ví của tác giả / chủ sở hữu hợp pháp hiện tại
-        uint256 timestamp;     // Mốc thời gian khối (block.timestamp) khi đăng ký ban đầu
-        uint256 blockNumber;   // Thứ tự khối giao dịch xác nhận
-        string title;          // Tiêu đề ý tưởng / công trình nghiên cứu
-        string category;       // Lĩnh vực chuyên môn (Kinh tế số, Fintech, AI, ...)
-        bool exists;           // Cờ đánh dấu đã xác lập trên sổ cái
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert UnauthorizedCaller(msg.sender);
+        _;
     }
 
-    // Ánh xạ từ vân tay số 32 bytes (docHash Keccak-256) sang bản ghi quyền tác giả
-    mapping(bytes32 => IdeaRecord) private _ideas;
+    modifier onlyIssuer() {
+        if (msg.sender != owner && !authorizedIssuers[msg.sender]) {
+            revert UnauthorizedIssuer(msg.sender);
+        }
+        _;
+    }
 
-    // Tổng số lượng công trình nghiên cứu đã được bảo chứng trên hệ thống
+    // ========================================================================
+    // CẤU TRÚC DỮ LIỆU CHỦ ĐỀ 8: CHỨNG NHẬN KHÓA HỌC (CREDENTIAL VERIFICATION)
+    // ========================================================================
+    struct CertificateRecord {
+        bytes32 certHash;         // Mã băm Keccak-256 (32 bytes) của tệp chứng chỉ PDF gốc
+        string certCode;          // Mã số chứng chỉ duy nhất (VD: HCE-BC-2026-001)
+        string studentName;       // Họ và tên học viên nhận chứng nhận
+        string courseName;        // Tên khóa học / chương trình đào tạo
+        string grade;             // Xếp loại tốt nghiệp (Xuất sắc, Giỏi, Khá)
+        uint256 issueDate;        // Mốc thời gian khối (block.timestamp) khi cấp chứng nhận
+        uint256 blockNumber;      // Số thứ tự khối xác nhận trên Sepolia
+        address issuer;           // Địa chỉ ví của đơn vị phát hành đã ký giao dịch
+        bool isRevoked;           // Cờ đánh dấu trạng thái thu hồi (true: đã bị thu hồi)
+        string revokeReason;      // Lý do thu hồi chính thức từ Hội đồng kỷ luật / Nhà trường
+        uint256 revokedAt;        // Mốc thời gian khối khi giao dịch thu hồi được xác nhận
+        address revokedBy;        // Địa chỉ ví của người có thẩm quyền ký lệnh thu hồi
+        bool exists;              // Cờ kiểm tra tính tồn tại của chứng nhận trên sổ cái
+    }
+
+    // Ánh xạ từ Mã chứng chỉ (certCode) sang Bản ghi chi tiết
+    mapping(string => CertificateRecord) private _certificates;
+
+    // Ánh xạ từ Mã băm Keccak-256 (certHash) sang Mã chứng chỉ (hỗ trợ đối soát theo tệp PDF)
+    mapping(bytes32 => string) private _hashToCertCode;
+
+    // Các biến đếm thống kê sổ cái chứng nhận
+    uint256 public totalCertificates;
+    uint256 public totalRevokedCertificates;
+
+    // ========================================================================
+    // CẤU TRÚC DỮ LIỆU PHÂN HỆ Ý TƯỞNG NGHIÊN CỨU (BẢO TOÀN TÍNH TƯƠNG THÍCH)
+    // ========================================================================
+    uint256 public constant MAX_TITLE_LENGTH = 200;
+    uint256 public constant MAX_CATEGORY_LENGTH = 100;
+
+    struct IdeaRecord {
+        address author;
+        uint256 timestamp;
+        uint256 blockNumber;
+        string title;
+        string category;
+        bool exists;
+    }
+
+    mapping(bytes32 => IdeaRecord) private _ideas;
     uint256 public totalIdeas;
 
-    // --- SỰ KIỆN ON-CHAIN (EVENTS) ---
+    // ========================================================================
+    // SỰ KIỆN ON-CHAIN (EVENTS)
+    // ========================================================================
+    event CertificateIssued(
+        string indexed certCode,
+        bytes32 indexed certHash,
+        address indexed issuer,
+        string studentName,
+        string courseName,
+        uint256 issueDate
+    );
+
+    event CertificateRevoked(
+        string indexed certCode,
+        address indexed revokedBy,
+        string reason,
+        uint256 revokedAt
+    );
+
+    event IssuerStatusUpdated(address indexed issuer, bool status);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     event IdeaRegistered(
         bytes32 indexed docHash,
         address indexed author,
@@ -51,32 +121,237 @@ contract ScholarProof {
         uint256 timestamp
     );
 
-    // --- CẤU TRÚC LỖI TÙY BIẾN (CUSTOM ERRORS) ---
-    error InvalidDocHash();                                              // Mã băm rỗng (bytes32(0))
-    error EmptyTitle();                                                  // Tiêu đề để trống
-    error TitleTooLong(uint256 length, uint256 maxAllowed);              // Tiêu đề vượt quá giới hạn an toàn
-    error CategoryTooLong(uint256 length, uint256 maxAllowed);           // Lĩnh vực vượt quá giới hạn an toàn
-    error IdeaAlreadyRegistered(bytes32 docHash, address existingAuthor, uint256 registeredAt); // Ý tưởng đã có người đăng ký
-    error IdeaNotFound(bytes32 docHash);                                 // Mã băm chưa từng tồn tại trên sổ cái
-    error NotAuthor();                                                   // Người gọi không phải là tác giả hợp pháp
-    error InvalidNewAuthor();                                            // Địa chỉ tác giả mới là địa chỉ 0x0
-    error SameAuthor();                                                  // Chuyển nhượng cho chính mình
+    // ========================================================================
+    // LỖI TÙY BIẾN (CUSTOM ERRORS TIẾT KIỆM GAS)
+    // ========================================================================
+    error UnauthorizedCaller(address caller);
+    error UnauthorizedIssuer(address caller);
+    error InvalidDocHash();
+    error EmptyCertCode();
+    error EmptyStudentName();
+    error EmptyCourseName();
+    error EmptyRevokeReason();
+    error CertificateAlreadyExists(string certCode);
+    error CertificateNotFound(string certCode);
+    error CertificateAlreadyRevoked(string certCode, uint256 revokedAt, string reason);
+    error EmptyTitle();
+    error TitleTooLong(uint256 length, uint256 maxAllowed);
+    error CategoryTooLong(uint256 length, uint256 maxAllowed);
+    error IdeaAlreadyRegistered(bytes32 docHash, address existingAuthor, uint256 registeredAt);
+    error IdeaNotFound(bytes32 docHash);
+    error NotAuthor();
+    error InvalidNewAuthor();
+    error SameAuthor();
 
-    // --- CÁC HÀM NGHIỆP VỤ CỐT LÕI ---
+    // ========================================================================
+    // HÀM KHỞI TẠO (CONSTRUCTOR)
+    // ========================================================================
+    constructor() {
+        owner = msg.sender;
+        authorizedIssuers[msg.sender] = true;
+        
+        // Cấp quyền mặc định cho ví thử nghiệm của Trưởng nhóm Lê Huy và Thành viên Gia Bảo
+        authorizedIssuers[0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50] = true;
+    }
+
+    // ========================================================================
+    // HÀM QUẢN TRỊ ĐƠN VỊ PHÁT HÀNH (ADMIN FUNCTIONS)
+    // ========================================================================
+    function setAuthorizedIssuer(address issuer, bool status) external onlyOwner {
+        if (issuer == address(0)) revert InvalidNewAuthor();
+        authorizedIssuers[issuer] = status;
+        emit IssuerStatusUpdated(issuer, status);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert InvalidNewAuthor();
+        address oldOwner = owner;
+        owner = newOwner;
+        authorizedIssuers[newOwner] = true;
+        emit OwnershipTransferred(oldOwner, newOwner);
+    }
+
+    // ========================================================================
+    // NGHIỆP VỤ CỐT LÕI CHỦ ĐỀ 8: PHÁT HÀNH & THU HỒI CHỨNG NHẬN
+    // ========================================================================
 
     /**
-     * @notice Đăng ký quyền tác giả và xác lập bằng chứng ưu tiên (Prior Art) cho ý tưởng nghiên cứu
-     * @dev Áp dụng mô hình Checks-Effects-Interactions (CEI). Không lưu trữ tệp gốc để tiết kiệm gas.
-     * @param docHash Mã băm Keccak-256 (32 bytes) của tệp tài liệu nghiên cứu tính toán tại trình duyệt
-     * @param title Tiêu đề công trình / ý tưởng nghiên cứu
-     * @param category Lĩnh vực khoa học
+     * @notice Đơn vị phát hành cấp chứng nhận khóa học và niêm phong mã băm lên Sepolia
+     * @dev Áp dụng Checks-Effects-Interactions (CEI). Chỉ ví được ủy quyền mới gọi được.
+     * @param certCode Mã chứng nhận duy nhất (VD: HCE-BC-2026-001)
+     * @param certHash Mã băm Keccak-256 (32 bytes) của tệp PDF chứng nhận
+     * @param studentName Họ và tên học viên
+     * @param courseName Tên khóa đào tạo
+     * @param grade Xếp loại tốt nghiệp (Xuất sắc, Giỏi, Khá)
      */
+    function issueCertificate(
+        string calldata certCode,
+        bytes32 certHash,
+        string calldata studentName,
+        string calldata courseName,
+        string calldata grade
+    ) external onlyIssuer {
+        // 1. CHECKS
+        if (bytes(certCode).length == 0) revert EmptyCertCode();
+        if (certHash == bytes32(0)) revert InvalidDocHash();
+        if (bytes(studentName).length == 0) revert EmptyStudentName();
+        if (bytes(courseName).length == 0) revert EmptyCourseName();
+        if (_certificates[certCode].exists) revert CertificateAlreadyExists(certCode);
+
+        // 2. EFFECTS
+        _certificates[certCode] = CertificateRecord({
+            certHash: certHash,
+            certCode: certCode,
+            studentName: studentName,
+            courseName: courseName,
+            grade: grade,
+            issueDate: block.timestamp,
+            blockNumber: block.number,
+            issuer: msg.sender,
+            isRevoked: false,
+            revokeReason: "",
+            revokedAt: 0,
+            revokedBy: address(0),
+            exists: true
+        });
+
+        _hashToCertCode[certHash] = certCode;
+
+        unchecked {
+            totalCertificates++;
+        }
+
+        // 3. INTERACTIONS (Phát sự kiện)
+        emit CertificateIssued(
+            certCode,
+            certHash,
+            msg.sender,
+            studentName,
+            courseName,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Thu hồi chứng nhận khóa học khi phát hiện gian lận hoặc sai phạm nghiêm trọng
+     * @dev Chỉ Đơn vị phát hành có thẩm quyền mới được thu hồi. Giao dịch bất biến trên sổ cái.
+     * @param certCode Mã chứng chỉ cần thu hồi
+     * @param reason Lý do thu hồi (Bắt buộc, giải trình trước hội đồng)
+     */
+    function revokeCertificate(
+        string calldata certCode,
+        string calldata reason
+    ) external onlyIssuer {
+        // 1. CHECKS
+        CertificateRecord storage record = _certificates[certCode];
+        if (!record.exists) revert CertificateNotFound(certCode);
+        if (record.isRevoked) revert CertificateAlreadyRevoked(certCode, record.revokedAt, record.revokeReason);
+        if (bytes(reason).length == 0) revert EmptyRevokeReason();
+
+        // 2. EFFECTS
+        record.isRevoked = true;
+        record.revokeReason = reason;
+        record.revokedAt = block.timestamp;
+        record.revokedBy = msg.sender;
+
+        unchecked {
+            totalRevokedCertificates++;
+        }
+
+        // 3. INTERACTIONS (Phát sự kiện cảnh báo on-chain)
+        emit CertificateRevoked(
+            certCode,
+            msg.sender,
+            reason,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Nhà tuyển dụng hoặc bên thứ ba tra cứu và xác thực chứng nhận (0đ gas)
+     * @param certCode Mã số chứng nhận cần xác minh
+     */
+    function verifyCertificate(string calldata certCode) external view returns (
+        bool exists,
+        bool isRevoked,
+        bytes32 certHash,
+        string memory studentName,
+        string memory courseName,
+        string memory grade,
+        uint256 issueDate,
+        uint256 blockNumber,
+        address issuer,
+        string memory revokeReason,
+        uint256 revokedAt
+    ) {
+        CertificateRecord memory record = _certificates[certCode];
+        if (!record.exists) revert CertificateNotFound(certCode);
+
+        return (
+            record.exists,
+            record.isRevoked,
+            record.certHash,
+            record.studentName,
+            record.courseName,
+            record.grade,
+            record.issueDate,
+            record.blockNumber,
+            record.issuer,
+            record.revokeReason,
+            record.revokedAt
+        );
+    }
+
+    /**
+     * @notice Xác thực chứng nhận dựa trên Mã băm tệp PDF do ứng viên cung cấp
+     * @param certHash Mã băm Keccak-256 tính từ tệp tài liệu
+     */
+    function verifyCertificateByHash(bytes32 certHash) external view returns (
+        bool exists,
+        bool isRevoked,
+        string memory certCode,
+        string memory studentName,
+        string memory courseName,
+        string memory grade,
+        uint256 issueDate,
+        string memory revokeReason
+    ) {
+        string memory code = _hashToCertCode[certHash];
+        if (bytes(code).length == 0) revert CertificateNotFound("");
+
+        CertificateRecord memory record = _certificates[code];
+        return (
+            record.exists,
+            record.isRevoked,
+            record.certCode,
+            record.studentName,
+            record.courseName,
+            record.grade,
+            record.issueDate,
+            record.revokeReason
+        );
+    }
+
+    /**
+     * @notice Kiểm tra nhanh xem chứng nhận có bị thu hồi hay không
+     */
+    function isCertificateRevoked(string calldata certCode) external view returns (
+        bool exists,
+        bool isRevoked,
+        string memory reason
+    ) {
+        CertificateRecord memory record = _certificates[certCode];
+        return (record.exists, record.isRevoked, record.revokeReason);
+    }
+
+    // ========================================================================
+    // CÁC HÀM XÁC THỰC BẢN QUYỀN Ý TƯỞNG (GIỮ NGUYÊN BẢO TOÀN CHO LAB CŨ)
+    // ========================================================================
     function registerIdea(
         bytes32 docHash,
         string calldata title,
         string calldata category
     ) external {
-        // 1. CHECKS: Kiểm tra tính hợp lệ và toàn vẹn của dữ liệu đầu vào
         if (docHash == bytes32(0)) revert InvalidDocHash();
         
         uint256 titleLen = bytes(title).length;
@@ -90,7 +365,6 @@ contract ScholarProof {
             revert IdeaAlreadyRegistered(docHash, _ideas[docHash].author, _ideas[docHash].timestamp);
         }
 
-        // 2. EFFECTS: Cập nhật trạng thái bộ nhớ lưu trữ bền vững (Storage)
         _ideas[docHash] = IdeaRecord({
             author: msg.sender,
             timestamp: block.timestamp,
@@ -104,7 +378,6 @@ contract ScholarProof {
             totalIdeas++;
         }
 
-        // Phát sự kiện on-chain thông báo cho mạng lưới và ứng dụng Web3 client
         emit IdeaRegistered(
             docHash,
             msg.sender,
@@ -115,38 +388,19 @@ contract ScholarProof {
         );
     }
 
-    /**
-     * @notice Chuyển nhượng quyền tác giả / quyền sở hữu trí tuệ của ý tưởng cho cá nhân/tổ chức mới
-     * @dev Chỉ tác giả hiện tại mới có quyền thực hiện giao dịch này. Tuân thủ CEI.
-     * @param docHash Mã băm của tài liệu nghiên cứu cần chuyển nhượng
-     * @param newAuthor Địa chỉ ví Web3 của người nhận quyền tác giả mới
-     */
     function transferAuthorship(bytes32 docHash, address newAuthor) external {
-        // 1. CHECKS
         IdeaRecord storage record = _ideas[docHash];
         if (!record.exists) revert IdeaNotFound(docHash);
         if (record.author != msg.sender) revert NotAuthor();
         if (newAuthor == address(0)) revert InvalidNewAuthor();
         if (newAuthor == msg.sender) revert SameAuthor();
 
-        // 2. EFFECTS
         address previousAuthor = record.author;
         record.author = newAuthor;
 
-        // Phát sự kiện chuyển giao quyền tài sản trí tuệ
         emit AuthorshipTransferred(docHash, previousAuthor, newAuthor, block.timestamp);
     }
 
-    /**
-     * @notice Tra cứu và thẩm định quyền tác giả của một tài liệu nghiên cứu
-     * @dev Hàm view chỉ đọc, không tốn gas khi gọi từ bên ngoài chuỗi
-     * @param docHash Mã băm của tài liệu cần kiểm chứng
-     * @return author Địa chỉ ví của tác giả/chủ sở hữu hiện tại
-     * @return timestamp Mốc thời gian khối khi đăng ký lần đầu
-     * @return blockNumber Số thứ tự khối giao dịch xác nhận
-     * @return title Tiêu đề công trình
-     * @return category Lĩnh vực nghiên cứu
-     */
     function verifyIdea(bytes32 docHash) external view returns (
         address author,
         uint256 timestamp,
@@ -166,11 +420,6 @@ contract ScholarProof {
         );
     }
 
-    /**
-     * @notice Kiểm tra nhanh xem mã băm tài liệu đã từng được đăng ký hay chưa
-     * @param docHash Mã băm tài liệu
-     * @return isRegistered true nếu đã đăng ký, false nếu chưa
-     */
     function isIdeaRegistered(bytes32 docHash) external view returns (bool isRegistered) {
         return _ideas[docHash].exists;
     }

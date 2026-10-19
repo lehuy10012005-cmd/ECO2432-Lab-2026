@@ -3592,6 +3592,10 @@
 
         <!-- Khi ĐÃ ĐĂNG NHẬP: Hiển thị Thẻ Hồ sơ Tác giả đã xác thực -->
         <div id="headerAuthLoggedInWrap" style="display: none; align-items: center; gap: 8px;">
+          <!-- Nút truy cập Cổng Quản Trị & Thu Hồi Chứng Nhận (Chủ đề 8) dành cho Lê Huy & Gia Bảo -->
+          <a href="admin.html" id="btnHeaderAdminPortal" style="display: none; padding: 7px 12px; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #ffffff; font-size: 12px; font-weight: 700; border-radius: var(--radius-md); text-decoration: none; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(124,58,237,0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'" title="Mở Cổng Quản Trị & Thu Hồi Chứng Nhận Khóa Học (Dành riêng cho Admin Huy & Bảo)">
+            <span>⚡</span> <span>Cổng Admin</span>
+          </a>
           <button class="btn-passport" id="btnHeaderPassport" onclick="openAuthorPassportModal()"
             title="Xem Hồ sơ tác giả (Khung chiều ngang) & Đăng xuất"
             style="padding: 7px 14px; font-weight: 700; gap: 8px; border-radius: var(--radius-md);">
@@ -5322,6 +5326,39 @@
   </div>
 
   <!-- ========================================================================
+       MODAL: ĐIỀU HƯỚNG QUẢN TRỊ VIÊN HCE (DÀNH CHO LÊ HUY & GIA BẢO)
+       ======================================================================== -->
+  <div class="popover-backdrop" id="adminRouteModalBackdrop" onclick="closeAdminRouteModal()"></div>
+  <div class="admin-route-modal" id="adminRouteModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); border: 2px solid #7c3aed; border-radius: var(--radius-lg); width: 92%; max-width: 520px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(124, 58, 237, 0.25); z-index: 9999; animation: modalFadeIn 0.25s ease-out;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <div style="font-size: 40px; margin-bottom: 8px;">👑</div>
+      <h3 style="font-size: 19px; font-weight: 800; color: #1e3a8a; margin: 0;">XÁC THỰC QUẢN TRỊ VIÊN HCE THÀNH CÔNG</h3>
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-top: 6px;">
+        Xin chào Admin <strong id="lblAdminRouteName" style="color: var(--text);">Lê Văn Quang Huy</strong>!<br>
+        Hệ thống nhận diện bạn có quyền Quản trị cấp cao. Vui lòng chọn phân hệ làm việc:
+      </p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <button type="button" onclick="chooseClientPortal()" style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; border: 2px solid var(--surface-border); background: var(--surface); color: var(--text); cursor: pointer; text-align: left; transition: all 0.2s;" onmouseover="this.style.borderColor='#0284c7'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--surface-border)'; this.style.transform='none'">
+        <span style="font-size: 28px;">🌐</span>
+        <div>
+          <strong style="font-size: 14.5px; display: block; color: var(--text);">1. Cổng Sinh Viên &amp; Khách Hàng (Trang Hiện Tại)</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Xem sổ cái, nộp đề tài, thư viện số HCE và đối soát công khai.</span>
+        </div>
+      </button>
+
+      <button type="button" onclick="chooseAdminPortal()" style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; border: 2px solid #7c3aed; background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(79,70,229,0.12)); color: var(--text); cursor: pointer; text-align: left; transition: all 0.2s; box-shadow: 0 4px 12px rgba(124,58,237,0.15);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(124,58,237,0.25)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(124,58,237,0.15)'">
+        <span style="font-size: 28px;">⚡</span>
+        <div>
+          <strong style="font-size: 14.5px; color: #7c3aed; display: block;">2. Cổng Quản Trị &amp; Thu Hồi Chứng Nhận (Chủ đề 8)</strong>
+          <span style="font-size: 12px; color: var(--text-muted);">Phát hành chứng nhận khóa học, quản lý danh mục &amp; ký thu hồi on-chain.</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
        MODAL: ĐĂNG KÝ TÀI KHOẢN TÁC GIẢ (KÈM BƯỚC XÁC THỰC MÃ OTP 6 SỐ)
        ======================================================================== -->
   <div class="popover-backdrop" id="registerModalBackdrop" onclick="closeRegisterAccountModal()"></div>
@@ -5627,6 +5664,7 @@
     const DEFAULT_COPYCHAIN_USERS = [
       {
         id: "USR-01",
+        mssv: "23K4300010",
         name: "Lê văn quang huy",
         fullName: "Lê văn quang huy",
         idCard: "046205001234",
@@ -5637,11 +5675,32 @@
         class: "Khoa HTTT Kinh tế",
         faculty: "Khoa HTTT Kinh tế",
         wallet: "0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50",
-        role: "AUTHOR",
-        roleName: "Tác Giả Đăng Ký",
-        badge: "✓ HUE VERIFIED AUTHOR",
+        role: "ADMIN",
+        roleName: "Quản Trị Viên HCE",
+        badge: "👑 HCE ADMIN",
         avatar: "LH",
-        password: "123"
+        password: "123",
+        isAdmin: true
+      },
+      {
+        id: "USR-02",
+        mssv: "23K4300024",
+        name: "Lại Vương Gia Bảo",
+        fullName: "Lại Vương Gia Bảo",
+        idCard: "046205005678",
+        email: "bao9d4tpsh@gmail.com",
+        phone: "0900000000",
+        dob: "2005-01-01",
+        address: "TP. Huế, Thừa Thiên Huế",
+        class: "Khoa HTTT Kinh tế",
+        faculty: "Khoa HTTT Kinh tế",
+        wallet: "0x6f9171b3e1081b2394602f23241bc458a2d53bf2",
+        role: "ADMIN",
+        roleName: "Quản Trị Viên HCE",
+        badge: "👑 HCE ADMIN",
+        avatar: "GB",
+        password: "123",
+        isAdmin: true
       }
     ];
 
@@ -5656,9 +5715,8 @@
               const email = (u.email || "").toLowerCase();
               const name = (u.name || "").toLowerCase();
               if (email === "huanb1784@gmail.com" || name.includes("huấn")) return false;
-              if (email === "23k4300024@hue.edu.vn" || name.includes("gia bảo")) return false;
               if (email === "22k4100055@hue.edu.vn" || name.includes("văn an")) return false;
-              if (email === "admin@copychain.edu.vn" || u.role === "ADMIN") return false;
+              if (email === "admin@copychain.edu.vn") return false;
               if (email === "23k4300010@hue.edu.vn" && parsed.some(x => (x.email || "").toLowerCase() === "lehuy10012005@gmail.com")) return false;
               return true;
             });
@@ -6137,6 +6195,40 @@
       if (backdrop) backdrop.style.display = "none";
     }
 
+    // --- CÁC HÀM ĐIỀU HƯỚNG QUẢN TRỊ VIÊN HCE (LÊ HUY & GIA BẢO) ---
+    function openAdminRouteModal(user) {
+      const modal = document.getElementById("adminRouteModal");
+      const backdrop = document.getElementById("adminRouteModalBackdrop");
+      const lblName = document.getElementById("lblAdminRouteName");
+      if (lblName && user) {
+        lblName.textContent = user.fullName || user.name || "Quản Trị Viên";
+      }
+      if (modal) modal.style.display = "block";
+      if (backdrop) backdrop.style.display = "block";
+    }
+
+    function closeAdminRouteModal() {
+      const modal = document.getElementById("adminRouteModal");
+      const backdrop = document.getElementById("adminRouteModalBackdrop");
+      if (modal) modal.style.display = "none";
+      if (backdrop) backdrop.style.display = "none";
+    }
+
+    function chooseClientPortal() {
+      closeAdminRouteModal();
+      toast("Đã vào Cổng Khách Hàng. Bạn có thể bấm nút '⚡ Cổng Admin' trên thanh menu để chuyển phân hệ bất cứ lúc nào!", "info");
+      if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
+        const nextTab = pendingNavTabAfterLogin;
+        pendingNavTabAfterLogin = null;
+        setTimeout(() => switchNavTab(nextTab), 300);
+      }
+    }
+
+    function chooseAdminPortal() {
+      closeAdminRouteModal();
+      window.location.href = "admin.html";
+    }
+
     function handleHeaderAuthClick() {
       if (currentAuthUser) {
         // Nếu đã đăng nhập, cho phép xem thông tin hoặc đăng xuất
@@ -6236,6 +6328,33 @@
           } catch (e) { }
           updateAuthUI();
           closeLoginAccountModal();
+
+          // KIỂM TRA PHÂN QUYỀN ĐIỀU HƯỚNG QUẢN TRỊ VIÊN HCE (LÊ HUY & GIA BẢO)
+          const userEmail = (matched.email || "").toLowerCase().trim();
+          const userPhone = (matched.phone || "").trim();
+          const userMssv = (matched.mssv || matched.id || "").toLowerCase().trim();
+          const isAdminUser = userEmail === "lehuy10012005@gmail.com" || 
+                              userEmail === "bao9d4tpsh@gmail.com" ||
+                              userEmail.includes("lehuy") ||
+                              userEmail.includes("bao9d4") ||
+                              userPhone === "0945638340" ||
+                              userMssv === "23k4300010" ||
+                              userMssv === "23k4300024" ||
+                              matched.role === "ADMIN" ||
+                              matched.isAdmin === true;
+
+          if (isAdminUser) {
+            matched.isAdmin = true;
+            matched.role = "ADMIN";
+            matched.roleName = "Quản Trị Viên HCE";
+            try {
+              localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(matched));
+            } catch (e) { }
+            updateAuthUI();
+            openAdminRouteModal(matched);
+            return;
+          }
+
           toast("Đăng nhập thành công! Xin chào tác giả " + (matched.fullName || matched.name), "success");
           if (typeof pendingNavTabAfterLogin !== "undefined" && pendingNavTabAfterLogin) {
             const nextTab = pendingNavTabAfterLogin;
@@ -6919,9 +7038,23 @@
         if (btn) btn.title = "Đang đăng nhập: " + displayName + " (" + (activeUser.roleName || "Tác Giả") + ") - Bấm để xem hồ sơ / đăng xuất";
         if (dashGreeting) dashGreeting.textContent = displayName;
         if (dashRole) dashRole.textContent = "✓ " + (activeUser.roleName || "Tác Giả Xác Thực");
+
+        // Cập nhật nút Cổng Admin trên Header
+        const btnAdminHeader = document.getElementById("btnHeaderAdminPortal");
+        if (btnAdminHeader) {
+          const isAdm = (activeUser.email && (activeUser.email.toLowerCase().includes("lehuy") || activeUser.email.toLowerCase().includes("bao9d4"))) ||
+                        activeUser.role === "ADMIN" ||
+                        activeUser.isAdmin === true ||
+                        (activeUser.phone && activeUser.phone === "0945638340") ||
+                        (activeUser.mssv && (activeUser.mssv.toLowerCase().includes("23k4300010") || activeUser.mssv.toLowerCase().includes("23k4300024")));
+          btnAdminHeader.style.display = isAdm ? "inline-flex" : "none";
+        }
       } else {
         if (loggedInWrap) loggedInWrap.style.display = "none";
         if (loggedOutWrap) loggedOutWrap.style.display = "flex";
+
+        const btnAdminHeader = document.getElementById("btnHeaderAdminPortal");
+        if (btnAdminHeader) btnAdminHeader.style.display = "none";
 
         if (authorLbl) authorLbl.textContent = "Khách vãng lai";
         if (formActiveLbl) formActiveLbl.textContent = "Chưa đăng nhập";
@@ -10091,10 +10224,45 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
       }
     }
 
-    // Tìm kiếm trong Sổ Cái
+    // Tìm kiếm trong Sổ Cái & Tra cứu Chứng nhận Khóa học (Chủ đề 8)
     function searchLedger() {
       const q = document.getElementById("txtLedgerSearch").value.toLowerCase().trim();
       const facSel = document.getElementById("selLedgerFacultyFilter") ? document.getElementById("selLedgerFacultyFilter").value : "ALL";
+
+      // Kiểm tra nếu Nhà tuyển dụng tra cứu Mã chứng nhận khóa học (Chủ đề 8)
+      if (q.startsWith("hce-bc-") || q.startsWith("hce-cert-")) {
+        try {
+          const certs = JSON.parse(localStorage.getItem("HCE_COURSE_CERTIFICATES_V3") || "[]");
+          const foundCert = certs.find(c => c.certCode && c.certCode.toLowerCase() === q);
+          if (foundCert) {
+            if (foundCert.isRevoked) {
+              alert(
+                `🔴 CẢNH BÁO TRA CỨU: CHỨNG NHẬN KHÓA HỌC ĐÃ BỊ THU HỒI!\n` +
+                `--------------------------------------------------\n` +
+                `Mã chứng nhận: ${foundCert.certCode}\n` +
+                `Học viên: ${foundCert.studentName}\n` +
+                `Khóa học: ${foundCert.courseName}\n` +
+                `Trạng thái: 🔴 ĐÃ HỦY HIỆU LỰC VĨNH VIỄN TRÊN SEPOLIA\n` +
+                `Thời điểm thu hồi: ${new Date(foundCert.revokedAt).toLocaleString('vi-VN')}\n\n` +
+                `LÝ DO THU HỒI CHÍNH THỨC:\n"${foundCert.revokeReason}"\n\n` +
+                `❌ Kết luận: Chứng chỉ này không còn giá trị học thuật hay pháp lý.`
+              );
+            } else {
+              alert(
+                `🟢 KẾT QUẢ TRA CỨU: CHỨNG NHẬN HỢP LỆ (AUTHENTIC)\n` +
+                `--------------------------------------------------\n` +
+                `Mã chứng nhận: ${foundCert.certCode}\n` +
+                `Học viên: ${foundCert.studentName}\n` +
+                `Khóa học: ${foundCert.courseName}\n` +
+                `Xếp loại tốt nghiệp: ${foundCert.grade}\n` +
+                `Ngày cấp chính thức: ${foundCert.issueDate}\n` +
+                `Đơn vị bảo chứng: Trường Đại học Kinh tế, Đại học Huế\n` +
+                `Mã băm on-chain: ${foundCert.certHash}`
+              );
+            }
+          }
+        } catch (e) { }
+      }
 
       const filtered = SAMPLE_RECORDS.filter(r => {
         const matchFac = (facSel === "ALL") || (r.faculty === facSel);
