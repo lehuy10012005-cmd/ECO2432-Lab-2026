@@ -756,3 +756,40 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 **Ai phát hiện:** Sinh viên Lê Huy đưa ra quan sát sắc bén về mặt quản trị rủi ro danh tính học thuật; AI thiết kế mô hình phân loại tài khoản và hoàn thiện toàn bộ tính năng kiểm soát liêm chính học thuật.
 
+## Lần 29 (Khắc phục Lỗi Tự Động Tải Lại Trang Khi Chuyển Mạng Sepolia & Bảo Toàn Biểu Mẫu Wizard Bước 5)
+
+**Prompt:**
+> "ê nói nè hiện tại phần đăng kí tác phẩm thì chạy trên máy tôi và bảo rất ngon , tuy nhiên có 1 vấn đề là: khi người khác 'đăng kí tác phẩm' và đến bước 'kí và ghi nhận' thì nó lại bị lỗi nhảy qua lại qua bước 1 của trang 'đăng kí tác phẩm' vì thế mà giao dịch không thực hiện được. hãy nói rõ cho tôi biết đây là lỗi gì trước đã"
+> *(Kèm chỉ đạo triển khai: "ừ làm đi")*
+
+**AI trả về:**
+- Khắc phục triệt để lỗi vòng lặp/reset trạng thái giao diện Wizard khi người dùng khác (máy lạ, ví lạ) thực hiện chuyển mạng sang Sepolia Testnet tại Bước 5:
+  1. **Nguyên nhân gốc rễ (Root Cause Analysis):**
+     - Tại dòng 8997–8999 của `web/index.html`, sự kiện `initialEth.on('chainChanged', () => { window.location.reload(); })` thực hiện F5 tải lại toàn bộ trang web.
+     - Trên máy của nhóm phát triển (Lê Huy & Gia Bảo), ví MetaMask đã luôn ở mạng Sepolia Testnet (`0xaa36a7`), do đó sự kiện `chainChanged` không bao giờ kích hoạt.
+     - Trên máy của người dùng khác (giảng viên, bạn bè, tester), ví MetaMask mặc định ở Ethereum Mainnet (`0x1`) hoặc mạng khác. Khi tới Bước 5 bấm *"✍️ Ký & Ghi Nhận Lên Blockchain Sepolia"*, hệ thống yêu cầu chuyển sang mạng Sepolia. Ngay khi người dùng bấm *"Switch network"*, MetaMask phát sự kiện `chainChanged`, lập tức kích hoạt `window.location.reload()`. Trang web bị F5 tải lại từ đầu, khiến biến trạng thái `currentWizardStep` bị reset về `1` và xóa sạch dữ liệu form trong RAM, làm giao dịch ký on-chain bị ngắt quãng hoàn toàn.
+  2. **Giải pháp Kỹ thuật Triệt để:**
+     - Xóa bỏ hoàn toàn lệnh `window.location.reload()` trong listener `chainChanged`.
+     - Thay thế bằng cơ chế cập nhật trạng thái mềm trong bộ nhớ (`silent in-place state update`): Khi mạng đổi sang Sepolia, hệ thống tự động ghi nhận chainId mới, hiển thị toast thông báo thành công và giữ nguyên vị trí Bước 5 cùng toàn bộ tệp đính kèm và form đã điền.
+     - Tái cấu trúc luồng khởi tạo Ethers v6 Provider trong `handleExecuteWizardRegistration()`: Đặt lệnh `await ensureMetaMaskSepolia(eth)` lên TRƯỚC lệnh khởi tạo `provider = new ethers.BrowserProvider(eth)`, đảm bảo Provider của Ethers.js nhận diện chính xác mạng Sepolia (`chainId: 11155111`), triệt tiêu lỗi `NETWORK_ERROR` do lệch chainId.
+     - Cải tiến cảnh báo số dư gas `0 SepoliaETH`: Nếu ví người dùng mới có số dư bằng 0, hệ thống hiển thị thông báo chi tiết và hướng dẫn nhận testnet ETH miễn phí tại các vòi uy tín (Google Cloud, Alchemy), đồng thời bảo toàn 100% hồ sơ tại Bước 5 để người dùng ký lại ngay sau khi nạp gas.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Chống Đứt Gãy Chuỗi Trạng Thái & Thất Thoát Dữ Liệu (State Continuity & Abort Risk):** Trong một quy trình xác lập quyền tác giả đa bước, trải nghiệm người dùng gắn liền với tính toàn vẹn của dữ liệu hồ sơ. Ép F5 tải lại trang giữa chừng khi người dùng vừa chuyển mạng vi phạm nguyên lý bảo toàn trạng thái (State Preservation), dẫn đến rủi ro đứt đoạn giao dịch và mất niềm tin vào độ ổn định của hệ thống Web3.
+- **Quản trị Rủi ro Chi phí Gas & Tính Khả Dụng On-chain (Gas Availability Risk):** Đối với các tác giả lần đầu tiếp cận Web3, rào cản lớn nhất là việc không có testnet ETH để chi trả phí gas. Cơ chế kiểm tra trước giao dịch kết hợp thông điệp hướng dẫn vòi Sepolia rõ ràng giúp ngăn chặn việc gửi các giao dịch thất bại làm nghẽn mạng và lãng phí thời gian người dùng.
+- **Đồng Bộ Hai Chiều & Toàn Vẹn Sổ Cái (Ledger Integrity & Zero Phantom Records):** Việc bắt giữ ngoại lệ người dùng từ chối chuyển mạng hoặc hủy ký (`code: 4001`) đảm bảo hệ thống không bao giờ ghi nhận bản ghi rác hoặc bản ghi ảo vào cơ sở dữ liệu Supabase khi giao dịch on-chain chưa được xác nhận bởi validator.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Chuyển mạng Sepolia tự động không reload trang & ký thành công):**
+   - *Kịch bản:* Người dùng mở MetaMask ở mạng Ethereum Mainnet, điền đầy đủ từ Bước 1 đến Bước 4, tới Bước 5 bấm *"✍️ Ký & Ghi Nhận Lên Blockchain Sepolia"*.
+   - *Kết quả:* MetaMask hiện thông báo yêu cầu chuyển sang mạng Sepolia -> Người dùng bấm "Chuyển mạng" -> Trang web **không hề bị tải lại**, Bước 5 giữ nguyên dữ liệu -> MetaMask mở tiếp popup xác nhận giao dịch ghi nhận tác quyền -> Giao dịch được xác nhận và cấp mã lưu trữ `CC-2026-XXXX` thành công.
+2. **TC-02 (Cảnh báo gas - Ví người dùng mới có số dư 0 SepoliaETH):**
+   - *Kịch bản:* Người dùng mới dùng ví mới chưa có SepoliaETH, bấm Ký tác phẩm tại Bước 5.
+   - *Kết quả:* Hệ thống thông báo rõ ràng: *"Số dư phí gas bằng 0 SepoliaETH"*, cung cấp đường dẫn nhận ETH Sepolia miễn phí. Giao diện giữ nguyên tại Bước 5, không reset về Bước 1, cho phép người dùng bấm ký lại ngay sau khi nhận gas.
+3. **TC-03 (Gian lận / Từ chối chuyển mạng hoặc hủy ký giao dịch):**
+   - *Kịch bản:* Khi MetaMask hỏi chuyển mạng Sepolia hoặc hỏi xác nhận giao dịch ký, người dùng bấm *"Từ chối"* (`Reject` - mã lỗi `4001`).
+   - *Kết quả:* Hệ thống bắt lỗi an toàn, hiển thị thông báo hủy nhẹ nhàng, khôi phục trạng thái nút bấm, giữ nguyên form tại Bước 5 và TUYỆT ĐỐI KHÔNG ghi nhận bản ghi ảo lên Sổ cái on-chain.
+
+**Ai phát hiện:** Sinh viên Lê Huy phát hiện lỗi người dùng khác bị văng về Bước 1 khi ký giao dịch; AI truy vết chính xác cơ chế sự kiện `chainChanged` của MetaMask và khắc phục triệt để.
+
+

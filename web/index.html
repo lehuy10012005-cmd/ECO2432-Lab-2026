@@ -7954,8 +7954,9 @@
 
       let provider;
       try {
-        provider = new ethers.BrowserProvider(eth);
         await ensureMetaMaskSepolia(eth);
+        // Khởi tạo BrowserProvider SAU KHI đã chuyển mạng Sepolia thành công để Ethers v6 đồng bộ đúng chainId 11155111
+        provider = new ethers.BrowserProvider(eth);
       } catch (netErr) {
         if (netErr.code === 4001) {
           toast("Bạn đã hủy chuyển sang mạng Sepolia. Giao dịch ký bản quyền bị hủy.", "warning");
@@ -8037,7 +8038,18 @@
         // 3. Kiểm tra số dư ví SepoliaETH của tác giả
         const balance = await provider.getBalance(realSignerAddress);
         if (balance === 0n) {
-          toast("Số dư ví của bạn là 0 SepoliaETH! Vui lòng nạp một ít testnet ETH để trả phí gas giao dịch.", "error");
+          toast("⚠️ Số dư ví là 0 SepoliaETH! Bạn cần một ít testnet ETH để trả phí gas giao dịch.", "error");
+          alert(
+            "⚠️ SỐ DƯ PHÍ GAS BẰNG 0 (ZERO SEPOLIAETH)\n" +
+            "--------------------------------------------------\n" +
+            "Địa chỉ ví của bạn: " + realSignerAddress + "\n" +
+            "Số dư hiện tại: 0 SepoliaETH\n\n" +
+            "Theo cơ chế đồng thuận Proof-of-Stake của Ethereum Sepolia, mọi giao dịch ghi nhận bản quyền đều cần một lượng nhỏ gas để trả thưởng cho Validator đóng gói khối.\n\n" +
+            "👉 Bạn có thể nhận ETH Sepolia hoàn toàn miễn phí tại vòi (Faucet):\n" +
+            "- Google Cloud Sepolia Faucet: cloud.google.com/application/web3/faucet/ethereum/sepolia\n" +
+            "- Alchemy Sepolia Faucet: sepoliafaucet.com\n\n" +
+            "✓ Toàn bộ hồ sơ của bạn vẫn được bảo toàn nguyên vẹn tại Bước 5. Sau khi nhận testnet ETH, vui lòng bấm Ký lại!"
+          );
           btn.disabled = false;
           btn.style.opacity = "1";
           if (loadingState) loadingState.style.display = "none";
@@ -8994,8 +9006,21 @@
             toast("Đã ngắt kết nối ví MetaMask.", "info");
           }
         });
-        initialEth.on('chainChanged', () => {
-          window.location.reload();
+        initialEth.on('chainChanged', (chainId) => {
+          console.log("MetaMask đã đổi mạng sang:", chainId);
+          // TUYỆT ĐỐI KHÔNG GỌI window.location.reload() để bảo toàn toàn bộ dữ liệu biểu mẫu và trạng thái Wizard Bước 5
+          const isSepolia = (chainId === '0xaa36a7' || chainId === 11155111 || chainId === '11155111');
+          if (isSepolia) {
+            toast("✓ Đã nhận diện mạng Ethereum Sepolia Testnet!", "success");
+          } else {
+            toast("⚠️ Lưu ý: Ví đang ở mạng khác ngoài Sepolia. Vui lòng giữ Sepolia để thực hiện giao dịch.", "warning");
+          }
+          if (typeof syncWizardStep5Wallet === "function") {
+            syncWizardStep5Wallet();
+          }
+          if (typeof updateWalletModalInfo === "function") {
+            updateWalletModalInfo();
+          }
         });
       }
 
