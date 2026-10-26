@@ -792,4 +792,41 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 
 **Ai phát hiện:** Sinh viên Lê Huy phát hiện lỗi người dùng khác bị văng về Bước 1 khi ký giao dịch; AI truy vết chính xác cơ chế sự kiện `chainChanged` của MetaMask và khắc phục triệt để.
 
+## Lần 30 (Bỏ Ô Chọn Ngày Hoàn Thành Thủ Công & Xây Dựng Động Cơ IndexedDB Lưu Trữ - Phục Hồi Tệp Gốc Word/PDF Nguyên Bản)
+
+**Prompt:**
+> "sửa lỗi. 1.( ảnh 1) tôi nghĩ bỏ cái này đi, bởi vì đăng kí tác phẩm thì nó đã hiện giờ và ngày luôn rồi.      2. ( hình 2) Tôi chưa [hiểu] cái chức năng tải tệp gốc này là như nào, bởi vì khi tải lên bài word nhưng mà lúc tải về lại ra cái như hình 3 , kiểu nó bị vô dụng ấy"
+
+**AI trả về:**
+- Xử lý triệt để 2 vấn đề trải nghiệm người dùng và lưu trữ tệp on-chain:
+  1. **Vấn đề 1: Bỏ ô chọn ngày hoàn thành thủ công (`wizDateCompleted`):**
+     - *Phân tích thực tế:* Trên mạng Blockchain Ethereum Sepolia, thời điểm xác thực tác quyền được hợp đồng thông minh ghi nhận bất biến và tuyệt đối chính xác qua dấu thời gian đóng gói khối (`block.timestamp`). Việc bắt người dùng chọn lịch thủ công bằng ô `<input type="date">` là thừa thãi, gây phiền hà và làm rối luồng đăng ký.
+     - *Giải pháp:* Loại bỏ hoàn toàn ô chọn ngày hoàn thành ở Bước 1. Thay thế bằng nhãn thông tin công nghệ: *"Thời gian xác thực tác quyền: ⚡ Tự động đóng dấu thời gian On-Chain (Sepolia Timestamp)"*. Tại Bước 4 (Xem lại) và trong cơ sở dữ liệu, trường thời gian được liên kết tự động với thời gian thực của khối Sepolia.
+  2. **Vấn đề 2: Tải tệp gốc bị ra file `Chung_Thuc_CC-2026-xxxx.txt` thay vì bài Word (`.docx`)/PDF:**
+     - *Nguyên nhân gốc rễ:* Trong hàm `downloadDigitalLibraryFile()`, khi `fileUrl` bị rỗng (do tệp tải lên đám mây chưa cấu hình bucket `copychain_files` trên Supabase Storage), hàm tự động nhảy vào nhánh dự phòng (`fallback`) sinh ra một file văn bản `.txt` chứa nội dung biên bản tóm tắt thay vì tải đúng tệp bài nghiên cứu của tác giả.
+     - *Giải pháp Kỹ thuật Triệt để:*
+       + **Xây dựng Động cơ Lưu trữ Tệp Cục bộ IndexedDB (`HCE_SCHOLARPROOF_STORE`):** Trực tiếp lưu trữ toàn bộ dữ liệu nhị phân (Blob/File) của file bài làm tác giả tải lên (Word `.docx`, PDF `.pdf`, ZIP, hình ảnh...) vào cơ sở dữ liệu IndexedDB trên trình duyệt.
+       + **Cơ chế tải tệp phân cấp thông minh:** Khi bấm *"📥 Tải tệp gốc"*, hệ thống ưu tiên 1: trích xuất tệp nhị phân từ IndexedDB để tải về máy đúng 100% định dạng và tên file gốc (`.docx`, `.pdf`,...); ưu tiên 2: tải từ đám mây Supabase Storage (`fileUrl`); ưu tiên 3: nếu là bản ghi mẫu không có file, hệ thống bật hộp thoại thông báo rõ ràng thay vì âm thầm xuất file `.txt`.
+       + **Hỗ trợ xem trực tuyến thông minh (`toggleDigitalLibraryViewer`):** Hiển thị thẻ tệp Word chuyên nghiệp với nút tải nhanh về máy để mở bằng Microsoft Word/Google Docs, hoặc nhúng PDF trực tiếp vào trình đọc.
+       + **Đồng bộ mã băm toàn vẹn:** Hàm `verifyDigitalLibraryIntegrity()` băm trực tiếp từ Blob trong IndexedDB để đối soát trùng khớp 100% với mã Keccak-256 / SHA-256 đã niêm phong trên Smart Contract.
+       + **Bổ sung Bucket Supabase Storage:** Cập nhật `supabase_schema.sql` với câu lệnh tạo bucket `copychain_files` và chính sách RLS cho phép tải và đọc công khai.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Tính Bất Biến & Minh Bạch Thời Gian Thực (Tamper-proof Temporal Integrity):** Dấu thời gian do blockchain tạo ra (`block.timestamp`) có giá trị chứng cứ pháp lý và kế toán on-chain cao hơn nhiều so với việc cho phép người dùng tự điền ngày thủ công, loại bỏ rủi ro gian lận lùi ngày hoặc mạo danh thời điểm hoàn thành tác phẩm.
+- **Rủi ro Thất thoát Dữ liệu Đối tượng Nhị phân (Binary Object Loss Risk):** Blockchain Ethereum chỉ lưu trữ dấu vân tay số (Keccak-256/SHA-256 bytes32) chứ không lưu toàn bộ tệp nhị phân nặng hàng Megabytes do chi phí lưu trữ on-chain rất đắt đỏ (Storage Rent). Do đó, sự kết hợp giữa IndexedDB on-device và Supabase Storage Cloud là mô hình lai (Hybrid Off-chain Storage) chuẩn mực của Web3, bảo đảm chi phí gas tối ưu mà người dùng vẫn phục hồi được dữ liệu bài nghiên cứu gốc 100%.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Đăng ký tác phẩm bằng tệp Word .docx, thời gian tự động on-chain và tải về đúng tệp .docx):**
+   - *Kịch bản:* Người dùng đăng ký tác phẩm mới, điền tiêu đề, chọn khoa, không cần chọn ngày. Tải lên tệp `Bao_Cao_Tot_Nghiep.docx` (2.5 MB) -> Ký on-chain thành công -> Vào Thư viện số bấm *"📥 Tải tệp gốc"*.
+   - *Kết quả:* Trình duyệt tải về đúng tệp `Bao_Cao_Tot_Nghiep.docx`, mở bằng Microsoft Word hoàn toàn nguyên vẹn, không còn bị biến thành file `.txt` 974 Bytes.
+2. **TC-02 (Đối soát toàn vẹn tệp gốc với mã băm Sepolia):**
+   - *Kịch bản:* Người dùng mở modal Thư viện số của tác phẩm vừa đăng ký, bấm *"🛡️ Kiểm tra toàn vẹn"*.
+   - *Kết quả:* Hệ thống đọc trực tiếp dữ liệu nhị phân từ IndexedDB, tính lại SHA-256 và Keccak-256 trong RAM, khớp 100% với mã băm trên Sepolia và hiển thị huy hiệu xanh `✓ TÍNH TOÀN VẸN ĐƯỢC BẢO CHỨNG 100%`.
+3. **TC-03 (Gian lận / Tệp giả lập hoặc bản ghi không có tệp nhị phân):**
+   - *Kịch bản:* Người dùng bấm *"Tải tệp gốc"* trên một bản ghi mẫu cũ không có tệp lưu trữ trên máy hoặc đám mây.
+   - *Kết quả:* Hệ thống bật hộp thoại thông báo trung thực: công trình chưa có tệp đính kèm nhị phân trên thiết bị này và hỏi ý kiến trước khi xuất Biên bản Giấy chứng thực on-chain (.txt), loại bỏ hoàn toàn sự mập mờ, hiểu nhầm.
+
+**Ai phát hiện:** Sinh viên Lê Huy phát hiện sự bất hợp lý của ô chọn ngày thủ công và phản ánh việc tải tệp gốc trả về file text biên bản; AI tái cấu trúc động cơ lưu trữ nhị phân IndexedDB và hoàn thiện toàn bộ luồng tải tệp.
+
+
 

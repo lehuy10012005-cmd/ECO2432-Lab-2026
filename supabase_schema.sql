@@ -212,3 +212,23 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated;
 
+-- =============================================================================
+-- 5. BUCKET LƯU TRỮ TỆP NGUYÊN BẢN ON-CLOUD (copychain_files)
+-- Khắc phục lỗi không tải được tệp gốc do thiếu bucket hoặc bị chặn RLS Storage
+-- =============================================================================
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('copychain_files', 'copychain_files', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "Cho phép tải tệp công khai lên copychain_files" ON storage.objects;
+DROP POLICY IF EXISTS "Cho phép đọc tệp công khai từ copychain_files" ON storage.objects;
+
+CREATE POLICY "Cho phép tải tệp công khai lên copychain_files" 
+    ON storage.objects FOR INSERT 
+    WITH CHECK (bucket_id = 'copychain_files');
+
+CREATE POLICY "Cho phép đọc tệp công khai từ copychain_files" 
+    ON storage.objects FOR SELECT 
+    USING (bucket_id = 'copychain_files');
+
+

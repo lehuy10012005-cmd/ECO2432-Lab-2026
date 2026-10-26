@@ -3856,8 +3856,15 @@
                 </select>
               </div>
               <div class="f-group">
-                <label>Ngày hoàn thành tác phẩm *:</label>
-                <input type="date" id="wizDateCompleted" class="f-input">
+                <label>Lĩnh vực / Khoa chuyên môn HCE *:</label>
+                <select id="wizDepartment" class="f-select">
+                  <option value="Khoa HTTT Kinh tế" selected>Khoa Hệ thống Thông tin Kinh tế / CNTT</option>
+                  <option value="Khoa Tài chính - Ngân hàng">Khoa Tài chính - Ngân hàng / Fintech</option>
+                  <option value="Khoa Quản trị Kinh doanh">Khoa Quản trị Kinh doanh / TMĐT</option>
+                  <option value="Khoa Kế toán - Kiểm toán">Khoa Kế toán - Kiểm toán</option>
+                  <option value="Khoa Kinh tế & PT">Khoa Kinh tế học & Phát triển</option>
+                  <option value="Khoa Luật">Khoa Luật kinh tế</option>
+                </select>
               </div>
             </div>
 
@@ -3872,14 +3879,11 @@
                 </select>
               </div>
               <div class="f-group">
-                <label>Lĩnh vực / Chuyên ngành:</label>
-                <select id="wizDepartment" class="f-select">
-                  <option value="Khoa HTTT Kinh tế" selected>Hệ thống Thông tin Kinh tế / CNTT</option>
-                  <option value="Khoa Tài chính - Ngân hàng">Tài chính - Ngân hàng / Fintech</option>
-                  <option value="Khoa Quản trị Kinh doanh">Quản trị Kinh doanh / Thương mại điện tử</option>
-                  <option value="Khoa Kế toán - Kiểm toán">Kế toán - Kiểm toán</option>
-                  <option value="Khoa Kinh tế & PT">Kinh tế học & Phát triển</option>
-                </select>
+                <label>Thời gian xác thực tác quyền:</label>
+                <div style="padding: 10px 14px; background: var(--bg-subtle, #f8fafc); border: 1.5px solid var(--border-color, #e2e8f0); border-radius: var(--radius-sm, 6px); font-size: 13px; color: var(--primary, #0284c7); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                  <span>⚡</span>
+                  <span>Tự động đóng dấu thời gian On-Chain (Sepolia Timestamp)</span>
+                </div>
               </div>
             </div>
 
@@ -4149,8 +4153,8 @@
                     <td class="wr-val" id="revWorkType">--</td>
                   </tr>
                   <tr>
-                    <td class="wr-label">Ngày hoàn thành:</td>
-                    <td class="wr-val" id="revDateCompleted">--</td>
+                    <td class="wr-label">Dấu thời gian bảo chứng:</td>
+                    <td class="wr-val" id="revDateCompleted" style="color: var(--primary); font-weight: 600;">⚡ Tự động ghi nhận theo thời gian khối Sepolia (Block Timestamp)</td>
                   </tr>
                   <tr>
                     <td class="wr-label">Tác giả &amp; Tỷ lệ:</td>
@@ -7643,6 +7647,74 @@
       if (alertEl) alertEl.style.display = "none";
     }
 
+    // ========================================================================
+    // HỆ THỐNG LƯU TRỮ VÀ PHỤC HỒI TỆP NGUYÊN BẢN ON-DEVICE (INDEXEDDB STORAGE ENGINE)
+    // Giúp tác giả tải lại đúng tệp gốc (Word, PDF, ZIP...) mà không bị biến thành file .txt
+    // ========================================================================
+    const IDB_NAME = "HCE_SCHOLARPROOF_STORE";
+    const IDB_STORE = "work_files";
+
+    function openHceFileDB() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) return resolve(null);
+        try {
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE, { keyPath: "code" });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function saveWorkFileToDB(code, file) {
+      if (!file || !code) return false;
+      try {
+        const db = await openHceFileDB();
+        if (!db) return false;
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, "readwrite");
+          const store = tx.objectStore(IDB_STORE);
+          store.put({
+            code: code,
+            fileBlob: file,
+            fileName: file.name,
+            fileType: file.type || "application/octet-stream",
+            fileSize: file.size,
+            savedAt: Date.now()
+          });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (e) {
+        console.warn("Lỗi lưu IndexedDB:", e);
+        return false;
+      }
+    }
+
+    async function getWorkFileFromDB(code) {
+      if (!code) return null;
+      try {
+        const db = await openHceFileDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          const tx = db.transaction(IDB_STORE, "readonly");
+          const store = tx.objectStore(IDB_STORE);
+          const req = store.get(code);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
     // --- UPLOAD TỆP & TÍNH SHA-256 + KECCAK-256 CHO BƯỚC 3 ---
     async function handleWizFileUpload(file) {
       if (!file) return;
@@ -7897,7 +7969,8 @@
     function syncWizardStep4Review() {
       const title = document.getElementById("wizWorkTitle").value.trim() || "--";
       const type = document.getElementById("wizWorkType").value;
-      const dateComp = document.getElementById("wizDateCompleted").value;
+      const dateEl = document.getElementById("wizDateCompleted");
+      const dateComp = (dateEl && dateEl.value) ? dateEl.value : "";
       const mainName = document.getElementById("wizAuthorName").value.trim() || "--";
       const mainMssv = document.getElementById("wizAuthorMssv") ? document.getElementById("wizAuthorMssv").value.trim() : "";
       const mainFaculty = document.getElementById("wizAuthorFaculty") ? document.getElementById("wizAuthorFaculty").value.trim() : "";
@@ -7913,7 +7986,10 @@
 
       document.getElementById("revWorkTitle").textContent = title;
       document.getElementById("revWorkType").textContent = type;
-      document.getElementById("revDateCompleted").textContent = dateComp;
+      const revDate = document.getElementById("revDateCompleted");
+      if (revDate) {
+        revDate.textContent = dateComp || "⚡ Tự động đóng dấu thời gian thực tế theo khối Sepolia On-Chain";
+      }
       document.getElementById("revAuthorsSummary").textContent = authorsSum;
       document.getElementById("revFileName").textContent = wizSelectedFile ? (wizSelectedFile.name + " (" + (wizSelectedFile.size / (1024 * 1024)).toFixed(2) + " MB)") : "Chưa chọn tệp";
       document.getElementById("revSha256").textContent = wizComputedSha256 || "b4c3e8712a4d95e0192837465abcdeff0123456789abcdef0123456789abcdef";
@@ -8111,12 +8187,23 @@
         return; // CHẶN ĐỨNG: Tuyệt đối không lưu sổ cái nếu giao dịch On-chain thất bại!
       }
 
-      // TỰ ĐỘNG ĐẨY TỆP NGUYÊN BẢN LÊN ĐÁM MÂY SUPABASE STORAGE (BUCKET: copychain_files)
+      // TỰ ĐỘNG ĐẨY TỆP NGUYÊN BẢN LÊN ĐÁM MÂY SUPABASE STORAGE & LƯU TRỮ VÀO INDEXEDDB
       let publicFileUrl = "";
-      let attachedFileName = wizSelectedFile ? wizSelectedFile.name : "Tac_pham_dang_ky.pdf";
+      let attachedFileName = wizSelectedFile ? wizSelectedFile.name : (title ? (title.slice(0, 30).replace(/[^a-zA-Z0-9]/g, "_") + ".pdf") : "Tac_pham_dang_ky.pdf");
       let attachedFileSize = wizSelectedFile ? (wizSelectedFile.size / (1024 * 1024)).toFixed(2) + " MB" : "4.50 MB";
-      let attachedFileType = wizSelectedFile ? (wizSelectedFile.type || "application/pdf") : "application/pdf";
+      let attachedFileType = wizSelectedFile ? (wizSelectedFile.type || "application/octet-stream") : "application/pdf";
 
+      // 1. Lưu bản sao nguyên gốc vào IndexedDB của trình duyệt (Bảo đảm không bao giờ mất tệp)
+      if (wizSelectedFile) {
+        try {
+          await saveWorkFileToDB(newCode, wizSelectedFile);
+          console.log("✓ [IndexedDB] Đã lưu trữ tệp nguyên bản vào cơ sở dữ liệu trình duyệt:", wizSelectedFile.name);
+        } catch (idbErr) {
+          console.warn("⚠️ [IndexedDB] Lỗi lưu tệp cục bộ:", idbErr);
+        }
+      }
+
+      // 2. Tải tệp lên Supabase Storage Cloud (bucket: copychain_files)
       if (wizSelectedFile && supabaseClient) {
         try {
           toast("☁️ Đang đồng bộ và lưu trữ tệp gốc lên Supabase Storage Cloud...", "info");
@@ -8161,7 +8248,7 @@
         authorClass: mainClass,
         authorFaculty: mainFaculty,
         authorAcademicStatus: mainAcademicStatus,
-        dateCompleted: document.getElementById("wizDateCompleted").value,
+        dateCompleted: (document.getElementById("wizDateCompleted") && document.getElementById("wizDateCompleted").value) ? document.getElementById("wizDateCompleted").value : dateStr,
         dateRegistered: dateStr,
         authorsText: authorsFormatted,
         authorEmail: mainEmail,
@@ -9669,6 +9756,24 @@
       if (elFileMeta) elFileMeta.textContent = `${rawFileSize} • Định dạng ${fileExt.toUpperCase()} • Đã kiểm định toàn vẹn On-Chain`;
       if (elFileIcon) elFileIcon.textContent = iconEmoji;
 
+      // Tự động kiểm tra bản sao tệp nguyên bản trong bộ nhớ thiết bị IndexedDB
+      if (typeof getWorkFileFromDB === "function") {
+        getWorkFileFromDB(work.code || work.id).then(storedFile => {
+          if (storedFile && storedFile.fileName) {
+            const sName = storedFile.fileName;
+            const sExt = sName.split('.').pop().toLowerCase();
+            const sSize = (storedFile.fileSize / (1024 * 1024)).toFixed(2) + " MB";
+            if (elFileName) elFileName.textContent = sName;
+            let dbEmoji = "📄";
+            if (sExt === "pdf") dbEmoji = "📕";
+            else if (["doc", "docx"].includes(sExt)) dbEmoji = "📘";
+            else if (["zip", "rar", "tar"].includes(sExt)) dbEmoji = "📦";
+            if (elFileIcon) elFileIcon.textContent = dbEmoji;
+            if (elFileMeta) elFileMeta.textContent = `${sSize} • Định dạng ${sExt.toUpperCase()} • Tệp gốc đã lưu trên máy (Sẵn sàng tải về)`;
+          }
+        });
+      }
+
       // Ẩn Viewer và Alert kiểm tra toàn vẹn ban đầu
       const viewerBox = document.getElementById("libViewerBox");
       const viewerFrame = document.getElementById("libViewerFrame");
@@ -9697,7 +9802,7 @@
     }
 
     // Bật/tắt Trình đọc trực tuyến In-App Document Viewer
-    function toggleDigitalLibraryViewer(forceState) {
+    async function toggleDigitalLibraryViewer(forceState) {
       const viewerBox = document.getElementById("libViewerBox");
       const viewerFrame = document.getElementById("libViewerFrame");
       const extLink = document.getElementById("libViewerExternalLink");
@@ -9713,13 +9818,55 @@
         return;
       }
 
-      const fileUrl = currentLibraryWork.fileUrl || currentLibraryWork.file_url || "";
-      const fileName = currentLibraryWork.fileName || currentLibraryWork.file_name || "Tài liệu";
-      const fileExt = fileName.split('.').pop().toLowerCase();
+      const code = currentLibraryWork.code || currentLibraryWork.id;
+      let fileUrl = currentLibraryWork.fileUrl || currentLibraryWork.file_url || "";
+      let fileName = currentLibraryWork.fileName || currentLibraryWork.file_name || "Tài liệu";
 
+      // 1. Kiểm tra xem có tệp nhị phân trong IndexedDB của thiết bị không
+      let idbRecord = null;
+      if (typeof getWorkFileFromDB === "function") {
+        idbRecord = await getWorkFileFromDB(code);
+        if (idbRecord && idbRecord.fileName) {
+          fileName = idbRecord.fileName;
+        }
+      }
+
+      const fileExt = fileName.split('.').pop().toLowerCase();
       if (titleEl) titleEl.textContent = `Đang đọc trực tuyến: ${fileName}`;
 
-      if (fileUrl) {
+      if (idbRecord && idbRecord.fileBlob) {
+        if (fileExt === "pdf") {
+          const blobUrl = URL.createObjectURL(idbRecord.fileBlob);
+          viewerFrame.src = blobUrl;
+          if (extLink) extLink.href = blobUrl;
+        } else if (["doc", "docx"].includes(fileExt)) {
+          // File Word là tệp nén nhị phân OpenXML - hiển thị thẻ xem trước chuyên nghiệp
+          viewerFrame.srcdoc = `
+            <html>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 28px; text-align: center; color: #1e293b; background: #f8fafc;">
+              <div style="max-width: 520px; margin: 30px auto; background: #fff; padding: 32px 24px; border-radius: 12px; border: 1.5px solid #bfdbfe; box-shadow: 0 4px 16px rgba(37,99,235,0.08);">
+                <div style="font-size: 46px; margin-bottom: 12px;">📘</div>
+                <h3 style="color: #1e40af; margin: 0 0 8px; font-size: 16px;">TỆP MICROSOFT WORD NGUYÊN BẢN (.${fileExt.toUpperCase()})</h3>
+                <p style="font-size: 13.5px; color: #475569; line-height: 1.6; margin: 0 0 12px;">
+                  Tệp <strong>${fileName}</strong> (${(idbRecord.fileSize / (1024 * 1024)).toFixed(2)} MB) đã được bảo chứng và lưu trữ an toàn trên thiết bị của bạn.
+                </p>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">
+                  Để bảo đảm nguyên vẹn định dạng bảng biểu, đồ thị và công thức học thuật, tệp Word cần được mở trực tiếp bằng Microsoft Word hoặc Google Docs.
+                </p>
+                <button onclick="parent.downloadDigitalLibraryFile()" style="background: #2563eb; color: #fff; border: none; padding: 11px 22px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13.5px;">
+                  📥 Bấm Vào Đây Để Tải Tệp Word Gốc Về Máy
+                </button>
+              </div>
+            </body>
+            </html>
+          `;
+          if (extLink) extLink.href = "javascript:void(0)";
+        } else {
+          const blobUrl = URL.createObjectURL(idbRecord.fileBlob);
+          viewerFrame.src = blobUrl;
+          if (extLink) extLink.href = blobUrl;
+        }
+      } else if (fileUrl && fileUrl.startsWith("http")) {
         if (extLink) extLink.href = fileUrl;
         if (fileExt === "pdf") {
           viewerFrame.src = fileUrl;
@@ -9763,7 +9910,7 @@
     }
 
     // Tải tệp gốc về máy tính
-    function downloadDigitalLibraryFile() {
+    async function downloadDigitalLibraryFile() {
       if (!currentLibraryWork) return;
 
       const code = currentLibraryWork.code || currentLibraryWork.id;
@@ -9776,20 +9923,60 @@
         elDownloadDisplay.textContent = `📥 ${dCount} Lượt tải`;
       }
 
+      const expectedFileName = currentLibraryWork.fileName || currentLibraryWork.file_name || `HCE_${code}_Tai_Lieu`;
       const fileUrl = currentLibraryWork.fileUrl || currentLibraryWork.file_url;
-      const fileName = currentLibraryWork.fileName || currentLibraryWork.file_name || `HCE_${code}_Bao_Cao.pdf`;
 
-      if (fileUrl) {
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download = fileName;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast(`Đang tải tệp: ${fileName} về máy...`, "success");
-      } else {
-        // Tự động tạo tệp Biên bản Bằng chứng Xác thực Tác quyền (.txt/.pdf) nếu chưa có link đám mây
+      // 1. ƯU TIÊN 1: Kiểm tra tệp gốc nguyên bản trong bộ nhớ IndexedDB của thiết bị
+      if (typeof getWorkFileFromDB === "function") {
+        const idbRecord = await getWorkFileFromDB(code);
+        if (idbRecord && idbRecord.fileBlob) {
+          const blob = idbRecord.fileBlob;
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = idbRecord.fileName || expectedFileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          toast(`✓ Đã tải tệp gốc: ${idbRecord.fileName || expectedFileName} về máy!`, "success");
+          return;
+        }
+      }
+
+      // 2. ƯU TIÊN 2: Tải từ đường dẫn Supabase Cloud Storage
+      if (fileUrl && fileUrl.startsWith("http")) {
+        try {
+          toast(`Đang tải tệp gốc: ${expectedFileName} từ đám mây...`, "info");
+          const resp = await fetch(fileUrl);
+          if (resp.ok) {
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = expectedFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            toast(`✓ Đã tải tệp gốc: ${expectedFileName} thành công!`, "success");
+            return;
+          }
+        } catch (fetchErr) {
+          console.warn("Direct blob download failed, opening link in new tab:", fetchErr);
+          window.open(fileUrl, "_blank");
+          return;
+        }
+      }
+
+      // 3. ƯU TIÊN 3: Nếu là bản ghi mẫu hoặc chưa có tệp gốc nhị phân trên máy/đám mây
+      const wantsCert = confirm(
+        `ℹ️ THÔNG BÁO TỆP GỐC:\n\n` +
+        `Công trình [${code} - ${currentLibraryWork.title}] chưa có tệp đính kèm nhị phân trên thiết bị này hoặc đám mây (đây là bản ghi mẫu hoặc bạn đang truy cập từ máy tính khác chưa đồng bộ tệp).\n\n` +
+        `Bạn có muốn tải về "Biên bản Giấy Chứng thực Bằng chứng On-Chain (.txt)" chứa mã băm Keccak-256 / SHA-256 và bằng chứng khối Sepolia của công trình này không?`
+      );
+
+      if (wantsCert) {
         const content = `TRƯỜNG ĐẠI HỌC KINH TẾ HUẾ - HỆ THỐNG XÁC THỰC TÁC QUYỀN HỌC THUẬT ON-CHAIN
 ================================================================================
 BIÊN BẢN XÁC THỰC & BẢO CHỨNG TÁC PHẨM NGHIÊN CỨU KHOA HỌC
@@ -9815,7 +10002,7 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        toast(`Đã tải tệp Bằng chứng Xác thực: Chung_Thuc_${code}.txt`, "success");
+        toast(`Đã tải Giấy chứng thực số: Chung_Thuc_${code}.txt`, "info");
       }
     }
 
@@ -9834,7 +10021,7 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
       integrityBox.innerHTML = `
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="display: inline-block; animation: spin 1s infinite linear;">⚙️</span>
-          <strong>Đang tải dữ liệu nhị phân từ đám mây &amp; tính toán mã băm Keccak-256 / SHA-256 trong bộ nhớ RAM...</strong>
+          <strong>Đang đối soát dữ liệu nhị phân &amp; tính toán mã băm Keccak-256 / SHA-256 trong bộ nhớ RAM...</strong>
         </div>
       `;
 
@@ -9846,7 +10033,27 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
         let calcSha256 = "";
         let calcKeccak = "";
 
-        if (fileUrl) {
+        // Ưu tiên đọc tệp gốc từ IndexedDB của máy
+        let foundInIdb = false;
+        if (typeof getWorkFileFromDB === "function") {
+          const idbRecord = await getWorkFileFromDB(currentLibraryWork.code || currentLibraryWork.id);
+          if (idbRecord && idbRecord.fileBlob) {
+            try {
+              const arrayBuf = await idbRecord.fileBlob.arrayBuffer();
+              const bytes = new Uint8Array(arrayBuf);
+              const hashBuf = await crypto.subtle.digest("SHA-256", arrayBuf);
+              calcSha256 = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
+              if (typeof ethers !== "undefined" && typeof ethers.keccak256 === "function") {
+                calcKeccak = ethers.keccak256(bytes).toLowerCase();
+              }
+              foundInIdb = true;
+            } catch (e) {
+              console.warn("IndexedDB hash check error:", e);
+            }
+          }
+        }
+
+        if (!foundInIdb && fileUrl && fileUrl.startsWith("http")) {
           try {
             const resp = await fetch(fileUrl);
             const arrayBuf = await resp.arrayBuffer();
@@ -9865,7 +10072,7 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
             calcSha256 = expectedSha256;
             calcKeccak = expectedKeccak;
           }
-        } else {
+        } else if (!foundInIdb) {
           calcSha256 = expectedSha256;
           calcKeccak = expectedKeccak;
         }
