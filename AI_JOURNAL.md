@@ -827,6 +827,40 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kết quả:* Hệ thống bật hộp thoại thông báo trung thực: công trình chưa có tệp đính kèm nhị phân trên thiết bị này và hỏi ý kiến trước khi xuất Biên bản Giấy chứng thực on-chain (.txt), loại bỏ hoàn toàn sự mập mờ, hiểu nhầm.
 
 **Ai phát hiện:** Sinh viên Lê Huy phát hiện sự bất hợp lý của ô chọn ngày thủ công và phản ánh việc tải tệp gốc trả về file text biên bản; AI tái cấu trúc động cơ lưu trữ nhị phân IndexedDB và hoàn thiện toàn bộ luồng tải tệp.
+## Lần 31 (Tinh Gọn Bước 1: Đưa Ô Tóm Tắt Tác Phẩm Lên Hàng Trên & Tái Cấu Trúc Toàn Diện Cơ Chế Đồng Tác Giả Tại Bước 2)
 
+**Prompt:**
+> "sửa giao diện. 1.Bỏ cái ô thời gian xác thực đi, thừa thải, thay vào đó là bỏ ô mô tả tóm tắt lên    2. Tôi chưa hiểu cái cơ chế " Đồng tác giả" ở bước 2 lắm, có thể bỏ hoặc sửa lại cho dễ hình dung ra"
 
+**AI trả về:**
+- Giải quyết toàn diện 2 yêu cầu về giao diện và nghiệp vụ phân bổ bản quyền học thuật:
+  1. **Tinh gọn giao diện Bước 1:**
+     - Xóa bỏ hoàn toàn ô thông tin "Thời gian xác thực tác quyền" bị xem là thừa thãi.
+     - Đưa ô "Mô tả tóm tắt nội dung tác phẩm" (`wizDescription`) lên hàng thứ 3 song song với dropdown "Ngôn ngữ thể hiện", tạo nên bố cục 2 cột cân xứng, gọn gàng, giảm chiều cao cuộn trang.
+  2. **Tái cấu trúc UX/UI & Kế toán On-chain cho cơ chế "Đồng tác giả" ở Bước 2:**
+     - *Nguyên nhân gây khó hiểu:* Giao diện cũ để mặc định tỷ lệ tác giả chính là 100%, khi bấm "Thêm đồng tác giả" (với 20%), tổng tỷ lệ vọt lên 120% và báo đỏ làm người dùng bối rối; các ô nhập họ tên, vai trò, % bị vỡ dòng thiếu thẩm mỹ.
+     - *Giải pháp cải tiến:*
+       + **Bổ sung Bộ chọn hình thức đề tài rõ ràng ngay đầu Bước 2:**
+         * 👤 **Tác giả cá nhân (Độc lập 100%)** [Mặc định]: Ẩn toàn bộ khối tỷ lệ % và danh sách đồng tác giả rườm rà. Sinh viên làm nghiên cứu độc lập chỉ cần kiểm tra thông tin và bấm Tiếp tục, không còn bị vướng víu hay khó hiểu.
+         * 👥 **Nhóm nghiên cứu (Có đồng tác giả)**: Dành cho đề tài nhóm từ 2 người trở lên. Bạn đang đăng nhập đóng vai trò Trưởng nhóm / Chủ nhiệm đề tài.
+       + **Tính năng Tự động chia đều 100% (Equal Split):** Khi bấm `[➕ Thêm Đồng Tác Giả]`, hệ thống tự động tính toán chia đều tỷ lệ sở hữu (ví dụ 2 người: 50% - 50%; 3 người: 34% - 33% - 33%), đảm bảo tổng tỷ lệ luôn luôn tròn 100% màu xanh `✓ 100% (Cân đối chuẩn xác)`.
+       + **Nút tiện ích `[⚖️ Tự động chia đều 100%]`:** Giúp người dùng dễ dàng cân đối lại chỉ bằng 1 cú nhấp chuột nếu lỡ tay gõ sai.
+       + **Thẻ thành viên dạng Card chuẩn Web3:** Bổ sung trường nhập **MSSV của đồng tác giả** và thiết kế thẻ thành viên dạng card gọn gàng, trực quan.
+       + **Ràng buộc đối soát ở `nextWizardStep()`:** Bắt buộc tổng tỷ lệ của nhóm phải bằng đúng 100% mới cho phép tiếp tục sang Bước 3.
 
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Cân đối số dư sổ cái và chia sẻ quyền lợi (Ledger Reconciliation & Royalty Allocation):** Trong kế toán tài sản số và hợp đồng thông minh, tổng tỷ lệ phân chia quyền sở hữu trí tuệ của một nhóm đồng tác giả bắt buộc phải bằng 100% (Reconciliation Sum = 100%). Việc tự động cân đối và kiểm toán chặt chẽ ở Bước 2 triệt tiêu nguy cơ phát sinh tranh chấp bản quyền hoặc mất cân đối tài chính khi chia sẻ doanh thu/tiền bản quyền sau này.
+- **Tối ưu hóa trải nghiệm người dùng (UX Reduction of Cognitive Load):** Tách bạch rõ giữa tác giả cá nhân và nhóm nghiên cứu giúp giảm thiểu sai sót do thao tác người dùng, hạn chế các giao dịch lỗi làm lãng phí gas.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Đăng ký tác phẩm cá nhân độc lập):**
+   - *Kịch bản:* Người dùng chọn hình thức "Tác giả cá nhân (100%)", ô đồng tác giả tự ẩn, chuyển bước mượt mà sang Bước 3 mà không cần tính toán %.
+   - *Kết quả:* Bước 4 và Smart Contract Sepolia ghi nhận tác giả chính sở hữu độc lập 100% tác quyền.
+2. **TC-02 (Happy Path - Đăng ký nhóm nghiên cứu với tính năng Tự động chia đều):**
+   - *Kịch bản:* Người dùng chọn "Nhóm nghiên cứu", bấm Thêm đồng tác giả, hệ thống tự động chia đều 50% - 50% (hoặc 34% - 33% - 33%), tổng sở hữu hiển thị màu xanh `✓ 100%`.
+   - *Kết quả:* Hồ sơ lưu đầy đủ MSSV và họ tên các bạn cùng nhóm vào Sổ cái on-chain và Giấy chứng thực bản quyền.
+3. **TC-03 (Gian lận / Lệch tỷ lệ kế toán on-chain):**
+   - *Kịch bản:* Người dùng cố tình gõ tỷ lệ của các thành viên cộng lại bằng 120% hoặc 90% (chưa tròn 100%) và bấm Tiếp tục.
+   - *Kết quả:* Hệ thống phát hiện mất cân đối, chặn lại ở Bước 2 và cảnh báo: *"Tổng tỷ lệ sở hữu hiện tại là X%, chưa bằng 100%. Vui lòng điều chỉnh hoặc bấm '⚖️ Tự động chia đều 100%' để cân đối!"*.
+
+**Ai phát hiện:** Sinh viên Lê Huy phản ánh việc ô thời gian thừa thãi và cơ chế đồng tác giả gây khó hiểu, dẫn đến tình trạng vọt lên 120%; AI tái cấu trúc toàn diện UX/UI và tích hợp thuật toán phân bổ quyền sở hữu trí tuệ tự động.

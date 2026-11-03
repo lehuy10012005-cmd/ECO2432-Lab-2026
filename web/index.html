@@ -3879,18 +3879,10 @@
                 </select>
               </div>
               <div class="f-group">
-                <label>Thời gian xác thực tác quyền:</label>
-                <div style="padding: 10px 14px; background: var(--bg-subtle, #f8fafc); border: 1.5px solid var(--border-color, #e2e8f0); border-radius: var(--radius-sm, 6px); font-size: 13px; color: var(--primary, #0284c7); font-weight: 600; display: flex; align-items: center; gap: 8px;">
-                  <span>⚡</span>
-                  <span>Tự động đóng dấu thời gian On-Chain (Sepolia Timestamp)</span>
-                </div>
+                <label>Mô tả tóm tắt nội dung tác phẩm:</label>
+                <input type="text" id="wizDescription" class="f-input"
+                  placeholder="Tóm tắt công năng, tính mới và đặc điểm sáng tạo của tác phẩm...">
               </div>
-            </div>
-
-            <div class="f-group">
-              <label>Mô tả tóm tắt nội dung tác phẩm:</label>
-              <textarea id="wizDescription" class="f-textarea" rows="3"
-                placeholder="Tóm tắt công năng, tính mới và đặc điểm sáng tạo của tác phẩm..."></textarea>
             </div>
 
             <div class="wizard-actions-row">
@@ -3906,15 +3898,37 @@
             <div style="margin-bottom: 20px;">
               <h3 style="font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">Bước 2: Tác
                 Giả &amp; Quyền Sở Hữu</h3>
-              <p style="font-size: 12.5px; color: var(--text-muted); margin: 0;">Xác định tác giả chính, đồng tác giả và
-                tỷ lệ phân chia quyền sở hữu tác phẩm</p>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin: 0;">Xác nhận danh tính tác giả và lựa chọn hình thức nghiên cứu (Cá nhân độc lập hoặc Nhóm đồng tác giả)</p>
+            </div>
+
+            <!-- BỘ CHỌN HÌNH THỨC THỰC HIỆN ĐỀ TÀI -->
+            <div style="background: var(--bg-subtle); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px;">
+              <label style="font-weight: 700; font-size: 13.5px; color: var(--text-primary); display: block; margin-bottom: 8px;">
+                Hình thức thực hiện đề tài / công trình *:
+              </label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button type="button" id="btnAuthorModeSingle" onclick="setWizardAuthorMode('single')"
+                  style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 14px; border-radius: var(--radius-sm); border: 2px solid var(--primary); background: var(--primary-subtle); color: var(--primary); font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                  <span style="font-size: 16px;">👤</span>
+                  <span>Tác giả cá nhân (Độc lập 100%)</span>
+                </button>
+                <button type="button" id="btnAuthorModeGroup" onclick="setWizardAuthorMode('group')"
+                  style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-color); background: var(--bg-surface); color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                  <span style="font-size: 16px;">👥</span>
+                  <span>Nhóm nghiên cứu (Có đồng tác giả)</span>
+                </button>
+              </div>
+              <div id="authorModeDesc" style="margin-top: 8px; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <span style="color: var(--success); font-weight: 700;">✓</span>
+                <span>Đề tài do 1 sinh viên độc lập thực hiện. Bạn sở hữu toàn bộ 100% quyền tác giả và quyền tài sản on-chain.</span>
+              </div>
             </div>
 
             <!-- Thông tin tác giả chính -->
             <div
               style="background: var(--bg-surface); border: 1.5px solid var(--primary-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <strong style="color: var(--primary); font-size: 13.5px;">👤 Tác Giả Chính / Đại Diện Đăng Ký:</strong>
+                <strong style="color: var(--primary); font-size: 13.5px;" id="lblMainAuthorTitle">👤 Thông Tin Tác Giả Độc Lập / Chủ Sở Hữu:</strong>
                 <button type="button" onclick="autofillMainAuthorWithCurrentUser()"
                   style="background: var(--primary-subtle); border: 1px solid var(--primary-border); color: var(--primary); font-size: 11px; font-weight: 700; border-radius: 4px; padding: 3px 8px; cursor: pointer;">
                   ⚡ Đồng bộ từ Tài khoản
@@ -3965,47 +3979,54 @@
                 </div>
               </div>
 
-              <div class="f-row">
-                <div class="f-group">
-                  <label>Vai trò *:</label>
+              <div class="f-row" id="rowAuthorRoleAndShare" style="grid-template-columns: 1fr;">
+                <div class="f-group" id="groupMainAuthorRole">
+                  <label>Vai trò trong đề tài *:</label>
                   <select id="wizAuthorRole" class="f-select">
                     <option value="Tác giả kiêm Chủ sở hữu" selected>Tác giả kiêm Chủ sở hữu</option>
-                    <option value="Chủ nhiệm đề tài / Trưởng nhóm sáng tạo">Chủ nhiệm đề tài / Trưởng nhóm sáng tạo
-                    </option>
+                    <option value="Chủ nhiệm đề tài / Trưởng nhóm sáng tạo">Chủ nhiệm đề tài / Trưởng nhóm sáng tạo</option>
                     <option value="Tác giả sáng tạo chính">Tác giả sáng tạo chính</option>
                   </select>
                 </div>
-                <div class="f-group">
-                  <label>Tỷ lệ quyền sở hữu (%) *:</label>
+                <div class="f-group" id="groupMainAuthorShare" style="display: none;">
+                  <label>Tỷ lệ quyền sở hữu của bạn (%) *:</label>
                   <input type="number" id="wizAuthorShare" class="f-input" min="1" max="100" value="100"
-                    onchange="calculateShareTotal()">
+                    oninput="calculateShareTotal()">
                 </div>
               </div>
             </div>
 
-            <!-- Danh sách đồng tác giả -->
-            <div style="margin-bottom: 18px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <!-- Danh sách đồng tác giả (Chỉ hiển thị khi chọn Nhóm nghiên cứu) -->
+            <div id="coAuthorsSection" style="display: none; margin-bottom: 18px; background: var(--bg-subtle); border: 1.5px dashed var(--primary-border); border-radius: var(--radius-md); padding: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div>
-                  <strong style="font-size: 13.5px; color: var(--text-primary);">👥 Danh Sách Đồng Tác Giả (Nếu
-                    có):</strong>
-                  <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">(Thêm các cộng sự cùng
-                    tham gia sáng tạo)</span>
+                  <strong style="font-size: 13.5px; color: var(--text-primary);">👥 Danh Sách Đồng Tác Giả / Thành Viên Nhóm:</strong>
+                  <span style="font-size: 11.5px; color: var(--text-muted); display: block;">Khai báo các sinh viên, cộng sự cùng tham gia thực hiện đề tài</span>
                 </div>
-                <button type="button" class="btn-cta-secondary" onclick="addCoAuthorRow()"
-                  style="padding: 5px 12px; font-size: 12px; font-weight: 700;">
-                  ➕ Thêm Đồng Tác Giả
-                </button>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="btn-cta-secondary" onclick="autoDistributeEqualShares()"
+                    style="padding: 6px 12px; font-size: 12px; font-weight: 600; background: #fff;" title="Tự động chia đều tỷ lệ cho bạn và các thành viên để tròn 100%">
+                    ⚖️ Tự động chia đều 100%
+                  </button>
+                  <button type="button" class="btn-cta-primary" onclick="addCoAuthorRow()"
+                    style="padding: 6px 14px; font-size: 12px; font-weight: 700;">
+                    ➕ Thêm Đồng Tác Giả
+                  </button>
+                </div>
               </div>
 
               <div id="coAuthorsContainer">
-                <!-- Render động -->
+                <!-- Render động các thẻ đồng tác giả -->
               </div>
 
-              <div
-                style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px;">
-                <span>Tổng tỷ lệ sở hữu:</span>
-                <strong id="lblTotalShareDisplay" style="color: var(--success); font-size: 13px;">100%</strong>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-color); font-size: 12px;">
+                <span style="color: var(--text-muted);">
+                  💡 Quy tắc Kế toán On-Chain: Tổng tỷ lệ sở hữu của cả nhóm phải tròn <strong>100%</strong>.
+                </span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span>Tổng tỷ lệ sở hữu:</span>
+                  <strong id="lblTotalShareDisplay" style="color: var(--success); font-size: 13.5px;">✓ 100% (Độc lập)</strong>
+                </div>
               </div>
             </div>
 
@@ -7428,6 +7449,30 @@
         return;
       }
 
+      if (currentWizardStep === 2) {
+        const authorName = document.getElementById("wizAuthorName") ? document.getElementById("wizAuthorName").value.trim() : "";
+        if (!authorName) {
+          toast("Vui lòng nhập họ và tên tác giả chính tại Bước 2!", "warning");
+          return;
+        }
+        if (wizAuthorMode === "group") {
+          if (wizCoAuthors.length === 0) {
+            toast("Bạn đang chọn hình thức 'Nhóm nghiên cứu', vui lòng thêm ít nhất 1 đồng tác giả hoặc chuyển về 'Tác giả cá nhân'!", "warning");
+            return;
+          }
+          const emptyCo = wizCoAuthors.find(c => !c.name || !c.name.trim());
+          if (emptyCo) {
+            toast("Vui lòng nhập đầy đủ họ tên cho tất cả đồng tác giả trong nhóm!", "warning");
+            return;
+          }
+          const total = calculateShareTotal();
+          if (total !== 100) {
+            toast(`Tổng tỷ lệ sở hữu hiện tại là ${total}%. Vui lòng điều chỉnh hoặc bấm '⚖️ Tự động chia đều 100%' để cân đối!`, "error");
+            return;
+          }
+        }
+      }
+
       if (currentWizardStep === 3) {
         if (typeof isWizFileDuplicate !== "undefined" && isWizFileDuplicate) {
           toast("❌ Không thể tiếp tục! Tệp này đã trùng với file đã được chứng nhận bản quyền trước đó trên hệ thống.", "error");
@@ -7487,58 +7532,192 @@
       }
     }
 
-    // Quản lý Đồng tác giả
-    function addCoAuthorRow(name = "", role = "Đồng tác giả", share = 20) {
-      wizCoAuthors.push({ name: name, role: role, share: share });
+    // Quản lý Hình thức Tác giả & Danh sách Đồng tác giả (ECO2432 Intellectual Property Split)
+    let wizAuthorMode = "single"; // "single" (Tác giả độc lập) hoặc "group" (Nhóm nghiên cứu)
+
+    function setWizardAuthorMode(mode) {
+      wizAuthorMode = mode;
+      const btnSingle = document.getElementById("btnAuthorModeSingle");
+      const btnGroup = document.getElementById("btnAuthorModeGroup");
+      const modeDesc = document.getElementById("authorModeDesc");
+      const coSection = document.getElementById("coAuthorsSection");
+      const groupShare = document.getElementById("groupMainAuthorShare");
+      const rowRoleShare = document.getElementById("rowAuthorRoleAndShare");
+      const mainRole = document.getElementById("wizAuthorRole");
+      const mainShare = document.getElementById("wizAuthorShare");
+      const titleEl = document.getElementById("lblMainAuthorTitle");
+
+      if (mode === "single") {
+        if (btnSingle) {
+          btnSingle.style.borderColor = "var(--primary)";
+          btnSingle.style.background = "var(--primary-subtle)";
+          btnSingle.style.color = "var(--primary)";
+          btnSingle.style.fontWeight = "700";
+        }
+        if (btnGroup) {
+          btnGroup.style.borderColor = "var(--border-color)";
+          btnGroup.style.background = "var(--bg-surface)";
+          btnGroup.style.color = "var(--text-secondary)";
+          btnGroup.style.fontWeight = "600";
+        }
+        if (modeDesc) {
+          modeDesc.innerHTML = `<span style="color: var(--success); font-weight: 700;">✓</span> <span>Đề tài do 1 sinh viên độc lập thực hiện. Bạn sở hữu toàn bộ 100% quyền tác giả và quyền tài sản on-chain.</span>`;
+        }
+        if (titleEl) titleEl.textContent = "👤 Thông Tin Tác Giả Độc Lập / Chủ Sở Hữu:";
+        if (mainRole) mainRole.value = "Tác giả kiêm Chủ sở hữu";
+        if (mainShare) mainShare.value = "100";
+        if (groupShare) groupShare.style.display = "none";
+        if (rowRoleShare) rowRoleShare.style.gridTemplateColumns = "1fr";
+        if (coSection) coSection.style.display = "none";
+        wizCoAuthors = [];
+      } else {
+        if (btnGroup) {
+          btnGroup.style.borderColor = "var(--primary)";
+          btnGroup.style.background = "var(--primary-subtle)";
+          btnGroup.style.color = "var(--primary)";
+          btnGroup.style.fontWeight = "700";
+        }
+        if (btnSingle) {
+          btnSingle.style.borderColor = "var(--border-color)";
+          btnSingle.style.background = "var(--bg-surface)";
+          btnSingle.style.color = "var(--text-secondary)";
+          btnSingle.style.fontWeight = "600";
+        }
+        if (modeDesc) {
+          modeDesc.innerHTML = `<span style="color: var(--primary); font-weight: 700;">👥</span> <span>Đề tài nhóm (từ 2 người trở lên). Bạn là Trưởng nhóm / Đại diện nộp hồ sơ, kết hợp với các đồng tác giả khác.</span>`;
+        }
+        if (titleEl) titleEl.textContent = "👤 Thông Tin Trưởng Nhóm / Chủ Nhiệm Đề Tài:";
+        if (mainRole) mainRole.value = "Chủ nhiệm đề tài / Trưởng nhóm sáng tạo";
+        if (groupShare) groupShare.style.display = "block";
+        if (rowRoleShare) rowRoleShare.style.gridTemplateColumns = "1fr 1fr";
+        if (coSection) coSection.style.display = "block";
+
+        if (wizCoAuthors.length === 0) {
+          // Khởi tạo sẵn 1 đồng tác giả và chia đều 50-50 để tác giả dễ hình dung
+          wizCoAuthors.push({ name: "", mssv: "", role: "Đồng tác giả sáng tạo", share: 50 });
+          if (mainShare) mainShare.value = "50";
+        }
+        renderCoAuthorsList();
+        calculateShareTotal();
+      }
+    }
+
+    function autoDistributeEqualShares() {
+      const totalMembers = 1 + wizCoAuthors.length;
+      if (totalMembers <= 1) {
+        const mainShare = document.getElementById("wizAuthorShare");
+        if (mainShare) mainShare.value = "100";
+        calculateShareTotal();
+        return;
+      }
+
+      const equalShare = Math.floor(100 / totalMembers);
+      const remainder = 100 - (equalShare * totalMembers);
+
+      const mainShareInput = document.getElementById("wizAuthorShare");
+      if (mainShareInput) mainShareInput.value = equalShare + remainder;
+
+      wizCoAuthors.forEach(ca => {
+        ca.share = equalShare;
+      });
+
       renderCoAuthorsList();
       calculateShareTotal();
+      toast(`✓ Đã tự động chia đều tỷ lệ cho ${totalMembers} thành viên (Tổng: 100%)!`, "success");
+    }
+
+    function addCoAuthorRow(name = "", mssv = "", role = "Đồng tác giả sáng tạo") {
+      wizCoAuthors.push({ name: name, mssv: mssv, role: role, share: 0 });
+      autoDistributeEqualShares();
     }
 
     function removeCoAuthorRow(idx) {
       wizCoAuthors.splice(idx, 1);
-      renderCoAuthorsList();
-      calculateShareTotal();
+      if (wizCoAuthors.length === 0) {
+        const mainShare = document.getElementById("wizAuthorShare");
+        if (mainShare) mainShare.value = "100";
+        renderCoAuthorsList();
+        calculateShareTotal();
+      } else {
+        autoDistributeEqualShares();
+      }
     }
 
     function renderCoAuthorsList() {
       const container = document.getElementById("coAuthorsContainer");
       if (!container) return;
       if (wizCoAuthors.length === 0) {
-        container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); font-style: italic; padding: 6px 0;">Chưa có đồng tác giả. Tác giả chính sở hữu 100% quyền tác phẩm.</div>';
+        container.innerHTML = `
+          <div style="background: var(--bg-surface); border: 1px dashed var(--border-color); border-radius: 6px; padding: 14px; text-align: center; color: var(--text-muted); font-size: 12.5px;">
+            Chưa có đồng tác giả nào. Bấm <strong>[➕ Thêm Đồng Tác Giả]</strong> để thêm bạn cùng nhóm.
+          </div>
+        `;
         return;
       }
+
       container.innerHTML = wizCoAuthors.map((ca, idx) => `
-        <div class="coauthor-item">
-          <div>
-            <input type="text" class="f-input" placeholder="Họ tên đồng tác giả..." value="${ca.name}" onchange="wizCoAuthors[${idx}].name = this.value;" style="padding: 6px 10px; font-size: 12px;">
+        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="font-size: 12px; color: var(--primary);">#${idx + 1}. Đồng tác giả / Thành viên nhóm:</strong>
+            <button type="button" onclick="removeCoAuthorRow(${idx})" 
+              style="background: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; cursor: pointer;"
+              title="Xóa thành viên này">
+              ✕ Xóa
+            </button>
           </div>
-          <div>
-            <select class="f-select" onchange="wizCoAuthors[${idx}].role = this.value;" style="padding: 6px 8px; font-size: 12px;">
-              <option value="Đồng tác giả sáng tạo" ${ca.role === "Đồng tác giả sáng tạo" ? "selected" : ""}>Đồng tác giả sáng tạo</option>
-              <option value="Đồng tác giả công nghệ" ${ca.role === "Đồng tác giả công nghệ" ? "selected" : ""}>Đồng tác giả công nghệ</option>
-              <option value="Cố vấn chuyên môn" ${ca.role === "Cố vấn chuyên môn" ? "selected" : ""}>Cố vấn chuyên môn</option>
-            </select>
-          </div>
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <input type="number" class="f-input" min="1" max="100" value="${ca.share}" onchange="wizCoAuthors[${idx}].share = parseInt(this.value) || 0; calculateShareTotal();" style="padding: 6px 8px; font-size: 12px; text-align: center;">
-            <span style="font-size: 11px; color: var(--text-muted);">%</span>
-          </div>
-          <div>
-            <button type="button" onclick="removeCoAuthorRow(${idx})" style="background: none; border: none; color: var(--danger); font-size: 15px; cursor: pointer;" title="Xóa đồng tác giả">&times;</button>
+          <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.5fr 1fr; gap: 8px; align-items: flex-end;">
+            <div>
+              <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 3px;">Họ tên đồng tác giả *:</label>
+              <input type="text" class="f-input" placeholder="Ví dụ: Nguyễn Văn A..." value="${ca.name || ''}" 
+                oninput="wizCoAuthors[${idx}].name = this.value;" style="padding: 7px 10px; font-size: 12px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 3px;">MSSV (Nếu là SV HCE):</label>
+              <input type="text" class="f-input" placeholder="Ví dụ: 23K4300..." value="${ca.mssv || ''}" 
+                oninput="wizCoAuthors[${idx}].mssv = this.value;" style="padding: 7px 10px; font-size: 12px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 3px;">Vai trò sáng tạo:</label>
+              <select class="f-select" onchange="wizCoAuthors[${idx}].role = this.value;" style="padding: 7px 8px; font-size: 12px;">
+                <option value="Đồng tác giả sáng tạo" ${ca.role === "Đồng tác giả sáng tạo" ? "selected" : ""}>Đồng tác giả sáng tạo</option>
+                <option value="Đồng tác giả công nghệ" ${ca.role === "Đồng tác giả công nghệ" ? "selected" : ""}>Đồng tác giả công nghệ</option>
+                <option value="Cố vấn / Hỗ trợ" ${ca.role === "Cố vấn / Hỗ trợ" ? "selected" : ""}>Cố vấn / Hỗ trợ</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 3px;">Tỷ lệ quyền (%):</label>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" class="f-input" min="1" max="100" value="${ca.share}" 
+                  oninput="wizCoAuthors[${idx}].share = parseInt(this.value) || 0; calculateShareTotal();" 
+                  style="padding: 7px 6px; font-size: 12px; text-align: center; font-weight: 700;">
+                <span style="font-size: 11px; color: var(--text-muted); font-weight: 700;">%</span>
+              </div>
+            </div>
           </div>
         </div>
       `).join("");
     }
 
     function calculateShareTotal() {
+      if (wizAuthorMode === "single") {
+        const lbl = document.getElementById("lblTotalShareDisplay");
+        if (lbl) {
+          lbl.innerHTML = `<span style="color: var(--success); font-weight: 700;">✓ 100% (Độc lập)</span>`;
+        }
+        return 100;
+      }
       const mainShare = parseInt(document.getElementById("wizAuthorShare") ? document.getElementById("wizAuthorShare").value : 100) || 0;
       const coShareTotal = wizCoAuthors.reduce((acc, curr) => acc + (parseInt(curr.share) || 0), 0);
       const total = mainShare + coShareTotal;
       const lbl = document.getElementById("lblTotalShareDisplay");
       if (lbl) {
-        lbl.textContent = total + "%";
-        lbl.style.color = (total === 100) ? "var(--success)" : "var(--danger)";
+        if (total === 100) {
+          lbl.innerHTML = `<span style="color: var(--success); font-weight: 700;">✓ 100% (Cân đối chuẩn xác)</span>`;
+        } else {
+          lbl.innerHTML = `<span style="color: var(--danger); font-weight: 700;">⚠️ ${total}% (Chưa tròn 100%)</span>`;
+        }
       }
+      return total;
     }
 
     // Biến trạng thái kiểm tra trùng lặp bản quyền
@@ -7978,10 +8157,17 @@
 
       let mainLabel = mainName;
       if (mainMssv) mainLabel += ` [MSSV: ${mainMssv}${mainFaculty ? ' - ' + mainFaculty : ''}]`;
-      let authorsSum = mainLabel + " (" + mainShare + "%)";
-      if (wizCoAuthors.length > 0) {
-        const coList = wizCoAuthors.map(c => c.name + " (" + c.share + "%)").join(", ");
+      let authorsSum = "";
+      if (wizAuthorMode === "group" && wizCoAuthors.length > 0) {
+        authorsSum = mainLabel + " (" + mainShare + "%)";
+        const coList = wizCoAuthors.map(c => {
+          let cLbl = c.name;
+          if (c.mssv) cLbl += ` [MSSV: ${c.mssv}]`;
+          return cLbl + " (" + c.share + "%)";
+        }).join(", ");
         authorsSum += ", " + coList;
+      } else {
+        authorsSum = mainLabel + " (Tác giả độc lập 100%)";
       }
 
       document.getElementById("revWorkTitle").textContent = title;
@@ -8061,9 +8247,16 @@
 
       let mainLabel = mainName;
       if (mainMssv) mainLabel += ` [MSSV: ${mainMssv}]`;
-      let authorsFormatted = mainLabel + " (" + mainShare + "%)";
-      if (wizCoAuthors.length > 0) {
-        authorsFormatted += " & " + wizCoAuthors.map(c => c.name + " (" + c.share + "%)").join(" & ");
+      let authorsFormatted = "";
+      if (wizAuthorMode === "group" && wizCoAuthors.length > 0) {
+        authorsFormatted = mainLabel + " (" + mainShare + "%)";
+        authorsFormatted += " & " + wizCoAuthors.map(c => {
+          let cLbl = c.name;
+          if (c.mssv) cLbl += ` [MSSV: ${c.mssv}]`;
+          return cLbl + " (" + c.share + "%)";
+        }).join(" & ");
+      } else {
+        authorsFormatted = mainLabel + " (100%)";
       }
 
       const newCode = "CC-2026-" + Math.floor(1000 + Math.random() * 9000);
@@ -8435,6 +8628,7 @@
         if (aShare) aShare.value = "100";
 
         wizCoAuthors = [];
+        if (typeof setWizardAuthorMode === "function") setWizardAuthorMode("single");
         if (typeof renderCoAuthorsList === "function") renderCoAuthorsList();
         if (typeof calculateShareTotal === "function") calculateShareTotal();
 
