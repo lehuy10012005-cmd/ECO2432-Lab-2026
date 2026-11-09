@@ -1778,15 +1778,30 @@
         toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch thu hồi bản quyền lên Sepolia...", "info");
 
         // Phát sóng giao dịch thật sự lên Sepolia Blockchain
-        const payloadCalldata = ethers.hexlify(ethers.toUtf8Bytes(
-          "HCE_WORK_REVOKE:" + currentRevokingWorkCode + ":" + reason.slice(0, 36)
-        ));
+        let tx = null;
+        try {
+          const contractWrite = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, signer);
+          const revokeDocHash = ethers.keccak256(ethers.toUtf8Bytes(
+            `HCE_WORK_REVOKE:${currentRevokingWorkCode}:${Date.now()}`
+          ));
+          const revokeTitle = (`REVOKE_WORK:${currentRevokingWorkCode}:${reason}`).slice(0, 190);
+          const revokeCat = "Thu Hồi Bản Quyền Tác Phẩm";
 
-        const tx = await signer.sendTransaction({
-          to: toChecksumAddress(CONTRACT_ADDRESS),
-          value: 0n,
-          data: payloadCalldata
-        });
+          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+        } catch (contractErr) {
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            throw contractErr; // Admin chủ động hủy trên MetaMask
+          }
+          console.warn("Fallback direct transaction with calldata:", contractErr);
+          const payloadCalldata = ethers.hexlify(ethers.toUtf8Bytes(
+            "HCE_WORK_REVOKE:" + currentRevokingWorkCode + ":" + reason.slice(0, 36)
+          ));
+          tx = await signer.sendTransaction({
+            to: adminWallet, // Gửi về chính ví Admin để lưu calldata vĩnh viễn trên Sepolia mà không bị revert require(false)
+            value: 0n,
+            data: payloadCalldata
+          });
+        }
 
         toast("⏳ Giao dịch thu hồi bản quyền đang được ghi vào khối Sepolia...", "info");
         const receipt = await tx.wait(1);
@@ -2155,7 +2170,7 @@
             `HCE_CERT_ISSUE:${certCode}:${studentName}:${docHashBytes32.slice(0, 24)}`
           ));
           tx = await signer.sendTransaction({
-            to: validContractAddress,
+            to: adminWallet, // Gửi về chính ví Admin để fallback an toàn, không bị revert require(false)
             value: 0n,
             data: certPayload
           });
@@ -2401,15 +2416,30 @@
         toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch thu hồi chứng nhận lên Sepolia...", "info");
 
         // 3. Phát sóng giao dịch thật sự lên Sepolia Blockchain
-        const revokePayload = ethers.hexlify(ethers.toUtf8Bytes(
-          `HCE_CERT_REVOKE:${currentRevokingCertCode}:${reason.slice(0, 36)}`
-        ));
+        let tx = null;
+        try {
+          const contractWrite = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, signer);
+          const revokeDocHash = ethers.keccak256(ethers.toUtf8Bytes(
+            `HCE_CERT_REVOKE:${currentRevokingCertCode}:${Date.now()}`
+          ));
+          const revokeTitle = (`REVOKE_CERT:${currentRevokingCertCode}:${reason}`).slice(0, 190);
+          const revokeCat = "Thu Hồi Chứng Nhận Khóa Học";
 
-        const tx = await signer.sendTransaction({
-          to: toChecksumAddress(CONTRACT_ADDRESS),
-          value: 0n,
-          data: revokePayload
-        });
+          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+        } catch (contractErr) {
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            throw contractErr; // Admin chủ động hủy trên MetaMask
+          }
+          console.warn("Dự phòng giao dịch ghi nhận bằng chứng thu hồi trực tiếp:", contractErr);
+          const revokePayload = ethers.hexlify(ethers.toUtf8Bytes(
+            `HCE_CERT_REVOKE:${currentRevokingCertCode}:${reason.slice(0, 36)}`
+          ));
+          tx = await signer.sendTransaction({
+            to: adminWallet, // Gửi tới chính ví Admin để lưu calldata vĩnh viễn trên Sepolia mà không bị revert require(false)
+            value: 0n,
+            data: revokePayload
+          });
+        }
 
         toast("⏳ Đang ghi nhận quyết định thu hồi chứng nhận lên mạng Sepolia...", "info");
         const receipt = await tx.wait(1);
@@ -2434,6 +2464,10 @@
 
           // Cập nhật lên Supabase Cloud Database
           syncCertToSupabase(certs[idx]);
+
+          // Cập nhật giao diện bảng và thẻ thống kê ngay lập tức
+          renderCertificatesTable();
+          if (typeof updateStats === "function") updateStats();
 
           // Đồng bộ đình chỉ quyền học thuật của tài khoản sinh viên vi phạm quy chế đào tạo
           try {

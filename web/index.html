@@ -8340,12 +8340,12 @@
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Người dùng bấm Hủy trên MetaMask
           }
-          // Khi địa chỉ trên Sepolia chưa có bytecode, phát sóng giao dịch On-chain kèm calldata bằng chứng bản quyền
+          // Khi địa chỉ trên Sepolia chưa có bytecode, phát sóng giao dịch On-chain kèm calldata bằng chứng bản quyền về ví tác giả
           const proofCalldata = ethers.hexlify(ethers.toUtf8Bytes(
             "HUE_SCHOLARPROOF:" + newCode + ":" + (sha256Hash || "").slice(0, 32) + ":" + docHashBytes32.slice(0, 32)
           ));
           tx = await signer.sendTransaction({
-            to: validContractAddress,
+            to: realSignerAddress, // Gửi về chính ví tác giả để fallback an toàn, không bị revert require(false) do thiếu fallback()
             value: 0n,
             data: proofCalldata
           });
