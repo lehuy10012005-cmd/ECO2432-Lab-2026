@@ -5654,6 +5654,9 @@
 
     <!-- Body Modal -->
     <div class="lib-modal-body">
+      <!-- Cảnh báo nếu tác phẩm đã bị thu hồi do đạo văn -->
+      <div id="libRevokeAlertBox" style="display: none; background: #fef2f2; border: 1.5px solid #f87171; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; color: #991b1b; align-items: flex-start; gap: 12px;"></div>
+
       <!-- Lưới 2 cột: Bìa sách học thuật bên trái & Siêu dữ liệu bên phải -->
       <div class="lib-work-top-grid">
         <!-- Cột trái: Bìa sách học thuật HCE -->
@@ -6102,10 +6105,12 @@
           .select("*")
           .order("created_at", { ascending: false });
         if (!wErr && Array.isArray(worksData) && worksData.length > 0) {
-          let hasNew = false;
+          let hasWorksChange = false;
           worksData.forEach(row => {
+            const raw = row.raw_data || {};
+            const isRowRevoked = (row.status === 'REVOKED') || !!row.is_revoked || (raw.status === 'REVOKED') || !!raw.isRevoked || !!raw.is_revoked || (row.status_text && row.status_text.includes("THU HỒI")) || (raw.statusText && raw.statusText.includes("THU HỒI"));
             const workObj = {
-              ...(row.raw_data || {}),
+              ...raw,
               code: row.code,
               title: row.title,
               type: row.type,
@@ -6116,39 +6121,39 @@
               keccak256: row.keccak256,
               txHash: row.tx_hash,
               blockNumber: row.block_number,
-              status: row.status,
-              statusText: row.status_text,
-              isRevoked: !!row.is_revoked || (row.status === 'REVOKED'),
-              is_revoked: !!row.is_revoked || (row.status === 'REVOKED'),
-              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
-              revoke_reason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
-              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
-              revoked_at: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
-              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
-              revoked_by: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
-              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
-              revoke_tx_hash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
+              status: isRowRevoked ? "REVOKED" : (row.status || raw.status || "VERIFIED"),
+              statusText: isRowRevoked ? "ĐÃ THU HỒI DO ĐẠO VĂN" : (row.status_text || raw.statusText || "SEPOLIA ON-CHAIN"),
+              isRevoked: isRowRevoked,
+              is_revoked: isRowRevoked,
+              revokeReason: raw.revokeReason || raw.revoke_reason || row.revoke_reason || "",
+              revoke_reason: raw.revokeReason || raw.revoke_reason || row.revoke_reason || "",
+              revokedAt: raw.revokedAt || raw.revoked_at || row.revoked_at || null,
+              revoked_at: raw.revokedAt || raw.revoked_at || row.revoked_at || null,
+              revokedBy: raw.revokedBy || raw.revoked_by || row.revoked_by || null,
+              revoked_by: raw.revokedBy || raw.revoked_by || row.revoked_by || null,
+              revokeTxHash: raw.revokeTxHash || raw.revoke_tx_hash || row.revoke_tx_hash || "",
+              revoke_tx_hash: raw.revokeTxHash || raw.revoke_tx_hash || row.revoke_tx_hash || "",
               dateRegistered: row.date_registered,
-              file_url: row.file_url || (row.raw_data && row.raw_data.file_url) || "",
-              fileUrl: row.file_url || (row.raw_data && row.raw_data.fileUrl) || "",
-              file_name: row.file_name || (row.raw_data && row.raw_data.file_name) || "",
-              fileName: row.file_name || (row.raw_data && row.raw_data.fileName) || "",
-              file_size: row.file_size || (row.raw_data && row.raw_data.file_size) || "",
-              fileSize: row.file_size || (row.raw_data && row.raw_data.fileSize) || "",
-              file_type: row.file_type || (row.raw_data && row.raw_data.file_type) || "",
-              fileType: row.file_type || (row.raw_data && row.raw_data.fileType) || "",
-              view_count: row.view_count || (row.raw_data && row.raw_data.view_count) || 1,
-              download_count: row.download_count || (row.raw_data && row.raw_data.download_count) || 0
+              file_url: row.file_url || raw.file_url || raw.fileUrl || "",
+              fileUrl: row.file_url || raw.file_url || raw.fileUrl || "",
+              file_name: row.file_name || raw.file_name || raw.fileName || "",
+              fileName: row.file_name || raw.file_name || raw.fileName || "",
+              file_size: row.file_size || raw.file_size || raw.fileSize || "",
+              fileSize: row.file_size || raw.file_size || raw.fileSize || "",
+              file_type: row.file_type || raw.file_type || raw.fileType || "",
+              fileType: row.file_type || raw.file_type || raw.fileType || "",
+              view_count: row.view_count || raw.view_count || raw.viewCount || 1,
+              download_count: row.download_count || raw.download_count || raw.downloadCount || 0
             };
             const idx = COPYCHAIN_WORKS.findIndex(w => w.code === workObj.code);
             if (idx >= 0) {
               COPYCHAIN_WORKS[idx] = { ...COPYCHAIN_WORKS[idx], ...workObj };
             } else {
               COPYCHAIN_WORKS.push(workObj);
-              hasNew = true;
             }
+            hasWorksChange = true;
           });
-          if (hasNew) {
+          if (hasWorksChange) {
             localStorage.setItem("COPYCHAIN_REGISTERED_WORKS", JSON.stringify(COPYCHAIN_WORKS));
             if (typeof updateAdminWorksTable === "function") updateAdminWorksTable();
             if (typeof renderPortfolioWorks === "function") renderPortfolioWorks();
@@ -6165,11 +6170,12 @@
           .select("*")
           .order("created_at", { ascending: false });
         if (!rErr && Array.isArray(recData) && recData.length > 0) {
-          let hasNew = false;
+          let hasRecChange = false;
           recData.forEach(row => {
-            const isRowRevoked = (row.status === 'REVOKED') || !!row.is_revoked || (row.raw_data && (row.raw_data.status === 'REVOKED' || row.raw_data.isRevoked));
+            const raw = row.raw_data || {};
+            const isRowRevoked = (row.status === 'REVOKED') || !!row.is_revoked || (raw.status === 'REVOKED') || !!raw.isRevoked || !!raw.is_revoked || (row.status_text && row.status_text.includes("THU HỒI")) || (raw.statusText && raw.statusText.includes("THU HỒI"));
             const recObj = {
-              ...(row.raw_data || {}),
+              ...raw,
               code: row.code,
               title: row.title,
               date: row.date,
@@ -6185,38 +6191,38 @@
               time: row.time,
               wallet: row.wallet,
               txHash: row.tx_hash,
-              status: isRowRevoked ? "REVOKED" : (row.status || "AUTHENTICATED"),
-              statusText: isRowRevoked ? "ĐÃ THU HỒI DO ĐẠO VĂN" : (row.status_text || "Đã xác thực On-chain"),
+              status: isRowRevoked ? "REVOKED" : (row.status || raw.status || "AUTHENTICATED"),
+              statusText: isRowRevoked ? "ĐÃ THU HỒI DO ĐẠO VĂN" : (row.status_text || raw.statusText || "Đã xác thực On-chain"),
               isRevoked: isRowRevoked,
               is_revoked: isRowRevoked,
-              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || (row.raw_data && row.raw_data.revokeReason) || "",
-              revoke_reason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
-              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || (row.raw_data && row.raw_data.revokedAt) || null,
-              revoked_at: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
-              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || (row.raw_data && row.raw_data.revokedBy) || null,
-              revoked_by: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
-              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || (row.raw_data && row.raw_data.revokeTxHash) || "",
-              revoke_tx_hash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || "",
-              file_url: row.file_url || (row.raw_data && row.raw_data.file_url) || "",
-              fileUrl: row.file_url || (row.raw_data && row.raw_data.fileUrl) || "",
-              file_name: row.file_name || (row.raw_data && row.raw_data.file_name) || "",
-              fileName: row.file_name || (row.raw_data && row.raw_data.fileName) || "",
-              file_size: row.file_size || (row.raw_data && row.raw_data.file_size) || "",
-              fileSize: row.file_size || (row.raw_data && row.raw_data.fileSize) || "",
-              file_type: row.file_type || (row.raw_data && row.raw_data.file_type) || "",
-              fileType: row.file_type || (row.raw_data && row.raw_data.fileType) || "",
-              view_count: row.view_count || (row.raw_data && row.raw_data.view_count) || 1,
-              download_count: row.download_count || (row.raw_data && row.raw_data.download_count) || 0
+              revokeReason: raw.revokeReason || raw.revoke_reason || row.revoke_reason || "",
+              revoke_reason: raw.revokeReason || raw.revoke_reason || row.revoke_reason || "",
+              revokedAt: raw.revokedAt || raw.revoked_at || row.revoked_at || null,
+              revoked_at: raw.revokedAt || raw.revoked_at || row.revoked_at || null,
+              revokedBy: raw.revokedBy || raw.revoked_by || row.revoked_by || null,
+              revoked_by: raw.revokedBy || raw.revoked_by || row.revoked_by || null,
+              revokeTxHash: raw.revokeTxHash || raw.revoke_tx_hash || row.revoke_tx_hash || "",
+              revoke_tx_hash: raw.revokeTxHash || raw.revoke_tx_hash || row.revoke_tx_hash || "",
+              file_url: row.file_url || raw.file_url || raw.fileUrl || "",
+              fileUrl: row.file_url || raw.file_url || raw.fileUrl || "",
+              file_name: row.file_name || raw.file_name || raw.fileName || "",
+              fileName: row.file_name || raw.file_name || raw.fileName || "",
+              file_size: row.file_size || raw.file_size || raw.fileSize || "",
+              fileSize: row.file_size || raw.file_size || raw.fileSize || "",
+              file_type: row.file_type || raw.file_type || raw.fileType || "",
+              fileType: row.file_type || raw.file_type || raw.fileType || "",
+              view_count: row.view_count || raw.view_count || raw.viewCount || 1,
+              download_count: row.download_count || raw.download_count || raw.downloadCount || 0
             };
             const idx = SAMPLE_RECORDS.findIndex(r => r.code === recObj.code);
             if (idx >= 0) {
               SAMPLE_RECORDS[idx] = { ...SAMPLE_RECORDS[idx], ...recObj };
             } else {
               SAMPLE_RECORDS.push(recObj);
-              hasNew = true;
             }
+            hasRecChange = true;
           });
-          if (hasNew) {
+          if (hasRecChange) {
             localStorage.setItem("COPYCHAIN_REGISTERED_RECORDS", JSON.stringify(SAMPLE_RECORDS));
             if (typeof renderLedgerTable === "function") renderLedgerTable(SAMPLE_RECORDS);
             if (typeof renderLiveTicker === "function") renderLiveTicker();
@@ -6228,15 +6234,19 @@
         console.warn("⚠️ Không thể tải copychain_records từ Supabase:", e);
       }
 
-      // 4. Đồng bộ 2 chiều: Đẩy dữ liệu cục bộ lên đám mây nếu chưa có
+      // 4. Đồng bộ 2 chiều: Chỉ đồng bộ người dùng và tác phẩm MỚI/HỢP LỆ, TUYỆT ĐỐI KHÔNG ghi đè trạng thái REVOKED trên đám mây bằng bản ghi cũ từ localStorage
       if (Array.isArray(ALL_USERS)) {
         ALL_USERS.forEach(u => syncUserToSupabase(u));
       }
       if (Array.isArray(COPYCHAIN_WORKS)) {
-        COPYCHAIN_WORKS.forEach(w => syncWorkToSupabase(w));
+        COPYCHAIN_WORKS.forEach(w => {
+          if (!w.isRevoked && w.status !== "REVOKED") syncWorkToSupabase(w);
+        });
       }
       if (Array.isArray(SAMPLE_RECORDS)) {
-        SAMPLE_RECORDS.forEach(r => syncRecordToSupabase(r));
+        SAMPLE_RECORDS.forEach(r => {
+          if (!r.isRevoked && r.status !== "REVOKED") syncRecordToSupabase(r);
+        });
       }
 
       console.log("✓ Hoàn tất chu trình đồng bộ Supabase Cloud!");
@@ -9977,6 +9987,29 @@
       if (integrityBox) {
         integrityBox.style.display = "none";
         integrityBox.innerHTML = "";
+      }
+
+      // Cập nhật Cảnh báo thu hồi nếu tác phẩm đã bị tước quyền bản quyền
+      const revBox = document.getElementById("libRevokeAlertBox");
+      if (revBox) {
+        const isRev = work.isRevoked || work.is_revoked || (work.status === "REVOKED") || (work.statusText && work.statusText.includes("THU HỒI"));
+        if (isRev) {
+          revBox.style.display = "flex";
+          revBox.innerHTML = `
+            <span style="font-size: 26px; line-height: 1;">⛔</span>
+            <div style="flex: 1;">
+              <strong style="color: #dc2626; font-size: 13.5px; text-transform: uppercase;">QUYẾT ĐỊNH THU HỒI BẢN QUYỀN HỌC THUẬT (ON-CHAIN)</strong>
+              <div style="font-size: 12.5px; margin-top: 4px; color: #7f1d1d; line-height: 1.5;">
+                Công trình này đã bị Hội đồng Thẩm định HCE ký giao dịch thu hồi quyền ưu tiên tác giả trên Blockchain Sepolia do vi phạm liêm chính học thuật / đạo văn.<br>
+                <strong>Lý do thu hồi:</strong> "${work.revokeReason || work.revoke_reason || 'Vi phạm liêm chính học thuật'}"<br>
+                <strong>Thời điểm thu hồi on-chain:</strong> ${work.revokedAt || work.revoked_at ? new Date(work.revokedAt || work.revoked_at).toLocaleString('vi-VN') : 'Đã niêm phong trên Sepolia'}
+              </div>
+            </div>
+          `;
+        } else {
+          revBox.style.display = "none";
+          revBox.innerHTML = "";
+        }
       }
 
       // Hiển thị Modal & Backdrop

@@ -1560,25 +1560,29 @@
             .select("*")
             .order("created_at", { ascending: false });
           if (!error && Array.isArray(data) && data.length > 0) {
-            works = data.map(row => ({
-              code: row.code,
-              title: row.title,
-              type: row.type,
-              department: row.department,
-              authorsText: row.authors_text,
-              authorWallet: row.author_wallet,
-              dateRegistered: row.date_registered,
-              keccak256: row.keccak256,
-              sha256: row.sha256,
-              blockNumber: row.block_number,
-              status: row.status,
-              statusText: row.status_text,
-              isRevoked: !!row.is_revoked || (row.status === 'REVOKED'),
-              revokeReason: row.revoke_reason || (row.raw_data && row.raw_data.revoke_reason) || "",
-              revokedAt: row.revoked_at || (row.raw_data && row.raw_data.revoked_at) || null,
-              revokedBy: row.revoked_by || (row.raw_data && row.raw_data.revoked_by) || null,
-              revokeTxHash: row.revoke_tx_hash || (row.raw_data && row.raw_data.revoke_tx_hash) || ""
-            }));
+            works = data.map(row => {
+              const raw = row.raw_data || {};
+              const isRev = (row.status === 'REVOKED') || !!row.is_revoked || !!raw.is_revoked || !!raw.isRevoked || (row.status_text && row.status_text.includes("THU HỒI")) || (raw.statusText && raw.statusText.includes("THU HỒI"));
+              return {
+                code: row.code,
+                title: row.title,
+                type: row.type,
+                department: row.department,
+                authorsText: row.authors_text,
+                authorWallet: row.author_wallet,
+                dateRegistered: row.date_registered,
+                keccak256: row.keccak256,
+                sha256: row.sha256,
+                blockNumber: row.block_number,
+                status: isRev ? 'REVOKED' : row.status,
+                statusText: isRev ? (row.status_text || raw.statusText || 'ĐÃ THU HỒI DO ĐẠO VĂN') : (row.status_text || 'SEPOLIA ON-CHAIN'),
+                isRevoked: isRev,
+                revokeReason: raw.revokeReason || raw.revoke_reason || row.revoke_reason || "",
+                revokedAt: raw.revokedAt || raw.revoked_at || row.revoked_at || null,
+                revokedBy: raw.revokedBy || raw.revoked_by || row.revoked_by || null,
+                revokeTxHash: raw.revokeTxHash || raw.revoke_tx_hash || row.revoke_tx_hash || ""
+              };
+            });
           }
         } catch (e) {
           console.warn("Lỗi tải copychain_works:", e);
@@ -1592,14 +1596,19 @@
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed)) {
-              works = parsed.map(w => ({
-                ...w,
-                isRevoked: !!w.isRevoked || !!w.is_revoked || (w.status === 'REVOKED'),
-                revokeReason: w.revokeReason || w.revoke_reason || "",
-                revokedAt: w.revokedAt || w.revoked_at || null,
-                revokedBy: w.revokedBy || w.revoked_by || null,
-                revokeTxHash: w.revokeTxHash || w.revoke_tx_hash || ""
-              }));
+              works = parsed.map(w => {
+                const isRev = !!w.isRevoked || !!w.is_revoked || (w.status === 'REVOKED') || (w.statusText && w.statusText.includes("THU HỒI"));
+                return {
+                  ...w,
+                  status: isRev ? 'REVOKED' : (w.status || 'VERIFIED'),
+                  statusText: isRev ? (w.statusText || 'ĐÃ THU HỒI DO ĐẠO VĂN') : 'SEPOLIA ON-CHAIN',
+                  isRevoked: isRev,
+                  revokeReason: w.revokeReason || w.revoke_reason || "",
+                  revokedAt: w.revokedAt || w.revoked_at || null,
+                  revokedBy: w.revokedBy || w.revoked_by || null,
+                  revokeTxHash: w.revokeTxHash || w.revoke_tx_hash || ""
+                };
+              });
             }
           }
         } catch (e) {}
@@ -1813,23 +1822,66 @@
         const revokeTxHash = receipt.hash;
         const nowIso = new Date().toISOString();
 
+        const revokeInfo = {
+          status: "REVOKED",
+          statusText: "ĐÃ THU HỒI DO ĐẠO VĂN",
+          isRevoked: true,
+          is_revoked: true,
+          revoke_reason: reason,
+          revokeReason: reason,
+          revoked_at: nowIso,
+          revokedAt: nowIso,
+          revoked_by: adminWallet,
+          revokedBy: adminWallet,
+          revoke_tx_hash: revokeTxHash,
+          revokeTxHash: revokeTxHash
+        };
+
         // 1. Cập nhật bảng copychain_works trên Supabase Cloud
         if (supabaseClient) {
           try {
+            // Lấy raw_data hiện tại để merge an toàn
+            let oldRawWorks = {};
+            try {
+              const { data: wList } = await supabaseClient
+                .from("copychain_works")
+                .select("raw_data")
+                .eq("code", currentRevokingWorkCode);
+              if (wList && wList[0] && wList[0].raw_data) oldRawWorks = wList[0].raw_data;
+            } catch (eOld) {}
+
             await supabaseClient
               .from("copychain_works")
               .update({
                 status: "REVOKED",
                 status_text: "ĐÃ THU HỒI DO ĐẠO VĂN",
-                is_revoked: true,
-                revoke_reason: reason,
-                revoked_at: nowIso,
-                revoked_by: adminWallet,
-                revoke_tx_hash: revokeTxHash,
+                raw_data: { ...oldRawWorks, ...revokeInfo },
                 updated_at: nowIso
               })
               .eq("code", currentRevokingWorkCode);
-            console.log("✓ Supabase: Đã cập nhật trạng thái thu hồi cho tác phẩm", currentRevokingWorkCode);
+            console.log("✓ Supabase: Đã cập nhật trạng thái thu hồi cho copychain_works", currentRevokingWorkCode);
+
+            // Cập nhật ĐỒNG BỘ bảng copychain_records trên Supabase Cloud để Cổng Khách Hàng (Sổ Cái) đổi ngay
+            try {
+              let oldRawRec = {};
+              const { data: rList } = await supabaseClient
+                .from("copychain_records")
+                .select("raw_data")
+                .eq("code", currentRevokingWorkCode);
+              if (rList && rList[0] && rList[0].raw_data) oldRawRec = rList[0].raw_data;
+
+              await supabaseClient
+                .from("copychain_records")
+                .update({
+                  raw_data: { ...oldRawRec, ...revokeInfo },
+                  updated_at: nowIso
+                })
+                .eq("code", currentRevokingWorkCode);
+              console.log("✓ Supabase: Đã cập nhật trạng thái thu hồi cho copychain_records", currentRevokingWorkCode);
+            } catch (recErr) {
+              console.warn("Lỗi đồng bộ copychain_records:", recErr);
+            }
+
           } catch (supErr) {
             console.warn("Lỗi Supabase khi thu hồi tác phẩm:", supErr);
           }
@@ -1859,12 +1911,34 @@
           }
         } catch (localErr) {}
 
+        // Cập nhật LocalStorage COPYCHAIN_REGISTERED_RECORDS
+        try {
+          const rawRecs = localStorage.getItem("COPYCHAIN_REGISTERED_RECORDS");
+          if (rawRecs) {
+            const rList = JSON.parse(rawRecs);
+            const rTarget = rList.find(r => r.code === currentRevokingWorkCode);
+            if (rTarget) {
+              rTarget.status = "REVOKED";
+              rTarget.statusText = "ĐÃ THU HỒI DO ĐẠO VĂN";
+              rTarget.is_revoked = true;
+              rTarget.isRevoked = true;
+              rTarget.revokeReason = reason;
+              rTarget.revoke_reason = reason;
+              rTarget.revokedAt = nowIso;
+              rTarget.revokedBy = adminWallet;
+              rTarget.revokeTxHash = revokeTxHash;
+              localStorage.setItem("COPYCHAIN_REGISTERED_RECORDS", JSON.stringify(rList));
+            }
+          }
+        } catch (localRecErr) {}
+
         // 3. Cập nhật mảng đang hiển thị
         const targetMem = ALL_CLIENT_WORKS.find(w => w.code === currentRevokingWorkCode);
         if (targetMem) {
           targetMem.status = "REVOKED";
           targetMem.statusText = "ĐÃ THU HỒI DO ĐẠO VĂN";
           targetMem.isRevoked = true;
+          targetMem.is_revoked = true;
           targetMem.revokeReason = reason;
           targetMem.revokedAt = nowIso;
           targetMem.revokedBy = adminWallet;
@@ -2012,7 +2086,7 @@
       const targetPanel = document.getElementById(tabId);
       if (targetPanel) targetPanel.classList.add("active");
 
-      if (tabId === "tab-works-monitor" && ALL_CLIENT_WORKS.length === 0) {
+      if (tabId === "tab-works-monitor") {
         loadClientWorks();
       }
     }

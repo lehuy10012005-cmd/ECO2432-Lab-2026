@@ -900,3 +900,39 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kết quả:* Hệ thống bắt mã lỗi `4001` / `rejected`, hiển thị toast cảnh báo màu vàng: *"Bạn đã hủy ký giao dịch thu hồi trên MetaMask"*, bảo toàn trạng thái chứng nhận, không làm sai lệch sổ cái kế toán.
 
 **Ai phát hiện:** Sinh viên Lê Huy gửi ảnh chụp màn hình báo lỗi `❌ Lỗi thu hồi chứng nhận: require(false)` khi thao tác trên giao diện thực tế; AI phân tích mã bytecode máy ảo EVM, xác định lỗi thiếu fallback dispatcher và tái cấu trúc toàn diện cơ chế phát sóng giao dịch.
+
+---
+
+## Lần 33 (Khắc Phục Triệt Để Lỗi Không Đồng Bộ Trạng Thái Thu Hồi Bản Quyền Đề Tài Giữa Admin và Khách Hàng Do Lệch Cột Supabase)
+
+**Prompt:**
+> "ê cái phần thu hồi có thực hiện giao dịch rồi, nhưng trên wed vẫn chưa có dấu hiệu gì nha , thực hiện thu hồi bên admin đã dc ( nhưng vẫn còn hiện ở đó như cái ggbb đã bấm thu hồi thì phải có dấu hiệu gì chớ, chứ sao vẫn y nguyên như lúc đầu? ) cũng như giao diện 2 bên chưa đồng bộ , bên kia vẫn chưa có dấu hiệu gì về việc bị thu hồi. sửa đi" (Kèm ảnh chụp màn hình đề tài `ggbb` - `CC-2026-9373` bên Admin Tab 4 vẫn hiện nút Thu Hồi màu đỏ / On-chain xanh và bên Client `index.html` vẫn hiện nhãn `AUTHENTICATED` xanh lá).
+
+**AI trả về:**
+- **Phân tích nguyên nhân gốc rễ (Root Cause Analysis):**
+  1. *Lỗi lệch cấu trúc bảng Supabase (`copychain_works`):* Hàm `confirmRevokeWork` gửi các trường `is_revoked`, `revoke_reason`, `revoked_at` dạng top-level columns. Tuy nhiên bảng PostgreSQL trên Supabase thực tế chỉ có các cột `status`, `status_text`, `raw_data` (JSONB). API Supabase trả về lỗi ngầm `PGRST204: Could not find the 'is_revoked' column of 'copychain_works' in the schema cache`, khiến lệnh cập nhật trạng thái thu hồi bị máy chủ đám mây từ chối hoàn toàn.
+  2. *Thiếu cập nhật bảng `copychain_records`:* Giao diện Sổ cái phía khách hàng (`index.html`) tải dữ liệu từ mảng `SAMPLE_RECORDS` (liên thông với bảng `copychain_records`). Trước đây khi Admin bấm thu hồi, hàm chỉ cố cập nhật `copychain_works` mà bỏ quên `copychain_records`, khiến bên khách hàng vẫn giữ nguyên trạng thái `AUTHENTICATED`.
+  3. *Lỗi cờ kiểm tra cập nhật `hasNew`:* Trong `index.html`, vòng lặp kéo dữ liệu Supabase chỉ đánh dấu `hasNew = true` khi có bản ghi mới tinh. Khi một bản ghi cũ được cập nhật trạng thái `REVOKED`, `hasNew` vẫn mang giá trị `false`, khiến `localStorage` và hàm vẽ lại bảng `renderLedgerTable()` không được gọi. Đồng thời, bước đồng bộ 2 chiều cuối hàm còn vô tình đẩy dữ liệu cũ từ `localStorage` đè ngược lên Supabase.
+- **Giải pháp Kỹ thuật Triệt để:**
+  1. *Chuẩn hóa Payload Supabase theo đúng schema thực tế:* Đóng gói toàn bộ thông tin thu hồi (`isRevoked: true`, `is_revoked: true`, `revokeReason`, `revokedAt`, `revokedBy`, `revokeTxHash`) vào cột `raw_data` (JSONB) và cập nhật cột chuẩn `status: "REVOKED"`, `status_text: "ĐÃ THU HỒI DO ĐẠO VĂN"`. Kết quả kiểm thử thực tế trên Supabase đạt phản hồi chuẩn `200 OK`.
+  2. *Đồng bộ đồng thời cả 2 bảng `copychain_works` và `copychain_records`:* Hàm `confirmRevokeWork` cập nhật đồng bộ cả hai bảng trên đám mây và cả 2 khóa `COPYCHAIN_REGISTERED_WORKS`, `COPYCHAIN_REGISTERED_RECORDS` trong LocalStorage.
+  3. *Sửa cờ `hasRecChange` & `hasWorksChange`:* Bắt trọn vẹn mọi thay đổi trạng thái của các bản ghi hiện hữu, lưu ngay vào `localStorage` và lập tức re-render giao diện bảng Sổ cái: huy hiệu đổi sang đỏ rực `🔴 ĐÃ THU HỒI`, nút `📜 Chứng thư` tự động chuyển thành nút `⚠️ QĐ Thu hồi`.
+  4. *Tích hợp Banner cảnh báo trong Thư viện số (`libRevokeAlertBox`):* Khi bất kỳ ai bấm `📖 Chi tiết` xem công trình `ggbb`, một khung cảnh báo màu đỏ nổi bật sẽ hiện lên trên đầu modal ghi rõ: *"QUYẾT ĐỊNH THU HỒI BẢN QUYỀN HỌC THUẬT (ON-CHAIN)"* kèm lý do kỷ luật và thời điểm xác nhận trên Sepolia.
+  5. *Chặn ghi đè ngược:* Cơ chế đồng bộ client được gắn điều kiện kiểm tra: tuyệt đối không đẩy bản ghi đã thu hồi thành hợp lệ lên Supabase.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Nhất quán Sổ cái Kép (Dual-Ledger Consistency & Atomicity):** Trong quản trị dữ liệu Web3, một sự kiện thu hồi on-chain phải được phản ánh đồng thời và tức thì trên toàn bộ các giao diện người dùng. Việc không đồng bộ giữa các bảng phụ trợ tạo ra rủi ro mập mờ pháp lý, khiến công chúng và nhà tuyển dụng hiểu lầm một công trình đạo văn vẫn đang có giá trị chứng thực.
+- **Tính Bất biến & Chống Giả mạo Sổ cái:** Cơ chế cập nhật khóa chặt chẽ ngăn chặn mọi hành vi gian lận từ phía client dùng cache cũ để khôi phục trạng thái bản quyền đã bị tước đoạt.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Trạng thái thu hồi tác phẩm ggbb hiển thị đỏ tức thì trên cả 2 bên):**
+   - *Kịch bản:* Mở Admin Portal (Tab 4) -> Dòng đề tài `CC-2026-9373` (`ggbb`) lập tức hiển thị huy hiệu `🔴 ĐÃ THU HỒI (ĐẠO VĂN)` kèm nút `📜 Xem Lý Do`. Sang Cổng Khách Hàng (`index.html`), bảng Sổ cái hiển thị `ggbb` với huy hiệu `🔴 ĐÃ THU HỒI` và nút `⚠️ QĐ Thu hồi`.
+   - *Kết quả:* Hai bên đồng bộ 100%, không còn dấu hiệu `AUTHENTICATED` hay `SEPOLIA ON-CHAIN` xanh lá.
+2. **TC-02 (Happy Path - Cảnh báo đỏ nổi bật trong Modal Thư viện số):**
+   - *Kịch bản:* Người dùng bấm `📖 Chi tiết` trên đề tài `ggbb`.
+   - *Kết quả:* Modal Thư viện số mở ra với khung cảnh báo đỏ rực: *"CÔNG TRÌNH NÀY ĐÃ BỊ THU HỒI DO ĐẠO VĂN"*, ghi rõ lý do kỷ luật và mốc thời gian khối Sepolia.
+3. **TC-03 (Gian lận / Trình duyệt lưu cache cũ):**
+   - *Kịch bản:* Người dùng mở `index.html` với LocalStorage cũ chưa thu hồi.
+   - *Kết quả:* Hệ thống tự động so khớp với Supabase, phát hiện trạng thái `REVOKED`, cập nhật ngay `localStorage` và từ chối đồng bộ ngược, giữ vững tính toàn vẹn của sổ cái.
+
+**Ai phát hiện:** Sinh viên Lê Huy phản ánh giao dịch thu hồi đã trừ gas nhưng giao diện bên Admin và Client vẫn y nguyên như cũ, chưa có dấu hiệu bị thu hồi; AI đã truy vấn trực tiếp REST API Supabase, phát hiện lỗi `PGRST204` do lệch cột schema và tái cấu trúc toàn diện cơ chế đồng bộ hai chiều.
