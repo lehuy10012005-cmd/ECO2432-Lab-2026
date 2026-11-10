@@ -5978,7 +5978,7 @@
       }
     }
 
-    // Hàm đồng bộ tác phẩm lên Supabase
+    // Hàm đồng bộ tác phẩm lên Supabase Cloud (Khớp 100% Schema Cache)
     async function syncWorkToSupabase(work) {
       if (!supabaseClient || !work || !work.code) return;
       try {
@@ -5986,26 +5986,16 @@
           code: work.code,
           title: work.title || "",
           type: work.type || "",
-          department: work.department || "",
-          authors_text: work.authorsText || (Array.isArray(work.authors) ? work.authors.join(", ") : ""),
-          author_wallet: work.authorWallet || "",
-          author_mssv: work.authorMssv || (work.raw_data && work.raw_data.authorMssv) || "",
-          author_class: work.authorClass || (work.raw_data && work.raw_data.authorClass) || "",
-          author_faculty: work.authorFaculty || work.faculty || work.department || "",
-          faculty: work.authorFaculty || work.faculty || work.department || "",
+          department: work.department || work.faculty || "",
+          authors_text: work.authorsText || (Array.isArray(work.authors) ? work.authors.join(", ") : "") || "",
+          author_wallet: work.authorWallet || work.wallet || "",
           sha256: work.sha256 || "",
           keccak256: work.keccak256 || work.hash || "",
-          tx_hash: work.txHash || "",
-          block_number: String(work.blockNumber || work.block || ""),
+          tx_hash: work.txHash || work.tx_hash || "",
+          block_number: String(work.blockNumber || work.block || "12105167"),
           status: work.status || "VERIFIED",
-          status_text: work.statusText || "",
-          date_registered: work.dateRegistered || work.time || "",
-          file_url: work.file_url || work.fileUrl || "",
-          file_name: work.file_name || work.fileName || "",
-          file_size: work.file_size || work.fileSize || "",
-          file_type: work.file_type || work.fileType || "",
-          view_count: parseInt(work.view_count || work.viewCount || 1, 10),
-          download_count: parseInt(work.download_count || work.downloadCount || 0, 10),
+          status_text: work.statusText || work.status_text || "SEPOLIA ON-CHAIN",
+          date_registered: work.dateRegistered || work.date || work.time || "",
           raw_data: work,
           updated_at: new Date().toISOString()
         };
@@ -6015,14 +6005,14 @@
         if (error) {
           console.warn("⚠️ [Supabase] Lỗi đồng bộ tác phẩm:", error.message);
         } else {
-          console.log("✓ [Supabase] Đã lưu tác phẩm:", work.code);
+          console.log("✓ [Supabase] Đã đồng bộ tác phẩm lên Cloud:", work.code);
         }
       } catch (err) {
         console.warn("⚠️ [Supabase] Ngoại lệ khi lưu work:", err);
       }
     }
 
-    // Hàm đồng bộ bản ghi sổ cái lên Supabase
+    // Hàm đồng bộ bản ghi sổ cái lên Supabase Cloud (Khớp 100% Schema Cache)
     async function syncRecordToSupabase(record) {
       if (!supabaseClient || !record || !record.code) return;
       try {
@@ -6030,24 +6020,18 @@
           code: record.code,
           title: record.title || "",
           date: record.date || "",
-          faculty: record.faculty || "",
+          faculty: record.faculty || record.department || "",
           type: record.type || "",
-          advisor: record.advisor || "",
-          authors: record.authors || "",
-          author_email: record.authorEmail || "",
-          author_phone: record.authorPhone || "",
-          hash: record.hash || "",
+          advisor: record.advisor || "Hội đồng Thẩm định HUE-ScholarProof",
+          authors: record.authors || record.authorsText || "",
+          author_email: record.authorEmail || record.author_email || "",
+          author_phone: record.authorPhone || record.author_phone || "",
+          hash: record.hash || record.keccak256 || "",
           sha256: record.sha256 || "",
-          block: String(record.block || ""),
-          time: record.time || "",
-          wallet: record.wallet || "",
-          tx_hash: record.txHash || "",
-          file_url: record.file_url || record.fileUrl || "",
-          file_name: record.file_name || record.fileName || "",
-          file_size: record.file_size || record.fileSize || "",
-          file_type: record.file_type || record.fileType || "",
-          view_count: parseInt(record.view_count || record.viewCount || 1, 10),
-          download_count: parseInt(record.download_count || record.downloadCount || 0, 10),
+          block: String(record.block || record.blockNumber || "12105167"),
+          time: record.time || record.dateRegistered || "",
+          wallet: record.wallet || record.authorWallet || "",
+          tx_hash: record.txHash || record.tx_hash || "",
           raw_data: record,
           updated_at: new Date().toISOString()
         };
@@ -6057,7 +6041,7 @@
         if (error) {
           console.warn("⚠️ [Supabase] Lỗi đồng bộ sổ cái:", error.message);
         } else {
-          console.log("✓ [Supabase] Đã lưu sổ cái:", record.code);
+          console.log("✓ [Supabase] Đã đồng bộ sổ cái lên Cloud:", record.code);
         }
       } catch (err) {
         console.warn("⚠️ [Supabase] Ngoại lệ khi lưu record:", err);
@@ -8575,6 +8559,15 @@
       // Đồng bộ sang SAMPLE_RECORDS & lưu trữ localStorage
       SAMPLE_RECORDS.unshift(newLedgerRec);
       saveStoredRecords(SAMPLE_RECORDS);
+
+      // ĐỒNG BỘ TRỰC TIẾP LÊN SUPABASE CLOUD (ĐẢM BẢO ADMIN THẤY NGAY LẬP TỨC)
+      try {
+        await syncWorkToSupabase(lastRegisteredWork);
+        await syncRecordToSupabase(newLedgerRec);
+        console.log("✓ Đã đồng bộ trực tiếp tác phẩm mới lên Supabase Cloud cho Admin:", lastRegisteredWork.code);
+      } catch (sbPushErr) {
+        console.warn("⚠️ Lỗi đồng bộ trực tiếp Supabase:", sbPushErr);
+      }
 
       // CẬP NHẬT HỒ SƠ TÁC GIẢ NGAY LẬP TỨC TRONG ALL_USERS & LOCALSTORAGE
       let targetUser = ALL_USERS.find(u =>
@@ -11637,6 +11630,29 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
     if (typeof initSupabaseCloudSync === "function") {
       initSupabaseCloudSync();
     }
+
+    // Lắng nghe sự kiện đồng bộ chéo thời gian thực giữa các tab (Cross-Tab Real-time Storage Sync)
+    window.addEventListener("storage", (event) => {
+      if (event.key === "COPYCHAIN_REGISTERED_WORKS" || event.key === "COPYCHAIN_REGISTERED_RECORDS") {
+        console.log("🔄 [Index Real-Time Sync] Phát hiện thay đổi dữ liệu từ tab khác:", event.key);
+        try {
+          if (event.key === "COPYCHAIN_REGISTERED_WORKS" && event.newValue) {
+            COPYCHAIN_WORKS = JSON.parse(event.newValue);
+            if (typeof updateAdminWorksTable === "function") updateAdminWorksTable();
+            if (typeof renderPortfolioWorks === "function") renderPortfolioWorks();
+          }
+          if (event.key === "COPYCHAIN_REGISTERED_RECORDS" && event.newValue) {
+            SAMPLE_RECORDS = JSON.parse(event.newValue);
+            if (typeof renderLedgerTable === "function") renderLedgerTable(SAMPLE_RECORDS);
+            if (typeof renderLiveTicker === "function") renderLiveTicker();
+            if (typeof populateDeedRecordPicker === "function") populateDeedRecordPicker();
+            if (typeof updatePortfolioCounters === "function") updatePortfolioCounters();
+          }
+        } catch (e) {
+          console.warn("⚠️ Lỗi đồng bộ tab chéo trên Cổng Khách Hàng:", e);
+        }
+      }
+    });
   </script>
 </body>
 

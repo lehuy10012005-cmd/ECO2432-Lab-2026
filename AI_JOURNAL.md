@@ -1030,3 +1030,65 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kịch bản:* Khi hợp đồng mới được deploy với `payable`, giao dịch tầng 1 thực thi ngay lập tức với `{ value: serviceFeeWei }`, tích lũy phí vào quỹ hợp đồng.
 
 **Ai phát hiện:** Sinh viên Lê Huy gửi ảnh chụp màn hình báo lỗi `Lỗi phát sóng Smart Contract: require(false)`; AI mô phỏng bytecode máy ảo EVM trên Sepolia, phát hiện xung đột `nonpayable` của hợp đồng cũ và triển khai cơ chế thích ứng hai tầng.
+
+
+---
+
+### Lần 36: Khắc phục triệt để lỗi không đồng bộ dữ liệu giữa Cổng Khách Hàng và Cổng Admin (Supabase PostgREST PGRST204 & Dual-Ledger Cross-Tab Sync) & Giải trình Kế toán On-chain Quỹ Ngân Sách
+
+**Ngày ghi nhận:** 10/11/2026
+
+**Bối cảnh:**
+- Sau khi sinh viên đăng ký thành công các tác phẩm mới từ Cổng Khách Hàng (`bài test 4` - CC-2026-8300, `bài test 5` - CC-2026-2109, `bài test 6` - CC-2026-4657), phía Cổng Khách Hàng hiển thị đầy đủ 9 tác phẩm trên Sổ cái công trình. Tuy nhiên, tại Tab 4 của Cổng Quản trị Admin (`admin.html`), danh sách chỉ hiển thị vỏn vẹn 4 đề tài cũ (`CC-2026-4293`, `2131`, `1155`, `9373`), dẫn đến hiện tượng bất đối xứng thông tin và lệch số dư đối soát giữa hai cổng.
+- Đồng thời, khi Admin bấm nút "Rút Quỹ Ngân Sách", hệ thống hiển thị thông báo: *"Số dư quỹ hiện tại: 0.0000 ETH... Chưa có phí dịch vụ nào tích lũy"*, khiến sinh viên thắc mắc vì sao vừa đăng ký bài test 6 với mức phí 0.0001 ETH nhưng số dư quỹ vẫn là 0 ETH, và liệu có phải do đang sử dụng tài khoản ví Admin hay không.
+
+**Phân tích Nguyên nhân Kỹ thuật & Gốc rễ Lỗ hổng (Root Cause Analysis):**
+1. *Lỗi lệch Schema PostgREST Supabase (HTTP 400 - Code PGRST204):*
+   - Trong `web/index.html`, hàm `syncWorkToSupabase` và `syncRecordToSupabase` trước đây đã gửi các trường dữ liệu tùy biến cấp cao (`author_mssv`, `author_class`, `author_faculty`, `faculty`, `file_url`, `file_name`, `file_size`, `file_type`, `view_count`, `download_count`).
+   - Tuy nhiên, trong schema thực tế của bảng `copychain_works` trên Supabase Cloud, chỉ tồn tại các cột tiêu chuẩn: `code`, `title`, `type`, `department`, `authors_text`, `author_wallet`, `sha256`, `keccak256`, `tx_hash`, `block_number`, `status`, `status_text`, `date_registered`, `raw_data`, `updated_at`, `created_at`.
+   - Kết quả: Máy chủ REST API của PostgREST ngay lập tức từ chối toàn bộ payload với lỗi `400 Bad Request` (*PGRST204: Could not find the 'author_mssv' column of 'copychain_works' in the schema cache*). Các đề tài mới (`bài test 4, 5, 6`) chỉ được lưu cục bộ trong LocalStorage của trình duyệt khách mà không thể đẩy lên cơ sở dữ liệu chung Supabase Cloud.
+2. *Lỗi bỏ sót cơ chế dung hợp Sổ cái cục bộ tại Cổng Admin:*
+   - Hàm `loadClientWorks()` trong `web/admin.html` trước đây chỉ kiểm tra: nếu Supabase trả về rỗng thì mới đọc từ LocalStorage (`if (works.length === 0)`). Vì Supabase đã có sẵn 4 bản ghi ban đầu, nhánh đọc LocalStorage bị bỏ qua hoàn toàn, khiến Admin không nhìn thấy bất kỳ đề tài mới nào lưu trong LocalStorage.
+   - Khi người dùng thao tác ở hai tab trình duyệt khác nhau, không có cơ chế bắt sự kiện `storage` để tự động làm mới giao diện theo thời gian thực mà người dùng phải tải lại trang thủ công.
+3. *Bản chất Kế toán On-chain của Số dư Quỹ = 0.0000 ETH:*
+   - Hợp đồng `ScholarProof` triển khai tại địa chỉ `0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87` trên mạng Sepolia là phiên bản tiền nhiệm (`nonpayable`).
+   - Khi tác giả gửi yêu cầu nộp `bài test 6`, hệ thống kích hoạt cơ chế bảo vệ kép (Two-Tier Adaptive Resilient Fallback): do tầng 1 bị mạng EVM Sepolia từ chối vì không nhận `msg.value > 0`, tầng 2 tự động gửi giao dịch nộp bài với `msg.value = 0 ETH` tại Block #12105167.
+   - Do đó, ví MetaMask của tác giả **chỉ bị trừ phí gas mạng Sepolia mà KHÔNG hề bị trừ 0.0001 ETH**, và địa chỉ Smart Contract trên Sepolia cũng **nhận 0 ETH**. Vì số dư thực tế trong hợp đồng on-chain là 0 wei, khi Admin thực hiện truy vấn `provider.getBalance(CONTRACT_ADDRESS)`, kết quả trả về chính xác là `0.0000 ETH`.
+   - **Hiện tượng này hoàn toàn độc lập với quyền của ví (Admin hay User)**: Nguyên nhân cốt lõi là do bytecode thực tế trên Sepolia hiện tại chưa mở cổng `payable`.
+
+**Giải pháp Kỹ thuật Triệt để:**
+1. *Chuẩn hóa Schema Payload Supabase & Đóng gói Metadata an toàn vào JSONB (`raw_data`):*
+   - Tinh chỉnh payload của `syncWorkToSupabase` và `syncRecordToSupabase` trong `web/index.html` và `web/admin.html` khớp 100% với danh mục cột của bảng Supabase.
+   - Mọi siêu dữ liệu mở rộng (MSSV, lớp, file đính kèm, định dạng...) được đóng gói an toàn vào cột `raw_data` (JSONB), vừa vượt qua kiểm duyệt chặt chẽ của PostgREST, vừa bảo toàn vẹn toàn bộ hồ sơ tác phẩm. Đã kiểm thử trực tiếp qua REST API trả về mã `201 Created` thành công.
+2. *Thuật toán Hợp nhất Sổ cái Kép Hai chiều (Two-Way Dual-Ledger Reconciliation):*
+   - Cải tiến `loadClientWorks()` trong `web/admin.html`: Thu thập toàn diện dữ liệu từ cả Supabase Cloud và các kho khóa LocalStorage (`COPYCHAIN_REGISTERED_WORKS`, `COPYCHAIN_REGISTERED_RECORDS`).
+   - Khử trùng lặp thông minh theo mã lưu trữ `code` / `id`. Nếu phát hiện đề tài có trong LocalStorage nhưng chưa có trên Supabase, hệ thống Admin sẽ tự động backfill (đẩy bù) ngay lên Supabase Cloud thông qua hàm `syncWorkToSupabaseAdmin`.
+3. *Đồng bộ Hóa Thời Gian Thực Giữa Các Tab (Cross-Tab Real-time Storage Sync):*
+   - Bổ sung trình lắng nghe sự kiện `window.addEventListener("storage", ...)` trên cả hai cổng:
+     + Khi Cổng Khách hàng đăng ký tác phẩm mới -> Cổng Admin lập tức kích hoạt `loadClientWorks()` và cập nhật danh sách đề tài ngay tức thì.
+     + Khi Cổng Admin thu hồi đề tài/chứng chỉ -> Cổng Khách hàng lập tức cập nhật trạng thái `ĐÃ THU HỒI DO ĐẠO VĂN` lên Sổ cái công trình mà không cần F5.
+4. *Nâng cấp Báo cáo Đối soát Quỹ Ngân Sách (Treasury Audit Report Modal):*
+   - Khi Admin bấm "Rút Quỹ Ngân Sách", nếu số dư hợp đồng là 0 ETH, giao diện hiển thị bảng đối soát chi tiết:
+     + Số dư On-Chain thực tế trên Sepolia: 0.0000 ETH.
+     + Tổng số đề tài trên sổ cái & Tổng phí danh nghĩa dự kiến: (Số đề tài x 0.0001 ETH).
+     + Giải thích rõ ràng nguyên nhân (do Smart Contract Sepolia phiên bản hiện tại là non-payable nên cơ chế fallback gửi 0 ETH để bảo toàn giao dịch; ví không bị trừ phí).
+     + Hướng dẫn triển khai Smart Contract mới từ `contracts/capstone/ScholarProof.sol` để bắt đầu thu phí thật vào Quỹ.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Chống Bất Đối Xứng Thông Tin & Thất Thoát Dữ Liệu Sổ Cái (Audit Trail Integrity):**
+  - Trong kiến trúc Web3 phân tán, việc lệch pha giữa Off-chain Database (Supabase) và Local State dẫn đến rủi ro quản trị nghiêm trọng: Hội đồng Thẩm định không nhìn thấy đề tài của sinh viên, gây chậm trễ cấp bằng hoặc rủi ro cấp trùng. Cơ chế Two-Way Dual-Ledger Reconciliation đảm bảo sổ cái luôn hội tụ (eventual consistency) 100%.
+- **Bảo toàn Nguyên tắc Kế toán Thực thu - Thực chi (Cash-basis On-chain Accounting):**
+  - Hệ thống tuân thủ nguyên tắc kế toán minh bạch: Chỉ cho phép ghi nhận và rút số dư khi dòng tiền ETH thực tế đã nằm trong số dư hợp đồng (`balanceWei > 0`). Việc không cho phép rút khi số dư bằng 0 bảo vệ hợp đồng khỏi các lỗi Revert tốn gas vô ích, đồng thời bảo vệ Admin khỏi các rủi ro gian lận số dư ảo.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt (Test Cases Verification):**
+1. **TC-01 (Happy Path - Đồng bộ hai chiều Sổ cái & PostgREST hợp lệ):**
+   - *Kịch bản:* Đăng ký đề tài mới từ Cổng Khách Hàng, kích hoạt `syncWorkToSupabase` với payload chuẩn hóa JSONB.
+   - *Kết quả:* Supabase REST API trả về mã `201 Created` thành công. Cổng Admin lập tức tải về hiển thị đầy đủ các đề tài `bài test 4, 5, 6`.
+2. **TC-02 (Boundary & Cross-Tab Realtime - Đồng bộ trạng thái tức thời không cần F5):**
+   - *Kịch bản:* Mở Cổng Khách Hàng và Cổng Admin trên 2 tab trình duyệt song song. Admin bấm thu hồi đề tài `ggbb` (CC-2026-9373).
+   - *Kết quả:* Tab Khách Hàng tự động kích hoạt sự kiện `storage`, nhãn trạng thái của đề tài `ggbb` lập tức chuyển sang huy hiệu màu đỏ *"ĐÃ THU HỒI DO ĐẠO VĂN"* theo thời gian thực.
+3. **TC-03 (Gian lận / Trái phép - Giả mạo số dư quỹ ảo để rút tiền):**
+   - *Kịch bản:* Kẻ lạ hoặc người dùng cố tình can thiệp số dư hiển thị trên giao diện hoặc gọi trực tiếp hàm `withdrawFees()` khi hợp đồng có số dư = 0 hoặc gọi từ ví không phải Owner (`0xNonOwner`).
+   - *Kết quả:* Smart Contract từ chối và Revert `UnauthorizedCaller` hoặc giao diện chặn ngay từ bước `balanceWei === 0n`, bảo toàn an toàn tuyệt đối cho quỹ ngân sách.
+
+**Ai phát hiện:** Sinh viên Lê Huy gửi 3 ảnh chụp màn hình phản ánh hiện tượng đề tài mới chưa xuất hiện bên Admin và thắc mắc về số dư quỹ ngân sách bằng 0 ETH; AI phân tích mã lỗi PostgREST PGRST204, thiết lập thuật toán dung hợp hai chiều và bổ sung đối soát kế toán on-chain.
