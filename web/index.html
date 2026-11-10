@@ -4277,8 +4277,31 @@
                   Ethereum Sepolia Testnet (11155111)
                 </div>
                 <div style="margin-top: 4px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
-                  Contract: 0xa2F5...49cb
+                  Contract: 0x5D0E...4e87
                 </div>
+              </div>
+            </div>
+
+            <!-- BẢNG BIỂU PHÍ DỊCH VỤ THẨM ĐỊNH MINH BẠCH ON-CHAIN (MONETIZATION & SERVICE FEE) -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%); border: 1.5px solid #bfdbfe; border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 28px;">💎</span>
+                  <div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px;">Phí Dịch Vụ Thẩm Định &amp; Bảo Chứng Bản Quyền</div>
+                    <div style="font-size: 12px; color: #475569; margin-top: 3px;">Khoản phí thu trực tiếp vào Quỹ Ngân sách Smart Contract để chi trả Hội đồng thẩm định HCE &amp; duy trì hạ tầng On-Chain.</div>
+                  </div>
+                </div>
+                <div style="text-align: right; background: #ffffff; padding: 10px 18px; border-radius: var(--radius-md); border: 1.5px solid #93c5fd; box-shadow: var(--shadow-sm);">
+                  <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Phí Dịch Vụ Thẩm Định</div>
+                  <div style="font-size: 17px; font-weight: 900; color: #0284c7; font-family: var(--font-mono);">
+                    0.0001 ETH <span style="font-size: 11px; font-weight: 600; color: #16a34a;">(~2.500 VNĐ / SepoliaETH)</span>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-size: 11.5px; color: #64748b; flex-wrap: wrap; gap: 6px;">
+                <span>⚡ Ước tính Gas mạng Sepolia: <strong>~0.00004 SepoliaETH</strong></span>
+                <span>🔒 Cơ chế: <strong>Smart Contract Payable (Checks - Effects - Interactions)</strong></span>
               </div>
             </div>
 
@@ -6277,11 +6300,17 @@
 
     const CONTRACT_ADDRESS = "0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87";
     const SCHOLAR_PROOF_ABI = [
-      "function registerIdea(bytes32 docHash, string calldata title, string calldata category) external",
+      "function registerIdea(bytes32 docHash, string calldata title, string calldata category) external payable",
       "function verifyIdea(bytes32 docHash) external view returns (address author, uint256 timestamp, uint256 blockNumber, string memory title, string memory category)",
       "function isIdeaRegistered(bytes32 docHash) external view returns (bool isRegistered)",
       "function totalIdeas() external view returns (uint256)",
-      "event IdeaRegistered(bytes32 indexed docHash, address indexed author, uint256 timestamp, uint256 blockNumber, string title, string category)"
+      "function serviceFee() external view returns (uint256)",
+      "function setServiceFee(uint256 newFee) external",
+      "function withdrawFees() external",
+      "function owner() external view returns (address)",
+      "event IdeaRegistered(bytes32 indexed docHash, address indexed author, uint256 timestamp, uint256 blockNumber, string title, string category)",
+      "event ServiceFeeUpdated(uint256 newFee, uint256 timestamp)",
+      "event FeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp)"
     ];
 
     let ALL_USERS = getStoredUsers();
@@ -8297,6 +8326,20 @@
 
         const validContractAddress = toChecksumAddress(CONTRACT_ADDRESS);
 
+        // Đọc mức phí dịch vụ thẩm định từ Smart Contract hoặc dùng mặc định 0.0001 ETH
+        let serviceFeeWei = ethers.parseEther("0.0001");
+        try {
+          const contractRead = new ethers.Contract(validContractAddress, SCHOLAR_PROOF_ABI, provider);
+          if (typeof contractRead.serviceFee === "function") {
+            const onchainFee = await contractRead.serviceFee();
+            if (onchainFee !== undefined && onchainFee !== null && onchainFee > 0n) {
+              serviceFeeWei = onchainFee;
+            }
+          }
+        } catch (feeReadErr) {
+          console.warn("Dùng mức phí mặc định 0.0001 ETH:", feeReadErr);
+        }
+
         // 2. Kiểm tra trùng lặp trên Sổ cái Smart Contract Sepolia trước khi phát sóng giao dịch
         try {
           const contractRead = new ethers.Contract(validContractAddress, SCHOLAR_PROOF_ABI, provider);
@@ -8314,16 +8357,17 @@
           console.warn("isIdeaRegistered check note (bỏ qua nếu hợp đồng chưa nạp bytecode):", checkErr);
         }
 
-        // 3. Kiểm tra số dư ví SepoliaETH của tác giả
+        // 3. Kiểm tra số dư ví SepoliaETH của tác giả (yêu cầu tối thiểu phí dịch vụ thẩm định)
         const balance = await provider.getBalance(realSignerAddress);
-        if (balance === 0n) {
-          toast("⚠️ Số dư ví là 0 SepoliaETH! Bạn cần một ít testnet ETH để trả phí gas giao dịch.", "error");
+        if (balance < serviceFeeWei) {
+          toast("⚠️ Số dư ví không đủ để thanh toán phí dịch vụ thẩm định (0.0001 ETH)!", "error");
           alert(
-            "⚠️ SỐ DƯ PHÍ GAS BẰNG 0 (ZERO SEPOLIAETH)\n" +
+            "⚠️ SỐ DƯ VÍ KHÔNG ĐỦ THANH TOÁN PHÍ DỊCH VỤ\n" +
             "--------------------------------------------------\n" +
             "Địa chỉ ví của bạn: " + realSignerAddress + "\n" +
-            "Số dư hiện tại: 0 SepoliaETH\n\n" +
-            "Theo cơ chế đồng thuận Proof-of-Stake của Ethereum Sepolia, mọi giao dịch ghi nhận bản quyền đều cần một lượng nhỏ gas để trả thưởng cho Validator đóng gói khối.\n\n" +
+            "Số dư hiện tại: " + ethers.formatEther(balance) + " SepoliaETH\n" +
+            "Phí dịch vụ thẩm định yêu cầu: " + ethers.formatEther(serviceFeeWei) + " ETH (~0.0001 ETH)\n\n" +
+            "Theo quy định tài chính của hệ thống HCE-ScholarProof, tác giả cần đóng phí dịch vụ để kích hoạt quy trình thẩm định tác quyền và ghi nhận dấu thời gian on-chain.\n\n" +
             "👉 Bạn có thể nhận ETH Sepolia hoàn toàn miễn phí tại vòi (Faucet):\n" +
             "- Google Cloud Sepolia Faucet: cloud.google.com/application/web3/faucet/ethereum/sepolia\n" +
             "- Alchemy Sepolia Faucet: sepoliafaucet.com\n\n" +
@@ -8339,12 +8383,12 @@
         const cleanTitle = title.slice(0, 190);
         const cleanCategory = (dept || "Nghiên cứu khoa học").slice(0, 90);
 
-        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch On-Chain lên Smart Contract Sepolia...", "info");
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' thanh toán phí dịch vụ (0.0001 ETH) & Gas để ghi nhận lên Smart Contract Sepolia...", "info");
 
         let tx = null;
         try {
           const contractWrite = new ethers.Contract(validContractAddress, SCHOLAR_PROOF_ABI, signer);
-          tx = await contractWrite.registerIdea(docHashBytes32, cleanTitle, cleanCategory);
+          tx = await contractWrite.registerIdea(docHashBytes32, cleanTitle, cleanCategory, { value: serviceFeeWei });
         } catch (contractErr) {
           console.warn("contractWrite.registerIdea dự phòng giao dịch trực tiếp:", contractErr);
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {

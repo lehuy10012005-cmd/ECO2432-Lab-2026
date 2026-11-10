@@ -46,6 +46,35 @@
 | **Lab 14** | [`audit_report.md`](./audit_report.md)<br>[`lab14.md`](./lab14.md)<br>[`scripts/gas_benchmark.py`](./scripts/gas_benchmark.py) | Kiểm toán an toàn hợp đồng, đo lường chi phí Gas thực nghiệm trên Layer 2 Base/Arbitrum vs Sepolia Testnet | ✅ **Hoàn thành** |
 | **Lab 15** | [`DEPLOYMENT.md`](./DEPLOYMENT.md)<br>[`SLIDES.md`](./SLIDES.md)<br>[`DAPP_AI_SUPERVISION_JOURNAL.md`](./DAPP_AI_SUPERVISION_JOURNAL.md)<br>[`lab15.md`](./lab15.md) | Tài liệu hướng dẫn vận hành, nhật ký thực chiến giám sát AI & bằng chứng kiểm thử Web DApp, slide thuyết trình nghiệm thu trước hội đồng | ✅ **Hoàn thành** |
 | **Nâng cấp** | [`supabase_schema.sql`](./supabase_schema.sql)<br>[`web/index.html`](./web/index.html) (Thư viện số) | Tích hợp Thư viện Số Cổng HCE (`thuvien.hce.edu.vn`): Lưu trữ đám mây Supabase Storage (`copychain_files`), In-app PDF Viewer, Tải tệp gốc & Đối soát toàn vẹn | ✅ **Hoàn thành** |
+| **Monetization** | [`contracts/capstone/ScholarProof.sol`](./contracts/capstone/ScholarProof.sol)<br>[`web/index.html`](./web/index.html)<br>[`web/admin.html`](./web/admin.html) | Thu phí dịch vụ thẩm định bản quyền (0.0001 ETH) & Quản trị quỹ ngân sách Smart Contract (Treasury Management, CEI pattern, Custom Errors, 8/8 Test Cases) | ✅ **Hoàn thành** |
+
+---
+
+## 💎 Tính năng Mới: Thu Phí Dịch Vụ Thẩm Định & Quản Trị Quỹ Ngân Sách (Monetization & Treasury)
+
+Nhằm đảm bảo mô hình kinh tế Web3 bền vững (Tokenomics & Sustainability), hệ thống HCE-ScholarProof đã nâng cấp toàn diện cơ chế thu phí dịch vụ thẩm định và quản trị ngân sách:
+
+1. **Thu phí dịch vụ thẩm định bản quyền (`serviceFee`):**
+   - Mức phí mặc định: **`0.0001 ETH`** (~2.500 VNĐ / SepoliaETH) cho mỗi lượt đăng ký ý tưởng nghiên cứu / tác phẩm.
+   - Hàm `registerIdea(...)` được chuyển thành `external payable`. Áp dụng nghiêm ngặt mẫu thiết kế **Checks - Effects - Interactions (CEI)**.
+   - Chống gian lận nộp thiếu phí: Nếu `msg.value < serviceFee`, giao dịch lập tức Revert với mã lỗi tùy biến `InsufficientFee(uint256 sent, uint256 required)` giúp tiết kiệm tối đa gas cho người dùng.
+
+2. **Quản trị Quỹ Ngân sách & Rút tiền On-chain (`withdrawFees`):**
+   - Phân quyền nghiêm ngặt `onlyOwner`: Chỉ địa chỉ ví Chủ sở hữu hợp đồng mới có thẩm quyền thực thi lệnh rút quỹ.
+   - Chuyển toàn bộ số dư hợp đồng thông qua cú pháp chuẩn an toàn `(bool success, ) = owner.call{value: balance}("")` và kiểm tra kết quả `if (!success) revert WithdrawFailed();`.
+   - Nếu số dư quỹ bằng 0, hợp đồng từ chối xử lý với lỗi `NoFundsToWithdraw()`.
+   - Mọi biến động dòng tiền đều phát sự kiện minh bạch `event FeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp)`.
+
+3. **Giao diện DApp Client & Cổng Admin:**
+   - **Bước 5 (Ký On-Chain):** Bổ sung bảng công khai chi phí: "Phí dịch vụ thẩm định: 0.0001 ETH", tự động nạp tham số `{ value: serviceFee }` vào giao dịch Ethers.js giúp MetaMask hiển thị chi phí rõ ràng trước khi ký.
+   - **Cổng Quản trị Admin (`web/admin.html`):** Bổ sung thẻ số dư quỹ hợp đồng (`statTreasuryBalance`) cập nhật thời gian thực từ mạng Sepolia và nút **"Rút Quỹ Ngân Sách"** với cơ chế bảo mật xác nhận ví.
+
+4. **Bộ Kiểm thử Tự động (8/8 Ca Kiểm thử - 100% Pass):**
+   - Chạy kiểm thử tự động với: `node test/ScholarProof.test.js`
+   - Bổ sung 3 ca kiểm thử chuyên sâu về kinh tế học Web3:
+     - `TC-06`: Nộp đúng phí 0.0001 ETH thành công, số dư quỹ hợp đồng tăng chính xác.
+     - `TC-07`: Chống gian lận nộp thiếu phí (gửi 0 ETH hoặc < 0.0001 ETH) bị Revert `InsufficientFee`.
+     - `TC-08`: Kẻ lạ cố tình rút trộm quỹ bị chặn `UnauthorizedCaller`; Chủ sở hữu rút thành công toàn bộ số dư về ví.
 
 ---
 

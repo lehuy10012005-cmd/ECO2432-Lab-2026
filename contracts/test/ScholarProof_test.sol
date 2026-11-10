@@ -29,16 +29,17 @@ contract ScholarProofTest {
     }
 
     /**
-     * @notice Ca 1: Luồng chuẩn - Đăng ký ý tưởng và xác lập dấu thời gian thành công
+     * @notice Ca 1: Luồng chuẩn - Đăng ký ý tưởng kèm phí dịch vụ 0.0001 ETH thành công
      */
     function testRegisterIdeaSuccess() public {
         string memory title = "He thong xac thuc quyen tac gia Web3";
         string memory category = "Fintech";
 
-        _contract.registerIdea(SAMPLE_DOC_HASH_1, title, category);
+        _contract.registerIdea{value: 0.0001 ether}(SAMPLE_DOC_HASH_1, title, category);
 
         require(_contract.totalIdeas() == 1, "Tong so y tuong tren so cai phai la 1");
         require(_contract.isIdeaRegistered(SAMPLE_DOC_HASH_1) == true, "DocHash phai duoc danh dau exists");
+        require(address(_contract).balance == 0.0001 ether, "So du quy hop dong phai la 0.0001 ether");
 
         (
             address author,
@@ -59,10 +60,10 @@ contract ScholarProofTest {
      * @notice Ca 2: Chống gian lận nộp đè (Anti-Scooping) - Nộp trùng hash bắt buộc Revert
      */
     function testRegisterDuplicateHashShouldFail() public {
-        _contract.registerIdea(SAMPLE_DOC_HASH_1, "Ban thao goc", "Kinh te so");
+        _contract.registerIdea{value: 0.0001 ether}(SAMPLE_DOC_HASH_1, "Ban thao goc", "Kinh te so");
 
         // Thử nộp lại cùng docHash với tiêu đề khác
-        try _contract.registerIdea(SAMPLE_DOC_HASH_1, "Dao van tieu de", "AI") {
+        try _contract.registerIdea{value: 0.0001 ether}(SAMPLE_DOC_HASH_1, "Dao van tieu de", "AI") {
             revert("Loi: Hop dong khong duoc phep cho nop trung ma bam");
         } catch {
             // Chặn thành công
@@ -74,7 +75,7 @@ contract ScholarProofTest {
      * @notice Ca 3: Kiểm soát dữ liệu biên - Chặn mã băm rỗng bytes32(0)
      */
     function testEmptyDocHashShouldFail() public {
-        try _contract.registerIdea(bytes32(0), "Tieu de hop le", "Fintech") {
+        try _contract.registerIdea{value: 0.0001 ether}(bytes32(0), "Tieu de hop le", "Fintech") {
             revert("Loi: Khong duoc chap nhan bytes32(0)");
         } catch {
             // Chặn thành công
@@ -92,10 +93,34 @@ contract ScholarProofTest {
         }
         string memory longTitle = string(longBytes);
 
-        try _contract.registerIdea(SAMPLE_DOC_HASH_2, longTitle, "Fintech") {
+        try _contract.registerIdea{value: 0.0001 ether}(SAMPLE_DOC_HASH_2, longTitle, "Fintech") {
             revert("Loi: Phai chan tieu de qua 200 ky tu de tiet kiem Storage");
         } catch {
             // Chặn thành công
         }
     }
+
+    /**
+     * @notice Ca 5: Kiểm tra phí dịch vụ - Nộp thiếu phí phải bị Revert InsufficientFee
+     */
+    function testInsufficientFeeShouldFail() public {
+        try _contract.registerIdea{value: 0}(SAMPLE_DOC_HASH_2, "Tieu de chua dong phi", "Fintech") {
+            revert("Loi: Nop thieu phi phai bi Revert InsufficientFee");
+        } catch {
+            // Chặn thành công
+        }
+    }
+
+    /**
+     * @notice Ca 6: Rút tiền ngân sách - Chủ sở hữu rút thành công toàn bộ số dư quỹ
+     */
+    function testWithdrawFeesSuccess() public {
+        _contract.registerIdea{value: 0.0001 ether}(SAMPLE_DOC_HASH_2, "Tieu de nop phi", "Fintech");
+        require(address(_contract).balance == 0.0001 ether, "So du quy phai tang");
+
+        _contract.withdrawFees();
+        require(address(_contract).balance == 0, "So du quy hop dong phai ve 0 sau khi rut");
+    }
+
+    receive() external payable {}
 }

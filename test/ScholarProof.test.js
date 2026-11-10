@@ -35,6 +35,9 @@ try {
 // --- MÔ PHỎNG MÁY ẢO EVM & TRẠNG THÁI SỔ CÁI ON-CHAIN CHO SCHOLARPROOF ---
 class ScholarProofHarness {
   constructor() {
+    this.owner = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"; // Ví chủ sở hữu Deployer
+    this.serviceFee = 100000000000000n; // Mặc định 0.0001 ETH = 10^14 wei
+    this.contractBalance = 0n;          // Số dư quỹ ngân sách hợp đồng on-chain
     this.MAX_TITLE_LENGTH = 200;
     this.MAX_CATEGORY_LENGTH = 100;
     this.totalIdeas = 0;
@@ -50,9 +53,59 @@ class ScholarProofHarness {
     this.currentTimestamp += seconds;
   }
 
-  // Hàm nghiệp vụ: registerIdea
-  registerIdea(caller, docHash, title, category) {
+  // Hàm quản trị: setServiceFee
+  setServiceFee(caller, newFee) {
+    if (caller.toLowerCase() !== this.owner.toLowerCase()) {
+      const err = new Error(`Custom error: UnauthorizedCaller(${caller})`);
+      err.code = "UnauthorizedCaller";
+      throw err;
+    }
+    this.serviceFee = BigInt(newFee);
+    const eventPayload = {
+      event: "ServiceFeeUpdated",
+      newFee: this.serviceFee,
+      timestamp: this.currentTimestamp
+    };
+    this.events.push(eventPayload);
+    return { success: true, event: eventPayload };
+  }
+
+  // Hàm quản trị: withdrawFees
+  withdrawFees(caller) {
+    if (caller.toLowerCase() !== this.owner.toLowerCase()) {
+      const err = new Error(`Custom error: UnauthorizedCaller(${caller})`);
+      err.code = "UnauthorizedCaller";
+      throw err;
+    }
+    if (this.contractBalance === 0n) {
+      const err = new Error("Custom error: NoFundsToWithdraw()");
+      err.code = "NoFundsToWithdraw";
+      throw err;
+    }
+    const amountToWithdraw = this.contractBalance;
+    this.contractBalance = 0n;
+    const eventPayload = {
+      event: "FeesWithdrawn",
+      owner: caller,
+      amount: amountToWithdraw,
+      timestamp: this.currentTimestamp
+    };
+    this.events.push(eventPayload);
+    return { success: true, amount: amountToWithdraw, event: eventPayload };
+  }
+
+  // Hàm nghiệp vụ: registerIdea (Payable)
+  registerIdea(caller, docHash, title, category, value = 100000000000000n) {
+    const valueBigInt = BigInt(value);
+
     // 1. CHECKS
+    if (valueBigInt < this.serviceFee) {
+      const err = new Error(`Custom error: InsufficientFee(${valueBigInt}, ${this.serviceFee})`);
+      err.code = "InsufficientFee";
+      err.params = { sent: valueBigInt, required: this.serviceFee };
+      throw err;
+    }
+
     if (!docHash || docHash === ethers.ZeroHash || docHash === "0x0000000000000000000000000000000000000000000000000000000000000000") {
       const err = new Error("Custom error: InvalidDocHash()");
       err.code = "InvalidDocHash";
@@ -90,6 +143,7 @@ class ScholarProofHarness {
 
     // 2. EFFECTS
     this.advanceBlock(12);
+    this.contractBalance += valueBigInt; // Tích lũy quỹ ngân sách vào hợp đồng
     const record = {
       author: caller,
       timestamp: this.currentTimestamp,
@@ -202,6 +256,7 @@ async function runTestSuite() {
   let failedTests = 0;
 
   // Thiết lập tài khoản ví kiểm thử giả lập
+  const ownerWallet = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";      // Ví chủ sở hữu Deployer / Admin
   const authorWallet = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";      // Ví tác giả sinh viên A
   const coAuthorWallet = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC";    // Ví đồng tác giả sinh viên B
   const attackerWallet = "0x90F79bf6EB2c4f870365E785982E1f101E93b906";    // Ví kẻ xấu / Attacker
@@ -209,6 +264,7 @@ async function runTestSuite() {
   // Dữ liệu băm mẫu Keccak-256 của tài liệu nghiên cứu
   const sampleDocHash1 = ethers.keccak256(ethers.toUtf8Bytes("HCE_FINTECH_RESEARCH_PAPER_2026_LEHUY"));
   const sampleDocHash2 = ethers.keccak256(ethers.toUtf8Bytes("HCE_BLOCKCHAIN_AUDIT_DATASET_2026_GIABAO"));
+  const sampleDocHash3 = ethers.keccak256(ethers.toUtf8Bytes("HCE_AI_ETHICS_MONETIZATION_2026_RESEARCH"));
 
   const contract = new ScholarProofHarness();
 
@@ -216,7 +272,7 @@ async function runTestSuite() {
   // CA 1: HAPPY PATH - ĐĂNG KÝ Ý TƯỞNG THÀNH CÔNG VÀ XÁC LẬP DẤU THỜI GIAN
   // ----------------------------------------------------------------------------
   try {
-    process.stdout.write("[TEST 1/5] Luồng chuẩn (Happy Path): Đăng ký ý tưởng & phát sự kiện... ");
+    process.stdout.write("[TEST 1/8] Luồng chuẩn (Happy Path): Đăng ký ý tưởng & phát sự kiện... ");
     
     const initialTotal = contract.totalIdeas;
     const title = "Nghiên cứu ứng dụng Blockchain trong xác lập quyền ưu tiên SHTT tại HCE";
@@ -252,7 +308,7 @@ async function runTestSuite() {
   // CA 2: ECONOMIC / ANTI-SCOOPING RULE - CHỐNG GIAN LẬN NỘP TRÙNG MÃ BĂM
   // ----------------------------------------------------------------------------
   try {
-    process.stdout.write("[TEST 2/5] Chống đạo văn (Anti-Scooping): Ngăn chặn nộp đè mã băm đã tồn tại... ");
+    process.stdout.write("[TEST 2/8] Chống đạo văn (Anti-Scooping): Ngăn chặn nộp đè mã băm đã tồn tại... ");
 
     const initialTotal = contract.totalIdeas;
     let revertedWithExpectedError = false;
@@ -285,7 +341,7 @@ async function runTestSuite() {
   // CA 3: FRAUD & SECURITY ATTACK - GIAN LẬN CHIẾM ĐOẠT QUYỀN TÁC GIẢ (UNAUTHORIZED)
   // ----------------------------------------------------------------------------
   try {
-    process.stdout.write("[TEST 3/5] Gian lận mạo danh (Unauthorized Attack): Kẻ lạ cố chiếm đoạt bản quyền... ");
+    process.stdout.write("[TEST 3/8] Gian lận mạo danh (Unauthorized Attack): Kẻ lạ cố chiếm đoạt bản quyền... ");
 
     let revertedWithNotAuthor = false;
 
@@ -317,7 +373,7 @@ async function runTestSuite() {
   // CA 4: AUTHORSHIP TRANSFER - CHUYỂN NHƯỢNG BẢN QUYỀN HỢP PHÁP VÀ KIỂM TRA ĐỊA CHỈ 0x0
   // ----------------------------------------------------------------------------
   try {
-    process.stdout.write("[TEST 4/5] Chuyển nhượng hợp pháp (Transfer): Tác giả chuyển giao cho đồng tác giả... ");
+    process.stdout.write("[TEST 4/8] Chuyển nhượng hợp pháp (Transfer): Tác giả chuyển giao cho đồng tác giả... ");
 
     // Chuyển nhượng thành công từ tác giả gốc sang đồng tác giả
     const transferRes = contract.transferAuthorship(authorWallet, sampleDocHash1, coAuthorWallet);
@@ -349,7 +405,7 @@ async function runTestSuite() {
   // CA 5: BOUNDARY CASES - KIỂM SOÁT DỮ LIỆU ĐẦU VÀO & CHỐNG PHÌNH BỘ NHỚ STORAGE
   // ----------------------------------------------------------------------------
   try {
-    process.stdout.write("[TEST 5/5] Kiểm soát giá trị biên (Boundary Cases): DocHash rỗng & Phình Storage... ");
+    process.stdout.write("[TEST 5/8] Kiểm soát giá trị biên (Boundary Cases): DocHash rỗng & Phình Storage... ");
 
     // 1. Thử nộp mã băm rỗng
     let emptyHashBlocked = false;
@@ -397,6 +453,130 @@ async function runTestSuite() {
   }
 
   // ----------------------------------------------------------------------------
+  // CA 6: MONETIZATION - NỘP BÀI KÈM PHÍ DỊCH VỤ THẨM ĐỊNH VÀ ĐỐI SOÁT SỔ CÁI
+  // ----------------------------------------------------------------------------
+  try {
+    process.stdout.write("[TEST 6/8] Thu phí thẩm định (Monetization): Nộp đúng 0.0001 ETH & tích lũy quỹ... ");
+
+    const initialContractBalance = contract.contractBalance;
+    const initialTotalIdeas = contract.totalIdeas;
+    const registrationFee = 100000000000000n; // 0.0001 ETH in wei
+
+    const result = contract.registerIdea(
+      coAuthorWallet,
+      sampleDocHash3,
+      "Mô hình Kinh tế Số & Quản trị Quỹ Ngân sách Tự trị",
+      "Kinh tế Số",
+      registrationFee
+    );
+
+    // Kiểm tra tính cân đối sổ cái quỹ hợp đồng (Ledger Reconciliation)
+    assert.strictEqual(
+      contract.contractBalance,
+      initialContractBalance + registrationFee,
+      "Số dư quỹ ngân sách hợp đồng phải tăng chính xác 0.0001 ETH"
+    );
+    assert.strictEqual(contract.totalIdeas, initialTotalIdeas + 1, "Tổng số ý tưởng phải tăng đúng 1");
+    assert.strictEqual(result.event.event, "IdeaRegistered");
+    assert.strictEqual(result.event.author, coAuthorWallet);
+
+    console.log(`\x1b[32m[PASS]\x1b[0m (Thu phí 0.0001 ETH thành công, Quỹ: ${Number(contract.contractBalance) / 1e18} ETH)`);
+    passedTests++;
+  } catch (err) {
+    console.log(`\x1b[31m[FAIL]\x1b[0m: ${err.message}`);
+    failedTests++;
+  }
+
+  // ----------------------------------------------------------------------------
+  // CA 7: INSUFFICIENT FEE ATTACK - CHỐNG GIAN LẬN NỘP THIẾU HOẶC KHÔNG NỘP PHÍ
+  // ----------------------------------------------------------------------------
+  try {
+    process.stdout.write("[TEST 7/8] Chống gian lận nộp thiếu phí: Revert InsufficientFee khi msg.value < fee... ");
+
+    const initialBalance = contract.contractBalance;
+    const initialIdeas = contract.totalIdeas;
+    const freeRiderHash = ethers.keccak256(ethers.toUtf8Bytes("HCE_FREE_RIDER_ATTACK_2026"));
+    let revertedWithInsufficientFee = false;
+
+    // Kẻ xấu cố tình nộp phí = 0 wei hoặc 50,000 gwei (nhỏ hơn 0.0001 ETH)
+    try {
+      contract.registerIdea(
+        attackerWallet,
+        freeRiderHash,
+        "Công trình cố tình trốn phí dịch vụ",
+        "Gian lận tài chính",
+        50000000000000n // 0.00005 ETH < 0.0001 ETH
+      );
+    } catch (err) {
+      if (err.code === "InsufficientFee") {
+        revertedWithInsufficientFee = true;
+        assert.strictEqual(err.params.sent, 50000000000000n);
+        assert.strictEqual(err.params.required, contract.serviceFee);
+      } else {
+        throw err;
+      }
+    }
+
+    assert.ok(revertedWithInsufficientFee, "Giao dịch nộp thiếu phí bắt buộc phải Revert InsufficientFee");
+    // Đảm bảo không thất thoát quỹ và không ghi nhận rác vào sổ cái
+    assert.strictEqual(contract.contractBalance, initialBalance, "Số dư quỹ hợp đồng không bị biến động");
+    assert.strictEqual(contract.totalIdeas, initialIdeas, "Sổ cái không được phép tăng khi giao dịch revert");
+
+    console.log("\x1b[32m[PASS]\x1b[0m (Bảo vệ ngân sách, Revert đúng InsufficientFee)");
+    passedTests++;
+  } catch (err) {
+    console.log(`\x1b[31m[FAIL]\x1b[0m: ${err.message}`);
+    failedTests++;
+  }
+
+  // ----------------------------------------------------------------------------
+  // CA 8: TREASURY GOVERNANCE - CHỐNG RÚT TRỘM QUỸ & RÚT QUỸ NGÂN SÁCH HỢP PHÁP
+  // ----------------------------------------------------------------------------
+  try {
+    process.stdout.write("[TEST 8/8] Quản trị quỹ (Treasury): Chặn kẻ lạ rút trộm & Chủ sở hữu rút thành công... ");
+
+    // 1. Kẻ lạ (Attacker) cố tình gọi withdrawFees() để chiếm đoạt ngân sách
+    let attackerBlocked = false;
+    try {
+      contract.withdrawFees(attackerWallet);
+    } catch (err) {
+      if (err.code === "UnauthorizedCaller") {
+        attackerBlocked = true;
+      }
+    }
+    assert.ok(attackerBlocked, "Kẻ lạ gọi withdrawFees() bắt buộc phải bị Revert UnauthorizedCaller");
+
+    // 2. Chủ sở hữu hợp pháp (ownerWallet) rút quỹ ngân sách
+    const balanceBeforeWithdraw = contract.contractBalance;
+    assert.ok(balanceBeforeWithdraw > 0n, "Quỹ ngân sách phải có số dư tích lũy trước khi rút");
+
+    const withdrawResult = contract.withdrawFees(ownerWallet);
+    assert.strictEqual(withdrawResult.success, true, "Lệnh rút tiền của Owner phải thành công");
+    assert.strictEqual(withdrawResult.amount, balanceBeforeWithdraw, "Số tiền rút phải khớp 100% số dư quỹ");
+    assert.strictEqual(contract.contractBalance, 0n, "Số dư quỹ hợp đồng sau khi rút phải về 0");
+
+    // Kiểm tra sự kiện FeesWithdrawn
+    assert.strictEqual(withdrawResult.event.event, "FeesWithdrawn");
+    assert.strictEqual(withdrawResult.event.owner, ownerWallet);
+    assert.strictEqual(withdrawResult.event.amount, balanceBeforeWithdraw);
+
+    // 3. Thử rút tiếp khi quỹ đã cạn (balance == 0) -> Phải Revert NoFundsToWithdraw
+    let emptyWithdrawBlocked = false;
+    try {
+      contract.withdrawFees(ownerWallet);
+    } catch (err) {
+      if (err.code === "NoFundsToWithdraw") emptyWithdrawBlocked = true;
+    }
+    assert.ok(emptyWithdrawBlocked, "Rút quỹ khi số dư bằng 0 phải Revert NoFundsToWithdraw");
+
+    console.log(`\x1b[32m[PASS]\x1b[0m (Rút thành công ${Number(balanceBeforeWithdraw) / 1e18} ETH về ví Owner & phát sự kiện FeesWithdrawn)`);
+    passedTests++;
+  } catch (err) {
+    console.log(`\x1b[31m[FAIL]\x1b[0m: ${err.message}`);
+    failedTests++;
+  }
+
+  // ----------------------------------------------------------------------------
   // TỔNG KẾT BÁO CÁO KIỂM THỬ
   // ----------------------------------------------------------------------------
   console.log("\n--------------------------------------------------------------------------------");
@@ -406,6 +586,9 @@ async function runTestSuite() {
   console.log(`  - Chống chiếm đoạt quyền tác giả (Unauthorized):  ĐẠT ✅`);
   console.log(`  - Chuyển giao quyền tài sản trí tuệ (Transfer):   ĐẠT ✅`);
   console.log(`  - Kiểm soát dữ liệu biên & Chống phình Storage:   ĐẠT ✅`);
+  console.log(`  - Thu phí dịch vụ thẩm định (Monetization):       ĐẠT ✅`);
+  console.log(`  - Chống gian lận nộp thiếu phí (InsufficientFee): ĐẠT ✅`);
+  console.log(`  - Quản trị rút quỹ ngân sách (Treasury Admin):    ĐẠT ✅`);
   console.log("--------------------------------------------------------------------------------\n");
 
   if (failedTests > 0) {

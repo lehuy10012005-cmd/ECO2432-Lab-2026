@@ -928,11 +928,27 @@
           <div class="stat-lbl">Chứng Nhận Đã Thu Hồi</div>
         </div>
       </div>
+      <!-- THẺ QUẢN TRỊ QUỸ NGÂN SÁCH HỢP ĐỒNG (TREASURY MANAGEMENT) -->
+      <div class="stat-card" style="border: 1.5px solid #93c5fd; background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 253, 244, 0.9));">
+        <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;">💰</div>
+        <div style="flex: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <div class="stat-val" id="statTreasuryBalance" style="color: #0369a1; font-family: var(--font-mono); font-size: 19px;">0.0000 ETH</div>
+            <button type="button" id="btnRefreshTreasury" onclick="refreshContractTreasuryBalance()" title="Làm mới số dư quỹ on-chain" style="background: none; border: none; cursor: pointer; font-size: 13px;">🔄</button>
+          </div>
+          <div class="stat-lbl" style="font-weight: 700; color: #0f172a;">Quỹ Ngân Sách Hợp Đồng</div>
+          <div style="margin-top: 6px;">
+            <button type="button" id="btnWithdrawTreasury" onclick="handleWithdrawTreasuryFees()" style="padding: 4px 12px; font-size: 11px; font-weight: 700; background: #0284c7; color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
+              <span>🏦</span> <span>Rút Quỹ Ngân Sách</span>
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="stat-card">
         <div class="stat-icon purple">⛓️</div>
         <div>
           <div class="stat-val" style="font-size: 16px; font-weight: 700; color: #7c3aed;">Sepolia Testnet</div>
-          <div class="stat-lbl">Trạng thái Hợp đồng: Verified</div>
+          <div class="stat-lbl">Phí Dịch Vụ: 0.0001 ETH</div>
         </div>
       </div>
     </div>
@@ -1274,10 +1290,17 @@
 
     // ABI Chuẩn mực của Smart Contract HCE-ScholarProof trên Sepolia
     const SCHOLAR_PROOF_ABI = [
-      "function registerIdea(bytes32 docHash, string title, string category) external returns (bool)",
+      "function registerIdea(bytes32 docHash, string calldata title, string calldata category) external payable",
       "function isIdeaRegistered(bytes32 docHash) external view returns (bool)",
-      "function verifyIdea(bytes32 docHash) external view returns (address, uint256, uint256, string, string)",
-      "event IdeaRegistered(bytes32 indexed docHash, address indexed author, uint256 timestamp, string title, string category)"
+      "function verifyIdea(bytes32 docHash) external view returns (address author, uint256 timestamp, uint256 blockNumber, string memory title, string memory category)",
+      "function totalIdeas() external view returns (uint256)",
+      "function serviceFee() external view returns (uint256)",
+      "function setServiceFee(uint256 newFee) external",
+      "function withdrawFees() external",
+      "function owner() external view returns (address)",
+      "event IdeaRegistered(bytes32 indexed docHash, address indexed author, uint256 timestamp, uint256 blockNumber, string title, string category)",
+      "event ServiceFeeUpdated(uint256 newFee, uint256 timestamp)",
+      "event FeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp)"
     ];
 
     // Cấu hình Supabase Cloud (Dự án: nolpfigqglmwcbfqoksq)
@@ -1796,7 +1819,7 @@
           const revokeTitle = (`REVOKE_WORK:${currentRevokingWorkCode}:${reason}`).slice(0, 190);
           const revokeCat = "Thu Hồi Bản Quyền Tác Phẩm";
 
-          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Admin chủ động hủy trên MetaMask
@@ -2021,6 +2044,141 @@
     }
 
     // ========================================================================
+    // QUẢN TRỊ QUỸ NGÂN SÁCH HỢP ĐỒNG (MONETIZATION & TREASURY MANAGEMENT)
+    // ========================================================================
+    /**
+     * @notice Đọc và hiển thị số dư Quỹ ngân sách hợp đồng thông minh on-chain
+     * @dev Đọc trực tiếp từ Sepolia RPC qua ethers provider
+     */
+    async function refreshContractTreasuryBalance() {
+      const balanceEl = document.getElementById("statTreasuryBalance");
+      const btnRefresh = document.getElementById("btnRefreshTreasury");
+      if (btnRefresh) btnRefresh.style.transform = "rotate(180deg)";
+
+      try {
+        let provider = null;
+        if (window.ethereum) {
+          provider = new ethers.BrowserProvider(window.ethereum);
+        } else {
+          provider = new ethers.JsonRpcProvider("https://ethereum-sepolia-rpc.publicnode.com");
+        }
+        const balanceWei = await provider.getBalance(toChecksumAddress(CONTRACT_ADDRESS));
+        const ethStr = ethers.formatEther(balanceWei);
+        const formatted = Number(ethStr).toFixed(4);
+        if (balanceEl) {
+          balanceEl.textContent = `${formatted} ETH`;
+          balanceEl.title = `Số dư chính xác: ${ethStr} SepoliaETH (${balanceWei.toString()} wei)`;
+        }
+      } catch (err) {
+        console.warn("Chưa tải được số dư quỹ hợp đồng on-chain:", err);
+        if (balanceEl && balanceEl.textContent === "0.0000 ETH") {
+          balanceEl.textContent = "0.0000 ETH";
+        }
+      } finally {
+        if (btnRefresh) {
+          setTimeout(() => { btnRefresh.style.transform = "none"; }, 500);
+        }
+      }
+    }
+
+    /**
+     * @notice Rút toàn bộ số dư quỹ ngân sách hợp đồng về ví Admin/Owner
+     * @dev Phân quyền onlyOwner, áp dụng CEI trên hợp đồng thông minh
+     */
+    async function handleWithdrawTreasuryFees() {
+      const btn = document.getElementById("btnWithdrawTreasury");
+      if (!window.ethereum) {
+        toast("Vui lòng cài đặt ví MetaMask để thực hiện rút quỹ ngân sách!", "warning");
+        return;
+      }
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = `<span>⏳</span> <span>Kiểm tra...</span>`;
+        }
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const signerAddress = (await signer.getAddress()).toLowerCase();
+
+        // 1. Kiểm tra số dư quỹ hợp đồng trước khi rút
+        const balanceWei = await provider.getBalance(toChecksumAddress(CONTRACT_ADDRESS));
+        if (balanceWei === 0n) {
+          toast("ℹ️ Quỹ ngân sách hiện tại có số dư là 0 ETH! Chưa có phí dịch vụ nào tích lũy.", "info");
+          alert(
+            "ℹ️ THÔNG BÁO QUẢN TRỊ QUỸ NGÂN SÁCH\n" +
+            "--------------------------------------------------\n" +
+            "Số dư quỹ hiện tại: 0.0000 ETH\n" +
+            "Địa chỉ Smart Contract: " + CONTRACT_ADDRESS + "\n\n" +
+            "Hiện tại chưa có khoản phí dịch vụ thẩm định nào trong hợp đồng. Khi có tác giả đăng ký tác phẩm (0.0001 ETH/lượt), số dư quỹ sẽ tự động tích lũy và cho phép Admin rút về ví!"
+          );
+          return;
+        }
+
+        const ethBalance = ethers.formatEther(balanceWei);
+
+        // 2. Xác nhận từ Admin
+        const confirmWithdraw = confirm(
+          "🏛️ QUYẾT ĐỊNH RÚT QUỸ NGÂN SÁCH HỢP ĐỒNG ON-CHAIN\n" +
+          "--------------------------------------------------\n" +
+          "Số tiền rút: " + ethBalance + " SepoliaETH\n" +
+          "Địa chỉ nhận (Ví Admin): " + signerAddress + "\n\n" +
+          "Giao dịch sẽ gọi hàm withdrawFees() trên hợp đồng thông minh và chuyển toàn bộ số dư quỹ về ví của bạn.\n\n" +
+          "Bạn có chắc chắn muốn phát sóng giao dịch này lên Sepolia không?"
+        );
+        if (!confirmWithdraw) return;
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để ký giao dịch rút quỹ on-chain...", "info");
+        if (btn) btn.innerHTML = `<span>🦊</span> <span>MetaMask...</span>`;
+
+        let tx;
+        try {
+          const contractWrite = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, signer);
+          tx = await contractWrite.withdrawFees();
+        } catch (contractErr) {
+          console.warn("Lỗi khi gọi withdrawFees, kiểm tra phân quyền onlyOwner:", contractErr);
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            toast("Bạn đã hủy ký giao dịch rút quỹ trên MetaMask.", "warning");
+            return;
+          }
+          if (contractErr.message && contractErr.message.includes("UnauthorizedCaller")) {
+            toast("⛔ LỖI PHÂN QUYỀN: Ví hiện tại không phải là Owner của hợp đồng!", "error");
+            alert("⛔ LỖI PHÂN QUYỀN ON-CHAIN:\nVí của bạn không có đặc quyền Chủ sở hữu (onlyOwner) để rút quỹ ngân sách hợp đồng!");
+            return;
+          }
+          throw contractErr;
+        }
+
+        toast("⏳ Giao dịch rút quỹ đã gửi lên mạng Sepolia! TxHash: " + tx.hash.slice(0, 10) + "...", "info");
+        if (btn) btn.innerHTML = `<span>⏳</span> <span>Đang đóng khối...</span>`;
+
+        const receipt = await tx.wait(1);
+        toast(`✅ Rút thành công ${ethBalance} SepoliaETH về ví Admin! Số dư quỹ đã về 0.`, "success");
+        alert(
+          "✅ RÚT QUỸ NGÂN SÁCH THÀNH CÔNG!\n" +
+          "--------------------------------------------------\n" +
+          "Số tiền đã rút: " + ethBalance + " SepoliaETH\n" +
+          "Số khối xác nhận: #" + receipt.blockNumber + "\n" +
+          "Mã giao dịch (TxHash): " + receipt.hash + "\n\n" +
+          "Số dư hợp đồng đã được đối soát và cập nhật trên sổ cái Sepolia!"
+        );
+
+        // Làm mới lại số dư
+        await refreshContractTreasuryBalance();
+
+      } catch (err) {
+        console.error("Lỗi rút quỹ ngân sách:", err);
+        toast("❌ Lỗi rút quỹ ngân sách: " + (err.reason || err.message || "Thất bại"), "error");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>🏦</span> <span>Rút Quỹ Ngân Sách</span>`;
+        }
+      }
+    }
+
+    // ========================================================================
     // KHỞI CHẠY TRANG & BẢO VỆ PHÂN QUYỀN (ACCESS GUARD)
     // ========================================================================
     window.addEventListener("DOMContentLoaded", () => {
@@ -2045,9 +2203,10 @@
       renderCertificatesTable();
       updateStats();
 
-      // 4. Đồng bộ dữ liệu mới nhất từ Supabase Cloud
+      // 4. Đồng bộ dữ liệu mới nhất từ Supabase Cloud & Quỹ Ngân Sách On-Chain
       loadCertificatesFromSupabase();
       loadClientWorks();
+      refreshContractTreasuryBalance();
 
       // 5. TUYỆT ĐỐI KHÔNG TỰ ĐỘNG GỌI eth_accounts KHI LOAD TRANG ĐỂ TRÁNH GẮN CỨNG VÍ
       // Chỉ lắng nghe sự kiện đổi tài khoản nếu người dùng tự đổi trên MetaMask
@@ -2233,7 +2392,8 @@
           tx = await contractWrite.registerIdea(
             docHashBytes32,
             (`HCE-CERT:${certCode}:${studentName}`).slice(0, 190),
-            (`Chứng Nhận Khóa Học`).slice(0, 90)
+            (`Chứng Nhận Khóa Học`).slice(0, 90),
+            { value: 100000000000000n }
           );
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
@@ -2499,7 +2659,7 @@
           const revokeTitle = (`REVOKE_CERT:${currentRevokingCertCode}:${reason}`).slice(0, 190);
           const revokeCat = "Thu Hồi Chứng Nhận Khóa Học";
 
-          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Admin chủ động hủy trên MetaMask

@@ -66,6 +66,11 @@ contract ScholarProof {
     uint256 public totalRevokedCertificates;
 
     // ========================================================================
+    // QUẢN TRỊ PHÍ DỊCH VỤ THẨM ĐỊNH & QUỸ NGÂN SÁCH (MONETIZATION & TREASURY)
+    // ========================================================================
+    uint256 public serviceFee; // Mức phí dịch vụ nộp bài thẩm định (tính bằng wei)
+
+    // ========================================================================
     // CẤU TRÚC DỮ LIỆU PHÂN HỆ Ý TƯỞNG NGHIÊN CỨU (BẢO TOÀN TÍNH TƯƠNG THÍCH)
     // ========================================================================
     uint256 public constant MAX_TITLE_LENGTH = 200;
@@ -121,6 +126,9 @@ contract ScholarProof {
         uint256 timestamp
     );
 
+    event ServiceFeeUpdated(uint256 newFee, uint256 timestamp);
+    event FeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp);
+
     // ========================================================================
     // LỖI TÙY BIẾN (CUSTOM ERRORS TIẾT KIỆM GAS)
     // ========================================================================
@@ -142,6 +150,9 @@ contract ScholarProof {
     error NotAuthor();
     error InvalidNewAuthor();
     error SameAuthor();
+    error InsufficientFee(uint256 sent, uint256 required);
+    error WithdrawFailed();
+    error NoFundsToWithdraw();
 
     // ========================================================================
     // HÀM KHỞI TẠO (CONSTRUCTOR)
@@ -152,15 +163,46 @@ contract ScholarProof {
         
         // Cấp quyền mặc định cho ví thử nghiệm của Trưởng nhóm Lê Huy và Thành viên Gia Bảo
         authorizedIssuers[0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50] = true;
+
+        // Khởi tạo mức phí dịch vụ thẩm định bản quyền mặc định: 0.0001 ether
+        serviceFee = 0.0001 ether;
+        emit ServiceFeeUpdated(0.0001 ether, block.timestamp);
     }
 
     // ========================================================================
-    // HÀM QUẢN TRỊ ĐƠN VỊ PHÁT HÀNH (ADMIN FUNCTIONS)
+    // HÀM QUẢN TRỊ ĐƠN VỊ PHÁT HÀNH & QUỸ NGÂN SÁCH (ADMIN FUNCTIONS)
     // ========================================================================
     function setAuthorizedIssuer(address issuer, bool status) external onlyOwner {
         if (issuer == address(0)) revert InvalidNewAuthor();
         authorizedIssuers[issuer] = status;
         emit IssuerStatusUpdated(issuer, status);
+    }
+
+    /**
+     * @notice Điều chỉnh mức phí dịch vụ thẩm định bản quyền on-chain
+     * @dev Chỉ chủ sở hữu hợp đồng mới có thẩm quyền thực thi (onlyOwner)
+     * @param newFee Mức phí dịch vụ mới tính bằng wei
+     */
+    function setServiceFee(uint256 newFee) external onlyOwner {
+        serviceFee = newFee;
+        emit ServiceFeeUpdated(newFee, block.timestamp);
+    }
+
+    /**
+     * @notice Rút toàn bộ số dư quỹ ngân sách dịch vụ về ví chủ sở hữu (Treasury Withdrawal)
+     * @dev Áp dụng nghiêm ngặt chuẩn Checks-Effects-Interactions (CEI)
+     *      Chuyển ETH qua cú pháp call{value: balance}("") và hoàn tất kiểm tra trạng thái
+     */
+    function withdrawFees() external onlyOwner {
+        uint256 balance = address(this).balance;
+        if (balance == 0) revert NoFundsToWithdraw();
+
+        // 1. CHECKS & 2. EFFECTS: Phát sự kiện trước tương tác ngoại vi
+        emit FeesWithdrawn(owner, balance, block.timestamp);
+
+        // 3. INTERACTIONS: Chuyển tiền an toàn bằng .call
+        (bool success, ) = owner.call{value: balance}("");
+        if (!success) revert WithdrawFailed();
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -345,13 +387,15 @@ contract ScholarProof {
     }
 
     // ========================================================================
-    // CÁC HÀM XÁC THỰC BẢN QUYỀN Ý TƯỞNG (GIỮ NGUYÊN BẢO TOÀN CHO LAB CŨ)
+    // CÁC HÀM XÁC THỰC BẢN QUYỀN Ý TƯỞNG & NỘP PHÍ DỊCH VỤ THẨM ĐỊNH (PAYABLE)
     // ========================================================================
     function registerIdea(
         bytes32 docHash,
         string calldata title,
         string calldata category
-    ) external {
+    ) external payable {
+        // 1. CHECKS (Kiểm tra phí dịch vụ và tính toàn vẹn dữ liệu)
+        if (msg.value < serviceFee) revert InsufficientFee(msg.value, serviceFee);
         if (docHash == bytes32(0)) revert InvalidDocHash();
         
         uint256 titleLen = bytes(title).length;
@@ -365,6 +409,7 @@ contract ScholarProof {
             revert IdeaAlreadyRegistered(docHash, _ideas[docHash].author, _ideas[docHash].timestamp);
         }
 
+        // 2. EFFECTS (Cập nhật trạng thái sổ cái nội bộ trước khi phát sự kiện)
         _ideas[docHash] = IdeaRecord({
             author: msg.sender,
             timestamp: block.timestamp,
@@ -378,6 +423,7 @@ contract ScholarProof {
             totalIdeas++;
         }
 
+        // 3. INTERACTIONS (Phát sự kiện On-Chain)
         emit IdeaRegistered(
             docHash,
             msg.sender,
@@ -423,4 +469,9 @@ contract ScholarProof {
     function isIdeaRegistered(bytes32 docHash) external view returns (bool isRegistered) {
         return _ideas[docHash].exists;
     }
+
+    /**
+     * @notice Hàm nhận ETH trực tiếp an toàn
+     */
+    receive() external payable {}
 }
