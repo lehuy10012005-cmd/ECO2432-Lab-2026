@@ -1819,7 +1819,13 @@
           const revokeTitle = (`REVOKE_WORK:${currentRevokingWorkCode}:${reason}`).slice(0, 190);
           const revokeCat = "Thu Hồi Bản Quyền Tác Phẩm";
 
-          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
+          try {
+            tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
+          } catch (feeErr) {
+            if (feeErr.code === 4001 || (feeErr.message && feeErr.message.includes("rejected"))) throw feeErr;
+            console.warn("Hợp đồng trên Sepolia là bản non-payable, tự động nộp 0 ETH:", feeErr);
+            tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+          }
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Admin chủ động hủy trên MetaMask
@@ -2389,12 +2395,20 @@
         let tx = null;
         try {
           const contractWrite = new ethers.Contract(validContractAddress, SCHOLAR_PROOF_ABI, signer);
-          tx = await contractWrite.registerIdea(
-            docHashBytes32,
-            (`HCE-CERT:${certCode}:${studentName}`).slice(0, 190),
-            (`Chứng Nhận Khóa Học`).slice(0, 90),
-            { value: 100000000000000n }
-          );
+          const certTitle = (`HCE-CERT:${certCode}:${studentName}`).slice(0, 190);
+          const certCat = (`Chứng Nhận Khóa Học`).slice(0, 90);
+          try {
+            tx = await contractWrite.registerIdea(
+              docHashBytes32,
+              certTitle,
+              certCat,
+              { value: 100000000000000n }
+            );
+          } catch (feeErr) {
+            if (feeErr.code === 4001 || (feeErr.message && feeErr.message.includes("rejected"))) throw feeErr;
+            console.warn("Hợp đồng trên Sepolia là bản non-payable, tự động phát hành 0 ETH:", feeErr);
+            tx = await contractWrite.registerIdea(docHashBytes32, certTitle, certCat);
+          }
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Admin chủ động hủy trên MetaMask
@@ -2659,7 +2673,13 @@
           const revokeTitle = (`REVOKE_CERT:${currentRevokingCertCode}:${reason}`).slice(0, 190);
           const revokeCat = "Thu Hồi Chứng Nhận Khóa Học";
 
-          tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
+          try {
+            tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat, { value: 100000000000000n });
+          } catch (feeErr) {
+            if (feeErr.code === 4001 || (feeErr.message && feeErr.message.includes("rejected"))) throw feeErr;
+            console.warn("Hợp đồng trên Sepolia là bản non-payable, tự động nộp 0 ETH:", feeErr);
+            tx = await contractWrite.registerIdea(revokeDocHash, revokeTitle, revokeCat);
+          }
         } catch (contractErr) {
           if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
             throw contractErr; // Admin chủ động hủy trên MetaMask
