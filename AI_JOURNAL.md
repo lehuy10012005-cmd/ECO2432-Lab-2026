@@ -1191,3 +1191,38 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 3. **TC-03 (Chống mở khóa không có quyền):** Giao dịch mở khóa bắt buộc phải xuất phát từ ví Admin có thẩm quyền; từ chối xử lý nếu không có chữ ký MetaMask hợp lệ.
 
 **Ai phát hiện:** Sinh viên Lê Huy đề xuất bổ sung tính năng mở khóa bằng MetaMask; AI xây dựng giải pháp UI modal, logic ký ví on-chain và đồng bộ hai chiều Supabase.
+
+---
+
+### Lần 40: Chuẩn hóa & Đồng bộ Toàn diện Tài liệu README.md với Hệ Thống Cổng Quản Trị On-Chain (Admin Portal)
+
+**Ngày ghi nhận:** 12/11/2026
+
+**Bối cảnh:**
+- Sau khi hoàn tất triển khai Hợp đồng Thông minh Sepolia có thu phí (`0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7`), kiểm thử rút quỹ ngân sách thành công (`0x228400c1105a8480aadcf04fbabd04950d9989b7d5013e36a176231a6996c370`), và tích hợp tính năng Mở khóa tài khoản on-chain qua MetaMask trên Cổng Admin, sinh viên Lê Huy yêu cầu cập nhật tài liệu `README.md` để phản ánh đầy đủ năng lực Cổng Quản trị.
+- Ràng buộc nghiêm ngặt: *"chỉ thêm không sửa cấu trúc phần readme nhé"* — Tuyệt đối giữ nguyên vẹn 100% bố cục, tiêu đề và trình tự các phần hiện hữu của `README.md`, chỉ bổ sung thêm nội dung Cổng Admin một cách liền mạch.
+
+**Giải pháp Kỹ thuật Triệt để:**
+1. *Bổ sung Liên kết Cổng Quản Trị tại Tiêu đề Dự án:*
+   - Bổ sung đường dẫn trực tiếp: `> **Cổng Quản trị Admin (Hội đồng Thẩm định):** https://chungnhanquyentacgia.vercel.app/admin.html` song song với Cổng Khách Hàng.
+2. *Bổ sung Phân Hệ Nghiệp Vụ Cổng Quản Trị vào Phần 3 Tổng Quan Nghiệp Vụ:*
+   - Bổ sung tiểu mục `### 4. Cổng Quản Trị Hội Đồng Thẩm Định & Chế Tài On-Chain (admin.html)` mô tả chi tiết 5 chức năng cốt lõi:
+     + **Giám sát Sổ cái Đề tài & Đọc Toàn văn Trực tiếp (Academic Auditing):** Đọc duyệt PDF/DOCX từ Supabase Storage và đối soát mã băm `docHash` với Sepolia.
+     + **Chế tài Thu hồi Quyền Tác giả On-Chain khi Vi phạm Đạo văn (Revocation Mechanism):** Ký giao dịch on-chain thu hồi, kích hoạt Academic Integrity Guard tự động đình chỉ sinh viên vi phạm trên toàn hệ thống.
+     + **Cơ chế Phục hồi Quyền Học thuật & Mở khóa Tài khoản On-Chain (Reinstatement & Unlocking):** Sau phúc khảo/giải trình, Admin ký ví MetaMask mở khóa, phát sóng on-chain và gỡ bỏ cảnh báo đỏ theo thời gian thực.
+     + **Cấp phát & Quản trị Chứng chỉ Đào tạo Học thuật On-Chain (Academic Credentials):** Phát hành chứng chỉ khóa học bảo chứng mật mã, chống làm bằng giả.
+     + **Quản trị Quỹ Ngân sách & Rút Phí Thẩm định (Treasury Governance):** Đối soát quỹ thu phí 0.0001 ETH/lượt và kích hoạt rút quỹ chuẩn CEI về ví Owner.
+3. *Đồng bộ Bảng Lộ Trình & Cây Thư Mục Dự án:*
+   - Thêm dòng bàn giao `Quản trị & Mở rộng` vào bảng tiến độ đồ án.
+   - Thêm tệp `web/admin.html` vào cấu trúc cây thư mục mã nguồn.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Tính Minh bạch & Khả năng Kiểm toán Toàn diện (Auditability & Transparency):**
+  - Tài liệu kỹ thuật đóng vai trò là "Bản cáo bạch" (Prospectus) của hệ thống Web3. Việc công khai rõ ràng cơ chế thu hồi, mở khóa và quản trị quỹ ngân sách giúp các bên tham gia (sinh viên, hội đồng trường, nhà nghiên cứu) tin tưởng vào tính khách quan của nền tảng, loại bỏ hoàn toàn rủi ro đặc quyền ngầm (black-box admin privilege).
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt:**
+1. **TC-01 (Toàn vẹn cấu trúc Markdown):** Kiểm tra cấu trúc tổng thể `README.md`, xác nhận toàn bộ các mục lớn và các bảng biểu trước đó được bảo toàn nguyên vẹn 100%.
+2. **TC-02 (Tính khả dụng của liên kết & tài nguyên):** Đối soát các liên kết Vercel Live Admin và đường dẫn tệp `web/admin.html`, `ScholarProof.sol` hoạt động chính xác.
+3. **TC-03 (Bộ kiểm thử tự động toàn diện):** Chạy lại bộ kịch bản kiểm thử `node test/ScholarProof.test.js`, xác nhận 8/8 ca kiểm thử tiếp tục ĐẠT (PASS) 100%.
+
+**Ai phát hiện:** Sinh viên Lê Huy chỉ định yêu cầu cập nhật tài liệu; AI thực thi cập nhật chuẩn xác, tuân thủ nguyên tắc không sửa cấu trúc.

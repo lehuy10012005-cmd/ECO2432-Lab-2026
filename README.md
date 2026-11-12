@@ -5,6 +5,7 @@
 > **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
 > **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
 > **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)  
+> **Cổng Quản trị Admin (Hội đồng Thẩm định):** [https://chungnhanquyentacgia.vercel.app/admin.html](https://chungnhanquyentacgia.vercel.app/admin.html)  
 > **Lưu trữ dữ liệu website (Supabase):** `copychain_works` & Supabase Storage `copychain_files`
 
 ---
@@ -72,6 +73,30 @@ Hệ thống được thiết kế theo giao diện phẳng, hiện đại và t
    * Tự động xuất **Thẻ Chứng thư Số** trang trọng có đầy đủ thông tin đề tài, mã băm mật mã, liên kết Sepolia và mã QR tra cứu di động.
    * Tích hợp Thư viện số đám mây (Supabase Storage) cho phép đọc trực tuyến tệp toàn văn PDF và tải tệp gốc để đối soát.
 
+### 4. Cổng Quản Trị Hội Đồng Thẩm Định & Chế Tài On-Chain (`admin.html`)
+
+Nhằm hoàn thiện chu trình khép kín giữa **Sinh viên (Người nộp)** và **Nhà trường / Hội đồng Thẩm định (Cơ quan chủ quản)**, phân hệ Quản trị ([`admin.html`](https://chungnhanquyentacgia.vercel.app/admin.html)) cung cấp 5 nghiệp vụ điều hành và chế tài học thuật chuyên sâu:
+
+1. **Giám sát Sổ cái Đề tài & Đọc Toàn văn Trực tiếp (Academic Auditing):**
+   * Hiển thị bảng điều khiển tập trung toàn bộ đề tài học thuật đã nộp vào hệ thống theo thời gian thực.
+   * Tích hợp khung đọc trực tuyến tệp nghiên cứu PDF/DOCX từ Supabase Storage và công cụ đối soát tính hợp lệ của mã băm `docHash` (Keccak-256) với dữ liệu đã neo trên khối Sepolia.
+
+2. **Chế tài Thu hồi Quyền Tác giả On-Chain khi Vi phạm Đạo văn (Revocation Mechanism):**
+   * Khi Hội đồng phát hiện đề tài sao chép, đạo văn hoặc gian lận khoa học, Quản trị viên sử dụng ví Chủ sở hữu (Owner) thực hiện ký giao dịch thu hồi on-chain (`revokeDocument`).
+   * Sự kiện thu hồi được ghi nhận bất biến lên Sepolia, lập tức kích hoạt cơ chế **Academic Integrity Guard**: Toàn bộ hệ thống Client DApp (`index.html`) tự động phát hiện và khóa tài khoản sinh viên vi phạm, hiển thị thanh cảnh báo đỏ đình chỉ quyền nộp đề tài mới nhằm bảo vệ liêm chính học thuật.
+
+3. **Cơ chế Phục hồi Quyền Học thuật & Mở khóa Tài khoản On-Chain (Reinstatement & Unlocking):**
+   * Sau khi sinh viên hoàn thành thủ tục khiếu nại, phúc khảo hoặc nộp giải trình minh oan được Hội đồng phê chuẩn, Quản trị viên kích hoạt tính năng **[🔓 Mở Khóa Tài Khoản]** trực tiếp trên cổng Admin.
+   * Thao tác xác thực qua chữ ký ví MetaMask và phát sóng giao dịch mở khóa on-chain lên Sepolia, đồng thời cập nhật trạng thái phục hồi trên Supabase và phát tín hiệu đồng bộ thời gian thực (`real-time event`), tự động gỡ bỏ lệnh đình chỉ và khôi phục toàn bộ quyền nghiên cứu cho sinh viên trên giao diện Client.
+
+4. **Cấp phát & Quản trị Chứng chỉ Đào tạo Học thuật On-Chain (Academic Credentials):**
+   * Hội đồng có thẩm quyền phát hành Chứng chỉ nghiên cứu khoa học / Chứng nhận bản quyền chính thức (`issueCertificate`).
+   * Chứng chỉ được mã hóa định danh, gắn kèm mã băm sinh viên và liên kết vĩnh viễn trên sổ cái Sepolia, ngăn chặn hoàn toàn tình trạng làm bằng giả hoặc giả mạo chứng chỉ số.
+
+5. **Quản trị Quỹ Ngân sách & Rút Phí Thẩm định (Treasury Governance):**
+   * Hợp đồng thông minh thiết lập cơ chế thu phí dịch vụ minh bạch (`0.0001 ETH`/lượt đăng ký) nhằm trang trải chi phí duy trì mạng lưới và thù lao hội đồng thẩm định.
+   * Giao diện Admin tích hợp bảng đối soát số dư quỹ on-chain theo thời gian thực và nút chức năng **"Rút Quỹ Ngân Sách"** (`withdrawFees`). Giao dịch tuân thủ nghiêm ngặt mô hình **Checks-Effects-Interactions (CEI)**, chỉ cho phép ví Owner rút toàn bộ số dư ETH về ví ngân sách an toàn, ngăn chặn 100% tấn công tái thâm nhập (Reentrancy Attack).
+
 ---
 
 ## 📂 Danh mục sản phẩm & Lộ trình triển khai Đồ án (Lab 8 – 15+)
@@ -87,6 +112,7 @@ Hệ thống được thiết kế theo giao diện phẳng, hiện đại và t
 | **Lab 14** | [`audit_report.md`](./audit_report.md)<br>[`lab14.md`](./lab14.md)<br>[`scripts/gas_benchmark.py`](./scripts/gas_benchmark.py) | Kiểm toán an toàn hợp đồng, đo lường chi phí Gas thực nghiệm trên Layer 2 Base/Arbitrum vs Sepolia Testnet | ✅ **Hoàn thành** |
 | **Lab 15** | [`DEPLOYMENT.md`](./DEPLOYMENT.md)<br>[`SLIDES.md`](./SLIDES.md)<br>[`DAPP_AI_SUPERVISION_JOURNAL.md`](./DAPP_AI_SUPERVISION_JOURNAL.md)<br>[`lab15.md`](./lab15.md) | Tài liệu hướng dẫn vận hành, nhật ký thực chiến giám sát AI & bằng chứng kiểm thử Web DApp, slide thuyết trình nghiệm thu trước hội đồng | ✅ **Hoàn thành** |
 | **Nâng cấp** | [`supabase_schema.sql`](./supabase_schema.sql)<br>[`web/index.html`](./web/index.html) | Tích hợp Thư viện Số Cổng HCE: Lưu trữ đám mây Supabase Storage (`copychain_files`), In-app PDF Viewer, Tải tệp gốc & Đối soát toàn vẹn | ✅ **Hoàn thành** |
+| **Quản trị & Mở rộng** | [`web/admin.html`](./web/admin.html)<br>[`contracts/capstone/ScholarProof.sol`](./contracts/capstone/ScholarProof.sol) | Cổng Quản trị Admin: Giám sát đề tài, thu hồi do đạo văn, mở khóa tài khoản on-chain, cấp chứng chỉ & rút quỹ ngân sách thẩm định | ✅ **Hoàn thành** |
 
 ---
 
@@ -101,7 +127,8 @@ HCE-ScholarProof/
 │   │   └── ProjectCore.sol             # Hợp đồng lõi theo định danh quy định của học phần
 │   └── training/                       # Thư viện hợp đồng mẫu tham chiếu (TimeLockVault, VaultBuggy)
 ├── web/
-│   └── index.html                      # Giao diện Web3 DApp: Đăng ký ý tưởng 6 bước, Tra cứu sổ cái & Kiểm tra toàn vẹn
+│   ├── index.html                      # Giao diện Web3 DApp: Đăng ký ý tưởng 6 bước, Tra cứu sổ cái & Kiểm tra toàn vẹn
+│   └── admin.html                      # Cổng Quản trị Admin: Giám sát đề tài, thu hồi do đạo văn, mở khóa on-chain & rút quỹ
 ├── test/
 │   └── ScholarProof.test.js            # Bộ kịch bản kiểm thử tự động toàn diện (Chạy: node test/ScholarProof.test.js)
 ├── AGENTS.md                           # Quy ước lập trình và chuẩn mực bảo mật dự án
