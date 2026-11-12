@@ -1124,3 +1124,36 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 - Đồng bộ toàn diện mã nguồn và tài liệu lên cả hai nhánh Git: `group/main` và `origin/main`.
 
 **Ai phát hiện:** Sinh viên Lê Huy định hướng tinh chỉnh tài liệu; AI chuẩn hóa nội dung theo văn phong học thuật công nghệ và kinh tế số.
+
+
+---
+
+### Lần 38: Triển khai Hợp đồng Thông minh Payable mới lên Sepolia (`0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7`) & Kích hoạt Dòng tiền Quỹ Ngân Sách Thực tế
+
+**Ngày ghi nhận:** 12/11/2026
+
+**Bối cảnh:**
+- Sau khi phân tích nguyên nhân số dư quỹ hiển thị `0.0000 ETH` (do hợp đồng cũ `0x5D0E...` là `nonpayable`), sinh viên Lê Huy đã trực tiếp biên dịch và triển khai (Deploy) thành công bản Smart Contract mới nhất [`contracts/capstone/ScholarProof.sol`](./contracts/capstone/ScholarProof.sol) lên mạng Ethereum Sepolia thông qua Remix IDE và ví MetaMask (`0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50`).
+- Địa chỉ Smart Contract mới: **`0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7`**.
+
+**Giải pháp Kỹ thuật & Đồng bộ Toàn diện:**
+1. *Kiểm toán & Xác thực Hợp đồng mới trên Sepolia:*
+   - Địa chỉ Owner: `0xB07FB0761c33a01F7f7493A6a8a9667F4842Fd50` (Ví của Trưởng nhóm Lê Huy).
+   - Biến `serviceFee`: Thiết lập chính xác ở mức `100000000000000 wei` (tương đương `0.0001 ETH`).
+   - Hàm nộp bài `registerIdea` mở cổng `payable`: Chấp nhận nhận tiền ETH thật gửi kèm giao dịch và cộng dồn vào số dư hợp đồng (`contractBalance`).
+   - Hàm `withdrawFees()`: Chuẩn Checks-Effects-Interactions (CEI), chuyển toàn bộ số dư hợp đồng về ví Owner qua `.call{value: balance}("")`.
+2. *Cập nhật Mã nguồn Giao diện & Tài liệu:*
+   - Thay thế toàn bộ địa chỉ hợp đồng cũ `0x5D0E...` sang địa chỉ mới `0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7` trên cả hai cổng:
+     + [`web/index.html`](./web/index.html): Cổng Khách Hàng (Tự động nạp `{ value: serviceFeeWei }` khi sinh viên ký nộp bài ở Bước 5).
+     + [`web/admin.html`](./web/admin.html): Cổng Quản Trị (Theo dõi số dư quỹ thời gian thực và kích hoạt nút "Rút Quỹ Ngân Sách").
+     + [`README.md`](./README.md): Cập nhật liên kết Explorer Sepolia chính thức.
+3. *Cam kết An toàn & Điểm Khôi phục (Rollback Guarantee):*
+   - Toàn bộ trạng thái trước khi nâng cấp được lưu trữ tại Commit `74aee2f` (Hợp đồng cũ: `0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`).
+   - Nếu có bất kỳ sự cố phát sinh, khi sinh viên yêu cầu *"về lại lúc chưa sửa"*, hệ thống sẽ hoàn nguyên 100% trong vòng vài giây.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt:**
+1. **TC-01 (Happy Path - Kích hoạt thu phí thật on-chain):** Nộp đề tài mới từ Cổng Khách Hàng kèm `0.0001 ETH`, giao dịch thành công trên Sepolia, số dư Quỹ trên Cổng Admin tăng từ `0.0000 ETH` lên `0.0001 ETH`.
+2. **TC-02 (Rút Quỹ Ngân Sách thành công):** Admin bấm "Rút Quỹ Ngân Sách", MetaMask xác nhận lệnh gọi `withdrawFees()`, toàn bộ số ETH trong hợp đồng được chuyển về ví Owner `0xB07FB...` và số dư quỹ hợp đồng quay về `0.0000 ETH`.
+3. **TC-03 (Chống kẻ lạ rút trộm):** Nếu gọi `withdrawFees()` từ bất kỳ ví nào khác ngoài Owner `0xB07FB...`, Smart Contract lập tức Revert `UnauthorizedCaller`.
+
+**Ai phát hiện:** Sinh viên Lê Huy deploy thành công hợp đồng lên Sepolia; AI đối soát RPC, xác thực bytecode và kích hoạt toàn bộ luồng giao dịch thanh toán on-chain.

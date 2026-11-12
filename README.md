@@ -26,7 +26,7 @@
 * **Tuyên ngôn định vị giá trị (Value Proposition):**
   > *“Nhóm sinh viên phát triển nền tảng DApp phi tập trung HCE-ScholarProof giúp sinh viên và giảng viên bảo hộ quyền sở hữu trí tuệ sơ khởi cho ý tưởng nghiên cứu khoa học, đề tài khoá luận bằng chứng minh sự tồn tại (Proof of Existence) và dấu thời gian khối (Block Timestamp) bất biến trên Blockchain Sepolia, giảm thiểu 100% rủi ro đạo văn và tranh chấp học thuật với chi phí lưu trữ tối ưu thông qua cơ chế băm nhị phân client-side.”*
 * **Địa chỉ Hợp đồng Thông minh chính thức (Sepolia Testnet):**  
-  [`0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87`](https://sepolia.etherscan.io/address/0x5D0E0Be214C4B6eF29CA8183F8BAF0Aaf6ab4e87)
+  [`0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7`](https://sepolia.etherscan.io/address/0x56fEF9eD4EeC61b0a1E7BF7A179a58d61dE6c9E7)
 * **Kho lưu trữ tệp đám mây công khai (Supabase Storage):** `copychain_files` (Hỗ trợ đọc trực tuyến & tải tệp gốc)
 
 ---
