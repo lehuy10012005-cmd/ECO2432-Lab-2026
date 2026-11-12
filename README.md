@@ -2,19 +2,17 @@
 
 > **Đồ án Capstone môn học:** Tiền điện tử và Hợp đồng thông minh (ECO2432)  
 > **Khoa:** Hệ thống Thông tin Kinh tế — Trường Đại học Kinh tế, Đại học Huế  
-> **Giảng viên hướng dẫn:** TS. Hà Ngọc Long
+> **Giảng viên hướng dẫn:** TS. Hà Ngọc Long  
+> **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)  
+> **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)  
+> **Lưu trữ dữ liệu website (Supabase):** `copychain_works` & Supabase Storage `copychain_files`
 
-> **Kho lưu trữ chính thức:** [https://github.com/lehuy10012005-cmd/HCE-ScholarProof](https://github.com/lehuy10012005-cmd/HCE-ScholarProof)
-
-> **Website DApp trực tuyến (Live Demo - Vercel Production):** [https://chungnhanquyentacgia.vercel.app/](https://chungnhanquyentacgia.vercel.app/)
-
-> **Lưu trữ dữ liệu website (Supbase): https://supabase.com/dashboard/project/nolpfigqglmwcbfqoksq/sql/c909fd6a-d77e-4778-aff8-1f10bfafc65d
 ---
 
 ## 👥 Nhóm sinh viên thực hiện (Cặp 2 sinh viên)
 
 | STT | Họ và tên sinh viên | Mã sinh viên | Lớp | Vai trò dự án | Email |
-| :---: | :--- | :---: | :---: | :--- | :--- |
+| :---: | :--- | :--- :---: | :---: | :--- | :--- |
 | 1 | **Lê Văn Quang Huy** | `23K4300010` | K57 Kinh Tế Số | **Trưởng nhóm** / Kỹ sư Hợp đồng Thông minh & Đặc tả Nghiệp vụ | `lehuy10012005@gmail.com` |
 | 2 | **Lại Vương Gia Bảo** | `23K4300024` | K57 Kinh Tế Số | **Thành viên cặp** / Kỹ sư Kiểm thử Tự động & Giao diện Web3 DApp | `bao9d4tpsh@gmail.com` |
 
@@ -33,6 +31,49 @@
 
 ---
 
+## 💡 Tổng quan Nghiệp vụ: Bài toán Thực tiễn, Triết lý Web3 & Các Tính năng Cốt lõi trên Web
+
+### 1. Tại sao cần Blockchain? Bài toán Thực tiễn trong Môi trường Đại học
+Trong nghiên cứu khoa học và đào tạo đại học, việc bảo vệ ý tưởng sơ khởi luôn gặp các rào cản cố hữu:
+* **Ngăn chặn nạn "nẫng tay trên" ý tưởng (Scooping Risk):** Khi sinh viên báo cáo ý tưởng trong seminar, nộp đề cương nghiên cứu hoặc thi khởi nghiệp, rủi ro bị sao chép ý tưởng trước ngày công bố/bảo vệ chính thức là rất lớn mà không có bằng chứng pháp lý chứng minh ai là người sáng tạo đầu tiên.
+* **Hạn chế của Cơ sở dữ liệu truyền thống (Centralized DB):** Nếu chỉ lưu trên máy chủ web trường hoặc ổ đĩa đám mây (Google Drive/OneDrive), dữ liệu mốc thời gian (timestamp) hoàn toàn có thể bị chỉnh sửa, ghi đè hoặc can thiệp bởi quản trị viên hệ thống.
+* **Giải pháp Bất biến từ Blockchain:** Blockchain đóng vai trò như một **"Công chứng viên kỹ thuật số phi tập trung"**. Bằng việc đóng dấu thời gian khối (**Block Timestamp**) trên mạng Ethereum Sepolia, một khi giao dịch đã vào khối thì **không một ai (kể cả tác giả hay nhà trường) có thể quay ngược thời gian để sửa đổi**. Điều này xác lập nguyên tắc quyền ưu tiên tuyệt đối: **Ai nộp trước dù chỉ 1 giây cũng là người đầu tiên (*First-to-Invent*)**.
+
+### 2. Triết lý Thiết kế: Bảo vệ Nội dung Tuyệt đối & Tối ưu Chi phí Gas
+* **Băm mật mã tại trình duyệt (Client-Side Cryptographic Hashing):**  
+  File tài liệu gốc (PDF, Word, Code) **không bao giờ bị tải nguyên bản lên Blockchain**. Trình duyệt của sinh viên tự động băm tài liệu thành chuỗi đại diện 32-byte duy nhất (`Keccak-256` và `SHA-256`).
+* **Bảo mật nghiên cứu sơ khởi:** Tệp bài viết gốc vẫn nằm an toàn trên máy tính của tác giả, hoàn toàn không bị rò rỉ nội dung bí mật công nghệ trước ngày bảo vệ.
+* **Tối ưu chi phí kinh tế:** Lưu 1MB dữ liệu thô lên blockchain tốn hàng chục ngàn USD, nhưng lưu chuỗi băm 32-byte chỉ tiêu tốn định mức gas tối thiểu (~48.000 gas), giúp hệ thống vận hành bền vững với chi phí gần như bằng 0.
+* **Hiệu ứng Tuyết lở (Avalanche Effect):** Thuật toán băm một chiều đảm bảo tính toàn vẹn tuyệt đối: Nếu tài liệu bị can thiệp dù chỉ thêm một dấu cách hay một ký tự, mã băm sinh ra sẽ thay đổi 100%, lập tức làm vô hiệu hóa bằng chứng giả mạo.
+
+### 3. Trải nghiệm 4 Trụ cột Nghiệp vụ trên Giao diện Web DApp (`index.html`)
+
+Hệ thống được thiết kế theo giao diện phẳng, hiện đại và trực quan để sinh viên, giảng viên có thể thao tác dễ dàng qua 4 trụ cột chức năng:
+
+1. **Quy trình Đăng ký Ý tưởng 6 Bước (Wizard Step-by-Step):**
+   * *Bước 1 (Thông tin tác phẩm):* Khai báo tên đề tài, mô tả tóm tắt, chọn Khoa/Viện chuyên môn trực thuộc HCE.
+   * *Bước 2 (Tác giả & Quyền sở hữu):* Minh bạch hóa vai trò và phân chia tỷ lệ đóng góp (ví dụ: Chủ nhiệm đề tài 60%, Đồng tác giả 40%) kèm chữ ký ví của các thành viên nhóm.
+   * *Bước 3 & 4 (Băm file & Kiểm tra dữ liệu):* Kéo thả tệp đề tài, trình duyệt tự động băm mã và hiển thị đối soát thông tin trước khi ký.
+   * *Bước 5 (Ký số Blockchain):* Kết nối ví MetaMask, ký số thông điệp xác thực quyền tác giả và phát sóng giao dịch lên Sepolia.
+   * *Bước 6 (Hoàn tất & Cấp mã):* Cấp mã lưu trữ chính thức (dạng `CC-2026-xxxx`), số khối on-chain và liên kết kiểm tra trên Sepolia Etherscan.
+
+2. **Sổ cái Công trình On-Chain Công khai (Ledger Explorer):**
+   * Bảng danh mục công khai hiển thị toàn bộ các công trình học thuật đã được bảo chứng theo thời gian thực.
+   * Minh bạch hóa số khối (#Block), ngày giờ đóng dấu, tên tác giả, đơn vị đào tạo và mã băm mật mã.
+   * Tích hợp bộ lọc đa tiêu chí theo từng Khoa và công cụ tìm kiếm tức thời.
+
+3. **Trung tâm Đối soát Tính Toàn vẹn Độc lập (Zero-Knowledge Integrity Verification):**
+   * Bất kỳ ai (nhà tuyển dụng, hội đồng đánh giá, tạp chí khoa học) chỉ cần kéo thả file bài viết cần kiểm tra vào trang:
+     - **Nếu tài liệu nguyên bản:** Hệ thống lập tức báo xanh ✅ *"TÀI LIỆU TOÀN VẸN & CHÍNH GỐC"* kèm thông tin tác giả và dấu thời gian khối.
+     - **Nếu tài liệu đã bị chỉnh sửa/đạo văn:** Hệ thống báo đỏ ❌ *"MÃ BĂM KHÔNG KHỚP / TÀI LIỆU ĐÃ BỊ THAY ĐỔI"*.
+   * Người thẩm định hoàn toàn không cần đăng nhập hay tạo tài khoản, đảm bảo tính công khai, minh bạch và khách quan.
+
+4. **Chứng thư Quyền Tác giả & Thư viện Số Học thuật:**
+   * Tự động xuất **Thẻ Chứng thư Số** trang trọng có đầy đủ thông tin đề tài, mã băm mật mã, liên kết Sepolia và mã QR tra cứu di động.
+   * Tích hợp Thư viện số đám mây (Supabase Storage) cho phép đọc trực tuyến tệp toàn văn PDF và tải tệp gốc để đối soát.
+
+---
+
 ## 📂 Danh mục sản phẩm & Lộ trình triển khai Đồ án (Lab 8 – 15+)
 
 | Giai đoạn | Sản phẩm bàn giao | Mô tả nghiệp vụ & Kỹ thuật | Trạng thái |
@@ -41,44 +82,16 @@
 | **Lab 9** | [`SPEC.md`](./SPEC.md)<br>[`lab09.md`](./lab09.md)<br>[`contracts/training/TimeLockVault.sol`](./contracts/training/TimeLockVault.sol) | Đặc tả nghiệp vụ BA chi tiết cho nền tảng ScholarProof, máy trạng thái xác thực ý tưởng và ma trận rủi ro | ✅ **Hoàn thành** |
 | **Lab 10** | [`lab10.md`](./lab10.md)<br>[`contracts/capstone/ScholarProof.sol`](./contracts/capstone/ScholarProof.sol) (v2)<br>[`contracts/project/ProjectCore.sol`](./contracts/project/ProjectCore.sol) | Rà soát mã nguồn do AI sinh ra, giải mã Storage Slot 2 (VaultBuggy), kiểm toán & nâng cấp ScholarProof v2 | ✅ **Hoàn thành** |
 | **Lab 11** | [`web/index.html`](./web/index.html)<br>[`lab11.md`](./lab11.md) | Xây dựng giao diện Web3 DApp: Băm file client-side (Keccak-256), kết nối MetaMask Ethers.js v6, tra cứu và xuất chứng thư số | ✅ **Hoàn thành** |
-| **Lab 12** | [`test/ScholarProof.test.js`](./test/ScholarProof.test.js)<br>[`contracts/test/ScholarProof_test.sol`](./contracts/test/ScholarProof_test.sol)<br>[`lab12.md`](./lab12.md) | Bộ kịch bản kiểm thử tự động toàn diện: Luồng chuẩn, chống gian lận nộp đè mã băm, xử lý ngoại lệ biên | ✅ **Hoàn thành** |
+| **Lab 12** | [`test/ScholarProof.test.js`](./test/ScholarProof.test.js)<br>[`contracts/test/ScholarProof_test.sol`](./contracts/test/ScholarProof_test.sol)<br>[`lab12.md`](./lab12.md) | Bộ kịch bản kiểm thử tự động toàn diện: Luồng chuẩn, chống gian lận nộp đè mã băm, xử lý ngoại lệ biên (Chạy: `node test/ScholarProof.test.js`) | ✅ **Hoàn thành** |
 | **Lab 13** | [`web/index.html`](./web/index.html) (Tích hợp Sepolia Testnet)<br>[`lab13.md`](./lab13.md)<br>[`AI_JOURNAL.md`](./AI_JOURNAL.md) | Tích hợp địa chỉ hợp đồng deploy Sepolia, xác thực mã nguồn Etherscan, kiểm thử luồng ký ví và đối soát sự kiện on-chain | ✅ **Hoàn thành** |
 | **Lab 14** | [`audit_report.md`](./audit_report.md)<br>[`lab14.md`](./lab14.md)<br>[`scripts/gas_benchmark.py`](./scripts/gas_benchmark.py) | Kiểm toán an toàn hợp đồng, đo lường chi phí Gas thực nghiệm trên Layer 2 Base/Arbitrum vs Sepolia Testnet | ✅ **Hoàn thành** |
 | **Lab 15** | [`DEPLOYMENT.md`](./DEPLOYMENT.md)<br>[`SLIDES.md`](./SLIDES.md)<br>[`DAPP_AI_SUPERVISION_JOURNAL.md`](./DAPP_AI_SUPERVISION_JOURNAL.md)<br>[`lab15.md`](./lab15.md) | Tài liệu hướng dẫn vận hành, nhật ký thực chiến giám sát AI & bằng chứng kiểm thử Web DApp, slide thuyết trình nghiệm thu trước hội đồng | ✅ **Hoàn thành** |
-| **Nâng cấp** | [`supabase_schema.sql`](./supabase_schema.sql)<br>[`web/index.html`](./web/index.html) (Thư viện số) | Tích hợp Thư viện Số Cổng HCE (`thuvien.hce.edu.vn`): Lưu trữ đám mây Supabase Storage (`copychain_files`), In-app PDF Viewer, Tải tệp gốc & Đối soát toàn vẹn | ✅ **Hoàn thành** |
-| **Monetization** | [`contracts/capstone/ScholarProof.sol`](./contracts/capstone/ScholarProof.sol)<br>[`web/index.html`](./web/index.html)<br>[`web/admin.html`](./web/admin.html) | Thu phí dịch vụ thẩm định bản quyền (0.0001 ETH) & Quản trị quỹ ngân sách Smart Contract (Treasury Management, CEI pattern, Custom Errors, 8/8 Test Cases) | ✅ **Hoàn thành** |
-
----
-
-## 💎 Tính năng Mới: Thu Phí Dịch Vụ Thẩm Định & Quản Trị Quỹ Ngân Sách (Monetization & Treasury)
-
-Nhằm đảm bảo mô hình kinh tế Web3 bền vững (Tokenomics & Sustainability), hệ thống HCE-ScholarProof đã nâng cấp toàn diện cơ chế thu phí dịch vụ thẩm định và quản trị ngân sách:
-
-1. **Thu phí dịch vụ thẩm định bản quyền (`serviceFee`):**
-   - Mức phí mặc định: **`0.0001 ETH`** (~2.500 VNĐ / SepoliaETH) cho mỗi lượt đăng ký ý tưởng nghiên cứu / tác phẩm.
-   - Hàm `registerIdea(...)` được chuyển thành `external payable`. Áp dụng nghiêm ngặt mẫu thiết kế **Checks - Effects - Interactions (CEI)**.
-   - Chống gian lận nộp thiếu phí: Nếu `msg.value < serviceFee`, giao dịch lập tức Revert với mã lỗi tùy biến `InsufficientFee(uint256 sent, uint256 required)` giúp tiết kiệm tối đa gas cho người dùng.
-
-2. **Quản trị Quỹ Ngân sách & Rút tiền On-chain (`withdrawFees`):**
-   - Phân quyền nghiêm ngặt `onlyOwner`: Chỉ địa chỉ ví Chủ sở hữu hợp đồng mới có thẩm quyền thực thi lệnh rút quỹ.
-   - Chuyển toàn bộ số dư hợp đồng thông qua cú pháp chuẩn an toàn `(bool success, ) = owner.call{value: balance}("")` và kiểm tra kết quả `if (!success) revert WithdrawFailed();`.
-   - Nếu số dư quỹ bằng 0, hợp đồng từ chối xử lý với lỗi `NoFundsToWithdraw()`.
-   - Mọi biến động dòng tiền đều phát sự kiện minh bạch `event FeesWithdrawn(address indexed owner, uint256 amount, uint256 timestamp)`.
-
-3. **Giao diện DApp Client & Cổng Admin:**
-   - **Bước 5 (Ký On-Chain):** Bổ sung bảng công khai chi phí: "Phí dịch vụ thẩm định: 0.0001 ETH", tự động nạp tham số `{ value: serviceFee }` vào giao dịch Ethers.js giúp MetaMask hiển thị chi phí rõ ràng trước khi ký.
-   - **Cổng Quản trị Admin (`web/admin.html`):** Bổ sung thẻ số dư quỹ hợp đồng (`statTreasuryBalance`) cập nhật thời gian thực từ mạng Sepolia và nút **"Rút Quỹ Ngân Sách"** với cơ chế bảo mật xác nhận ví.
-
-4. **Bộ Kiểm thử Tự động (8/8 Ca Kiểm thử - 100% Pass):**
-   - Chạy kiểm thử tự động với: `node test/ScholarProof.test.js`
-   - Bổ sung 3 ca kiểm thử chuyên sâu về kinh tế học Web3:
-     - `TC-06`: Nộp đúng phí 0.0001 ETH thành công, số dư quỹ hợp đồng tăng chính xác.
-     - `TC-07`: Chống gian lận nộp thiếu phí (gửi 0 ETH hoặc < 0.0001 ETH) bị Revert `InsufficientFee`.
-     - `TC-08`: Kẻ lạ cố tình rút trộm quỹ bị chặn `UnauthorizedCaller`; Chủ sở hữu rút thành công toàn bộ số dư về ví.
+| **Nâng cấp** | [`supabase_schema.sql`](./supabase_schema.sql)<br>[`web/index.html`](./web/index.html) | Tích hợp Thư viện Số Cổng HCE: Lưu trữ đám mây Supabase Storage (`copychain_files`), In-app PDF Viewer, Tải tệp gốc & Đối soát toàn vẹn | ✅ **Hoàn thành** |
 
 ---
 
 ## 🛠️ Cấu trúc kho lưu trữ mã nguồn Đồ án
+
 ```text
 HCE-ScholarProof/
 ├── contracts/
@@ -88,7 +101,9 @@ HCE-ScholarProof/
 │   │   └── ProjectCore.sol             # Hợp đồng lõi theo định danh quy định của học phần
 │   └── training/                       # Thư viện hợp đồng mẫu tham chiếu (TimeLockVault, VaultBuggy)
 ├── web/
-│   └── index.html                      # Giao diện Web3 DApp băm file client-side và tra cứu on-chain
+│   └── index.html                      # Giao diện Web3 DApp: Đăng ký ý tưởng 6 bước, Tra cứu sổ cái & Kiểm tra toàn vẹn
+├── test/
+│   └── ScholarProof.test.js            # Bộ kịch bản kiểm thử tự động toàn diện (Chạy: node test/ScholarProof.test.js)
 ├── AGENTS.md                           # Quy ước lập trình và chuẩn mực bảo mật dự án
 ├── AI_JOURNAL.md                       # Nhật ký làm việc, phản biện và giám sát AI học phần (Lab 1 - 15)
 ├── DAPP_AI_SUPERVISION_JOURNAL.md      # Nhật ký thực chiến giám sát AI & bằng chứng kiểm thử Web DApp

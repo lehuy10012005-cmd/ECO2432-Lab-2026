@@ -1092,3 +1092,35 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
    - *Kết quả:* Smart Contract từ chối và Revert `UnauthorizedCaller` hoặc giao diện chặn ngay từ bước `balanceWei === 0n`, bảo toàn an toàn tuyệt đối cho quỹ ngân sách.
 
 **Ai phát hiện:** Sinh viên Lê Huy gửi 3 ảnh chụp màn hình phản ánh hiện tượng đề tài mới chưa xuất hiện bên Admin và thắc mắc về số dư quỹ ngân sách bằng 0 ETH; AI phân tích mã lỗi PostgREST PGRST204, thiết lập thuật toán dung hợp hai chiều và bổ sung đối soát kế toán on-chain.
+
+
+---
+
+### Lần 37: Chuẩn hóa Tài liệu Đồ án Capstone trong README.md theo Định hướng Học thuật & Tối ưu Giao diện Trình bày
+
+**Ngày ghi nhận:** 12/11/2026
+
+**Bối cảnh & Yêu cầu:**
+- Sinh viên Lê Huy yêu cầu tối ưu hóa lại toàn bộ tài liệu [`README.md`](./README.md) của dự án để phục vụ báo cáo và nghiệm thu trước Giảng viên hướng dẫn (TS. Hà Ngọc Long) và Hội đồng đánh giá học phần ECO2432.
+- Yêu cầu cụ thể:
+  1. Lược bỏ hoàn toàn các mục nhật ký tính năng kỹ thuật vụn vặt (như cơ chế thu phí nội bộ, patch fallback) khỏi `README.md` để tránh làm loãng tài liệu (các phần này được bảo lưu đầy đủ trong `AI_JOURNAL.md` phục vụ kiểm toán).
+  2. Không đưa phân hệ Admin vào phần trình bày tổng quan nhằm giữ trọng tâm bài thuyết trình thuần túy vào Cổng Khách Hàng / Sinh viên (`index.html`).
+  3. Bổ sung các luận điểm sâu sắc nhưng dễ hiểu về triết lý Web3, lý giải bản chất vì sao cần Blockchain thay cho cơ sở dữ liệu truyền thống, cơ chế băm Client-side bảo mật ý tưởng sơ khởi và cấu trúc 4 trụ cột nghiệp vụ trên Web DApp.
+
+**Giải pháp Kỹ thuật & Chuẩn hóa Tài liệu:**
+1. *Luận giải Bản chất Triết lý Web3 & Kinh tế số (First-to-Invent & Immutable Proof):*
+   - Phân tích ranh giới giữa Cơ sở dữ liệu tập trung (Centralized DB dễ bị sửa đổi mốc thời gian `timestamp` bởi quản trị viên) và Sổ cái phân tán Blockchain (Ethereum Sepolia đóng vai trò như Công chứng viên số bất biến, không ai có thể quay ngược thời gian để sửa đổi).
+   - Xác lập nguyên tắc quyền ưu tiên tuyệt đối: Ai nộp trước dù chỉ 1 giây cũng là người đầu tiên sáng tạo ra ý tưởng (*Proof of Existence - First-to-Invent*), giải quyết triệt để rủi ro "nẫng tay trên" ý tưởng (Scooping risk) trong môi trường đại học.
+2. *Cơ chế Kỹ thuật Băm Client-Side & Hiệu ứng Tuyết lở (Avalanche Effect):*
+   - Làm rõ vì sao tệp gốc không bao giờ được đưa lên Blockchain: Đảm bảo bí mật nghiên cứu sơ khởi của sinh viên trước ngày bảo vệ, đồng thời tối ưu hóa 99.9% chi phí gas (chỉ lưu chuỗi băm 32-byte thay vì lưu tệp dung lượng lớn).
+3. *Định hình 4 Trụ cột Trải nghiệm trên Giao diện Web DApp (`index.html`):*
+   - Trụ cột 1: Quy trình Đăng ký Ý tưởng 6 Bước (Wizard Step-by-Step) có phân chia minh bạch tỷ lệ đóng góp của đồng tác giả.
+   - Trụ cột 2: Sổ cái Công trình On-Chain Công khai (Ledger Explorer) liên kết Sepolia Etherscan.
+   - Trụ cột 3: Trung tâm Đối soát Tính Toàn vẹn Độc lập (Zero-Knowledge Integrity Verification) bằng cơ chế kéo thả tệp không cần đăng nhập.
+   - Trụ cột 4: Chứng thư Quyền Tác giả dạng Thẻ số tích hợp mã QR & Thư viện số học thuật đám mây.
+
+**Kiểm thử & Đồng bộ:**
+- Bộ kiểm thử tự động [`test/ScholarProof.test.js`](./test/ScholarProof.test.js) tiếp tục vượt qua 8/8 ca kiểm thử (100% PASS).
+- Đồng bộ toàn diện mã nguồn và tài liệu lên cả hai nhánh Git: `group/main` và `origin/main`.
+
+**Ai phát hiện:** Sinh viên Lê Huy định hướng tinh chỉnh tài liệu; AI chuẩn hóa nội dung theo văn phong học thuật công nghệ và kinh tế số.
