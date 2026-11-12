@@ -1276,6 +1276,90 @@
     </div>
   </div>
 
+  <!-- MODAL PHỤC HỒI QUYỀN HỌC THUẬT & MỞ KHÓA ĐỀ TÀI (ON-CHAIN REINSTATEMENT) -->
+  <div id="reactivateWorkModalBackdrop" class="modal-backdrop" onclick="closeReactivateWorkModal()"></div>
+  <div id="reactivateWorkModal" class="modal-dialog">
+    <div class="modal-header">
+      <h4 style="color: #059669;"><span>🔓</span> Phục Hồi Quyền Học Thuật &amp; Mở Khóa Đề Tài</h4>
+      <button type="button" class="btn-close-modal" onclick="closeReactivateWorkModal()">&times;</button>
+    </div>
+    <div>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px; color: #166534;">
+        <strong>✅ CƠ CHẾ PHỤC HỒI ON-CHAIN (REINSTATEMENT):</strong><br>
+        Quyết định phục hồi sẽ được ký số bằng ví Admin và phát sóng lên mạng Sepolia. Tác phẩm sẽ được trả về trạng thái <strong>HỢP LỆ (SEPOLIA ON-CHAIN)</strong>, đồng thời tự động gỡ bỏ chế tài đình chỉ tài khoản tác giả trên Cổng Khách Hàng.
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Mã Đề Tài / Tác Phẩm:</label>
+        <input type="text" id="modalReactivateWorkCode" class="form-control" readonly style="background: var(--bg); font-weight: 700; font-family: monospace;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Tên Đề Tài &amp; Tác Giả:</label>
+        <input type="text" id="modalReactivateWorkTitle" class="form-control" readonly style="background: var(--bg);">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Lý Do Thu Hồi Trước Đây:</label>
+        <input type="text" id="modalReactivateWorkOldReason" class="form-control" readonly style="background: #fef2f2; color: #b91c1c; font-size: 12px;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Căn Cứ &amp; Lý Do Mở Khóa / Phục Hồi <span style="color: #059669;">*</span>:</label>
+        <textarea id="modalReactivateWorkReason" class="form-control" rows="3" placeholder="Ghi rõ căn cứ (VD: Sinh viên đã giải trình khiếu nại thành công, bổ sung minh chứng trích dẫn đầy đủ theo kết luận Hội đồng...)" required></textarea>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickReactivateWorkReason('Sinh viên đã giải trình khiếu nại thành công &amp; bổ sung minh chứng trích dẫn')">Giải trình thành công</button>
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickReactivateWorkReason('Học viên hoàn thành phúc khảo &amp; khắc phục sai sót theo yêu cầu')">Hoàn thành phúc khảo</button>
+          <button type="button" class="btn-addon" style="padding: 2px 8px; font-size: 11px;" onclick="setQuickReactivateWorkReason('Hội đồng thẩm định chấp thuận dỡ bỏ chế tài kỷ luật')">Hội đồng dỡ bỏ chế tài</button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn-secondary" onclick="closeReactivateWorkModal()">Hủy Bỏ</button>
+        <button type="button" id="btnConfirmReactivateWork" class="btn-success" style="padding: 10px 18px; font-size: 13.5px; background: #059669; color: white; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;" onclick="confirmReactivateWork()">
+          <span>🔓</span> <span>Xác Nhận Ký Ví Mở Khóa On-Chain</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PHỤC HỒI CHỨNG NHẬN KHÓA HỌC (TAB 2) -->
+  <div id="reactivateCertModalBackdrop" class="modal-backdrop" onclick="closeReactivateCertModal()"></div>
+  <div id="reactivateCertModal" class="modal-dialog">
+    <div class="modal-header">
+      <h4 style="color: #059669;"><span>🔓</span> Phục Hồi Hiệu Lực Chứng Nhận Khóa Học</h4>
+      <button type="button" class="btn-close-modal" onclick="closeReactivateCertModal()">&times;</button>
+    </div>
+    <div>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px; color: #166534;">
+        <strong>✅ CƠ CHẾ PHỤC HỒI CHỨNG NHẬN:</strong><br>
+        Lệnh khôi phục hiệu lực chứng chỉ sẽ được ký số ví Admin và phát sóng on-chain lên Sepolia. Chứng chỉ sẽ đổi trạng thái sang <strong>HỢP LỆ</strong>.
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Mã Chứng Nhận:</label>
+        <input type="text" id="modalReactivateCertCode" class="form-control" readonly style="background: var(--bg); font-weight: 700;">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label>Họ tên Học viên:</label>
+        <input type="text" id="modalReactivateCertStudent" class="form-control" readonly style="background: var(--bg);">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>Lý Do Phục Hồi Chứng Nhận <span style="color: #059669;">*</span>:</label>
+        <textarea id="modalReactivateCertReason" class="form-control" rows="3" placeholder="Nhập căn cứ phục hồi hiệu lực..." required></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" class="btn-secondary" onclick="closeReactivateCertModal()">Hủy Bỏ</button>
+        <button type="button" id="btnConfirmReactivateCert" class="btn-success" style="padding: 10px 18px; font-size: 13.5px; background: #059669; color: white; border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;" onclick="confirmReactivateCertificate()">
+          <span>🔓</span> <span>Xác Nhận Ký Ví Mở Khóa On-Chain</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST CONTAINER -->
   <div id="toastContainer"></div>
 
@@ -1752,9 +1836,14 @@
             </td>
             <td style="text-align: right; white-space: nowrap;">
               ${isRevoked ? `
-                <button type="button" class="btn-secondary" style="font-size: 11.5px; padding: 4px 10px;" onclick="viewWorkRevocationDetails('${w.code}')" title="Xem quyết định kỷ luật thu hồi">
-                  <span>📜</span> <span>Xem Lý Do</span>
-                </button>
+                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn-success" style="font-size: 11.5px; padding: 4px 10px; background: #059669; color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" onclick="openReactivateWorkModal('${w.code}')" title="Mở khóa tài khoản & phục hồi quyền tác giả on-chain">
+                    <span>🔓</span> <span>Mở Khóa</span>
+                  </button>
+                  <button type="button" class="btn-secondary" style="font-size: 11.5px; padding: 4px 8px;" onclick="viewWorkRevocationDetails('${w.code}')" title="Xem quyết định kỷ luật thu hồi">
+                    <span>📜</span> <span>Lý Do</span>
+                  </button>
+                </div>
               ` : `
                 <div style="display: inline-flex; gap: 6px; align-items: center;">
                   <button type="button" class="btn-danger" style="font-size: 11.5px; padding: 4px 10px;" onclick="openRevokeWorkModal('${w.code}')" title="Thu hồi bản quyền tác phẩm on-chain nếu phát hiện đạo văn">
@@ -2099,6 +2188,308 @@
         `Mã TxHash thu hồi: ${target.revokeTxHash ? target.revokeTxHash.slice(0, 16) + '...' : 'Sepolia Confirmed'}\n\n` +
         `KẾT LUẬN & LÝ DO THU HỒI CHÍNH THỨC:\n"${target.revokeReason || 'Vi phạm nghiêm trọng quy chế liêm chính học thuật và quyền sở hữu trí tuệ.'}"`
       );
+    }
+
+    // ========================================================================
+    // MỞ KHÓA TÀI KHOẢN & PHỤC HỒI QUYỀN TÁC GIẢ ON-CHAIN (TAB 4)
+    // ========================================================================
+    let currentReactivatingWorkCode = null;
+
+    function openReactivateWorkModal(workCode) {
+      const target = ALL_CLIENT_WORKS.find(w => w.code === workCode);
+      if (!target) {
+        toast("Không tìm thấy thông tin đề tài " + workCode, "error");
+        return;
+      }
+
+      currentReactivatingWorkCode = workCode;
+      document.getElementById("modalReactivateWorkCode").value = target.code;
+      document.getElementById("modalReactivateWorkTitle").value = target.title + " - Tác giả: " + (target.authorsText || target.authorWallet || 'Học viên HCE');
+      document.getElementById("modalReactivateWorkOldReason").value = target.revokeReason || target.revoke_reason || "Đã bị thu hồi do đạo văn";
+      document.getElementById("modalReactivateWorkReason").value = "";
+
+      document.getElementById("reactivateWorkModalBackdrop").style.display = "block";
+      document.getElementById("reactivateWorkModal").style.display = "block";
+    }
+
+    function closeReactivateWorkModal() {
+      document.getElementById("reactivateWorkModalBackdrop").style.display = "none";
+      document.getElementById("reactivateWorkModal").style.display = "none";
+      currentReactivatingWorkCode = null;
+    }
+
+    function setQuickReactivateWorkReason(text) {
+      const textarea = document.getElementById("modalReactivateWorkReason");
+      if (textarea) textarea.value = text;
+    }
+
+    async function confirmReactivateWork() {
+      const reason = (document.getElementById("modalReactivateWorkReason").value || "").trim();
+      if (!reason) {
+        toast("Vui lòng nhập căn cứ / lý do phục hồi quyền học thuật!", "warning");
+        return;
+      }
+
+      toast("🦊 Mở MetaMask: Vui lòng kết nối ví Admin để ký lệnh phục hồi quyền học thuật...", "info");
+      const adminWallet = await requestAdminWalletJustInTime(true);
+      if (!adminWallet) {
+        toast("Cần kết nối ví MetaMask để thực hiện giao dịch mở khóa!", "warning");
+        return;
+      }
+
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        toast("Không tìm thấy tiện ích MetaMask trên trình duyệt!", "error");
+        return;
+      }
+
+      let provider;
+      try {
+        provider = new ethers.BrowserProvider(eth);
+        await ensureMetaMaskSepolia(eth);
+      } catch (netErr) {
+        toast("Lỗi chuyển sang Sepolia Testnet: " + (netErr.message || netErr), "error");
+        return;
+      }
+
+      const btnConfirm = document.getElementById("btnConfirmReactivateWork");
+      if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = `<span>⚙️</span> <span>Đang ký lệnh mở khóa on-chain...</span>`;
+      }
+
+      try {
+        const signer = await provider.getSigner();
+
+        const balance = await provider.getBalance(adminWallet);
+        if (balance === 0n) {
+          toast("Số dư ví của bạn là 0 SepoliaETH! Cần nạp gas testnet để gửi giao dịch.", "error");
+          return;
+        }
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch mở khóa lên Sepolia...", "info");
+
+        // Phát sóng giao dịch On-chain lên Sepolia Blockchain
+        let tx = null;
+        try {
+          const contractWrite = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, signer);
+          const reinstateDocHash = ethers.keccak256(ethers.toUtf8Bytes(
+            `HCE_WORK_REINSTATE:${currentReactivatingWorkCode}:${Date.now()}`
+          ));
+          const reinstateTitle = (`REINSTATE_WORK:${currentReactivatingWorkCode}:${reason}`).slice(0, 190);
+          const reinstateCat = "Phục Hồi Bản Quyền Tác Phẩm";
+
+          try {
+            tx = await contractWrite.registerIdea(reinstateDocHash, reinstateTitle, reinstateCat, { value: 100000000000000n });
+          } catch (feeErr) {
+            if (feeErr.code === 4001 || (feeErr.message && feeErr.message.includes("rejected"))) throw feeErr;
+            tx = await contractWrite.registerIdea(reinstateDocHash, reinstateTitle, reinstateCat);
+          }
+        } catch (contractErr) {
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            throw contractErr;
+          }
+          const payloadCalldata = ethers.hexlify(ethers.toUtf8Bytes(
+            "HCE_WORK_REINSTATE:" + currentReactivatingWorkCode + ":" + reason.slice(0, 36)
+          ));
+          tx = await signer.sendTransaction({
+            to: adminWallet,
+            value: 0n,
+            data: payloadCalldata
+          });
+        }
+
+        toast("⏳ Giao dịch mở khóa đang được ghi vào khối Sepolia...", "info");
+        const receipt = await tx.wait(1);
+
+        if (!receipt || !receipt.hash) {
+          throw new Error("Không nhận được biên lai giao dịch từ mạng Sepolia.");
+        }
+
+        const reinstateTxHash = receipt.hash;
+        const nowIso = new Date().toISOString();
+
+        const reinstateInfo = {
+          status: "VERIFIED",
+          statusText: "SEPOLIA ON-CHAIN",
+          isRevoked: false,
+          is_revoked: false,
+          revoke_reason: "",
+          revokeReason: "",
+          revoked_at: null,
+          revokedAt: null,
+          revoked_by: null,
+          revokedBy: null,
+          reinstate_reason: reason,
+          reinstateReason: reason,
+          reinstated_by: adminWallet,
+          reinstatedBy: adminWallet,
+          reinstated_at: nowIso,
+          reinstatedAt: nowIso,
+          reinstate_tx_hash: reinstateTxHash,
+          reinstateTxHash: reinstateTxHash
+        };
+
+        // 1. Cập nhật bảng copychain_works trên Supabase Cloud
+        if (supabaseClient) {
+          try {
+            let oldRawWorks = {};
+            try {
+              const { data: wList } = await supabaseClient
+                .from("copychain_works")
+                .select("raw_data")
+                .eq("code", currentReactivatingWorkCode);
+              if (wList && wList[0] && wList[0].raw_data) oldRawWorks = wList[0].raw_data;
+            } catch (eOld) {}
+
+            await supabaseClient
+              .from("copychain_works")
+              .update({
+                status: "VERIFIED",
+                status_text: "SEPOLIA ON-CHAIN",
+                raw_data: { ...oldRawWorks, ...reinstateInfo },
+                updated_at: nowIso
+              })
+              .eq("code", currentReactivatingWorkCode);
+
+            // Cập nhật ĐỒNG BỘ bảng copychain_records
+            try {
+              let oldRawRec = {};
+              const { data: rList } = await supabaseClient
+                .from("copychain_records")
+                .select("raw_data")
+                .eq("code", currentReactivatingWorkCode);
+              if (rList && rList[0] && rList[0].raw_data) oldRawRec = rList[0].raw_data;
+
+              await supabaseClient
+                .from("copychain_records")
+                .update({
+                  raw_data: { ...oldRawRec, ...reinstateInfo },
+                  updated_at: nowIso
+                })
+                .eq("code", currentReactivatingWorkCode);
+            } catch (rErr) {}
+          } catch (supaErr) {
+            console.warn("Lỗi cập nhật Supabase khi mở khóa:", supaErr);
+          }
+        }
+
+        // 2. Cập nhật LocalStorage
+        try {
+          const localWorksRaw = localStorage.getItem("COPYCHAIN_REGISTERED_WORKS");
+          if (localWorksRaw) {
+            const arr = JSON.parse(localWorksRaw);
+            const idx = arr.findIndex(w => (w.code || w.id) === currentReactivatingWorkCode);
+            if (idx >= 0) {
+              arr[idx] = { ...arr[idx], ...reinstateInfo };
+              localStorage.setItem("COPYCHAIN_REGISTERED_WORKS", JSON.stringify(arr));
+            }
+          }
+        } catch (e) {}
+
+        try {
+          const localRecsRaw = localStorage.getItem("COPYCHAIN_REGISTERED_RECORDS");
+          if (localRecsRaw) {
+            const arrRec = JSON.parse(localRecsRaw);
+            const idxRec = arrRec.findIndex(r => (r.code || r.id) === currentReactivatingWorkCode);
+            if (idxRec >= 0) {
+              arrRec[idxRec] = { ...arrRec[idxRec], ...reinstateInfo };
+              localStorage.setItem("COPYCHAIN_REGISTERED_RECORDS", JSON.stringify(arrRec));
+            }
+          }
+        } catch (e) {}
+
+        // 3. Mở khóa tài khoản sinh viên trong COPYCHAIN_REGISTERED_USERS và COPYCHAIN_CURRENT_USER
+        try {
+          const rawUsers = localStorage.getItem("COPYCHAIN_REGISTERED_USERS");
+          if (rawUsers) {
+            const uList = JSON.parse(rawUsers);
+            const targetWork = ALL_CLIENT_WORKS.find(w => w.code === currentReactivatingWorkCode);
+            const authorWallet = (targetWork && targetWork.authorWallet ? targetWork.authorWallet : "").toLowerCase().trim();
+            const authorText = (targetWork && targetWork.authorsText ? targetWork.authorsText : "").toLowerCase().trim();
+
+            let userChanged = false;
+            uList.forEach(u => {
+              const uWallet = (u.wallet || "").toLowerCase().trim();
+              const uMssv = (u.mssv || u.id || "").toLowerCase().trim();
+              const uName = (u.fullName || u.name || "").toLowerCase().trim();
+
+              if ((authorWallet && uWallet === authorWallet) || (uMssv && authorText.includes(uMssv)) || (uName && authorText.includes(uName))) {
+                u.status = "ACTIVE";
+                u.academicStatus = "ACTIVE";
+                u.isSuspended = false;
+                u.isRevoked = false;
+                u.is_revoked = false;
+                u.revokeReason = null;
+                u.badge = "Tác Giả";
+                userChanged = true;
+
+                if (supabaseClient) {
+                  supabaseClient.from("copychain_users").update({
+                    role: "AUTHOR",
+                    badge: "Tác Giả",
+                    updated_at: nowIso
+                  }).eq("id", u.id).then(() => {}).catch(() => {});
+                }
+              }
+            });
+
+            if (userChanged) {
+              localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(uList));
+            }
+          }
+        } catch (eUserSync) {
+          console.warn("Lỗi mở khóa tài khoản tác giả:", eUserSync);
+        }
+
+        try {
+          const rawCurr = localStorage.getItem("COPYCHAIN_CURRENT_USER");
+          if (rawCurr) {
+            const curr = JSON.parse(rawCurr);
+            curr.status = "ACTIVE";
+            curr.academicStatus = "ACTIVE";
+            curr.isSuspended = false;
+            curr.isRevoked = false;
+            curr.is_revoked = false;
+            curr.revokeReason = null;
+            localStorage.setItem("COPYCHAIN_CURRENT_USER", JSON.stringify(curr));
+          }
+        } catch (eCurr) {}
+
+        // 4. Cập nhật biến bộ nhớ & vẽ lại bảng
+        const memIdx = ALL_CLIENT_WORKS.findIndex(w => w.code === currentReactivatingWorkCode);
+        if (memIdx >= 0) {
+          ALL_CLIENT_WORKS[memIdx] = { ...ALL_CLIENT_WORKS[memIdx], ...reinstateInfo };
+          renderWorksMonitorTable(ALL_CLIENT_WORKS);
+        }
+
+        toast("✅ Mở khóa tài khoản & phục hồi quyền tác giả thành công! Tx: " + reinstateTxHash.slice(0, 10) + "...", "success");
+        alert(
+          "✅ QUYẾT ĐỊNH MỞ KHÓA & PHỤC HỒI QUYỀN HỌC THUẬT THÀNH CÔNG!\n" +
+          "----------------------------------------------------------------------\n" +
+          "Mã đề tài: " + currentReactivatingWorkCode + "\n" +
+          "Trạng thái: HỢP LỆ (SEPOLIA ON-CHAIN)\n" +
+          "Căn cứ phục hồi: " + reason + "\n" +
+          "Mã băm giao dịch (TxHash): " + reinstateTxHash + "\n" +
+          "Khối xác nhận: #" + receipt.blockNumber + "\n\n" +
+          "Chế tài đình chỉ tài khoản đã được dỡ bỏ. Sinh viên có thể nộp đề tài bình thường!"
+        );
+
+        closeReactivateWorkModal();
+
+      } catch (err) {
+        console.error("Lỗi confirmReactivateWork:", err);
+        if (err.code === 4001 || (err.message && err.message.includes("rejected"))) {
+          toast("Bạn đã hủy ký giao dịch mở khóa trên MetaMask.", "warning");
+        } else {
+          toast("❌ Lỗi mở khóa on-chain: " + (err.reason || err.message || "Thất bại"), "error");
+        }
+      } finally {
+        if (btnConfirm) {
+          btnConfirm.disabled = false;
+          btnConfirm.innerHTML = `<span>🔓</span> <span>Xác Nhận Ký Ví Mở Khóa On-Chain</span>`;
+        }
+      }
     }
 
     // ========================================================================
@@ -2626,9 +3017,14 @@
           </td>
           <td style="text-align: right; white-space: nowrap;">
             ${c.isRevoked ? `
-              <button class="btn-secondary" style="font-size: 11.5px; padding: 4px 10px;" onclick="viewRevocationDetails('${c.certCode}')">
-                <span>📜</span> <span>Xem Lý Do</span>
-              </button>
+              <div style="display: inline-flex; gap: 4px; align-items: center;">
+                <button type="button" class="btn-success" style="font-size: 11px; padding: 4px 8px; background: #059669; color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;" onclick="openReactivateCertModal('${c.certCode}')" title="Mở khóa & khôi phục chứng chỉ on-chain">
+                  <span>🔓</span> <span>Mở Khóa</span>
+                </button>
+                <button class="btn-secondary" style="font-size: 11px; padding: 4px 8px;" onclick="viewRevocationDetails('${c.certCode}')" title="Xem lý do thu hồi">
+                  <span>📜</span>
+                </button>
+              </div>
             ` : `
               <button class="btn-danger" onclick="openRevokeModal('${c.certCode}')">
                 <span>⛔</span> <span>Thu Hồi</span>
@@ -2867,6 +3263,174 @@
         `Người ký thu hồi: ${target.revokedBy || 'Quản trị viên ủy quyền'}\n\n` +
         `LÝ DO THU HỒI CHÍNH THỨC:\n"${target.revokeReason}"`
       );
+    }
+
+    // ========================================================================
+    // PHỤC HỒI HIỆU LỰC CHỨNG CHỈ KHÓA HỌC ON-CHAIN (TAB 2)
+    // ========================================================================
+    let currentReactivatingCertCode = null;
+
+    function openReactivateCertModal(certCode) {
+      const certs = getStoredCertificates();
+      const target = certs.find(c => c.certCode === certCode);
+      if (!target) return;
+
+      currentReactivatingCertCode = certCode;
+      document.getElementById("modalReactivateCertCode").value = target.certCode;
+      document.getElementById("modalReactivateCertStudent").value = target.studentName + " - " + target.courseName;
+      document.getElementById("modalReactivateCertReason").value = "";
+
+      document.getElementById("reactivateCertModalBackdrop").style.display = "block";
+      document.getElementById("reactivateCertModal").style.display = "block";
+    }
+
+    function closeReactivateCertModal() {
+      document.getElementById("reactivateCertModalBackdrop").style.display = "none";
+      document.getElementById("reactivateCertModal").style.display = "none";
+      currentReactivatingCertCode = null;
+    }
+
+    async function confirmReactivateCertificate() {
+      const reason = (document.getElementById("modalReactivateCertReason").value || "").trim();
+      if (!reason) {
+        toast("Vui lòng nhập căn cứ phục hồi hiệu lực chứng nhận!", "warning");
+        return;
+      }
+
+      toast("🦊 Mở MetaMask: Vui lòng kết nối ví Admin để ký lệnh phục hồi chứng nhận...", "info");
+      const adminWallet = await requestAdminWalletJustInTime(true);
+      if (!adminWallet) {
+        toast("Cần kết nối ví MetaMask để thực hiện giao dịch mở khóa!", "warning");
+        return;
+      }
+
+      const eth = getMetaMaskProvider();
+      if (!eth) {
+        toast("Không tìm thấy tiện ích MetaMask!", "error");
+        return;
+      }
+
+      let provider;
+      try {
+        provider = new ethers.BrowserProvider(eth);
+        await ensureMetaMaskSepolia(eth);
+      } catch (netErr) {
+        toast("Lỗi chuyển sang Sepolia: " + (netErr.message || netErr), "error");
+        return;
+      }
+
+      const btnConfirm = document.getElementById("btnConfirmReactivateCert");
+      if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = `<span>⚙️</span> <span>Đang ký lệnh mở khóa on-chain...</span>`;
+      }
+
+      try {
+        const signer = await provider.getSigner();
+
+        toast("🦊 Mở MetaMask: Vui lòng bấm 'Xác nhận' để gửi giao dịch phục hồi chứng nhận...", "info");
+
+        let tx = null;
+        try {
+          const contractWrite = new ethers.Contract(toChecksumAddress(CONTRACT_ADDRESS), SCHOLAR_PROOF_ABI, signer);
+          const reinstateDocHash = ethers.keccak256(ethers.toUtf8Bytes(
+            `HCE_CERT_REINSTATE:${currentReactivatingCertCode}:${Date.now()}`
+          ));
+          const reinstateTitle = (`REINSTATE_CERT:${currentReactivatingCertCode}:${reason}`).slice(0, 190);
+          const reinstateCat = "Phục Hồi Chứng Nhận Khóa Học";
+
+          try {
+            tx = await contractWrite.registerIdea(reinstateDocHash, reinstateTitle, reinstateCat, { value: 100000000000000n });
+          } catch (feeErr) {
+            if (feeErr.code === 4001 || (feeErr.message && feeErr.message.includes("rejected"))) throw feeErr;
+            tx = await contractWrite.registerIdea(reinstateDocHash, reinstateTitle, reinstateCat);
+          }
+        } catch (contractErr) {
+          if (contractErr.code === 4001 || (contractErr.message && contractErr.message.includes("rejected"))) {
+            throw contractErr;
+          }
+          const reinstatePayload = ethers.hexlify(ethers.toUtf8Bytes(
+            `HCE_CERT_REINSTATE:${currentReactivatingCertCode}:${reason.slice(0, 36)}`
+          ));
+          tx = await signer.sendTransaction({
+            to: adminWallet,
+            value: 0n,
+            data: reinstatePayload
+          });
+        }
+
+        toast("⏳ Giao dịch mở khóa chứng nhận đang ghi vào Sepolia...", "info");
+        const receipt = await tx.wait(1);
+
+        const reinstateTxHash = receipt.hash;
+        const nowIso = new Date().toISOString();
+
+        const certs = getStoredCertificates();
+        const idx = certs.findIndex(c => c.certCode === currentReactivatingCertCode);
+        if (idx >= 0) {
+          certs[idx].isRevoked = false;
+          certs[idx].revokeReason = "";
+          certs[idx].reinstatedAt = nowIso;
+          certs[idx].reinstatedBy = adminWallet;
+          certs[idx].reinstateTxHash = reinstateTxHash;
+          certs[idx].reinstateReason = reason;
+
+          saveCertificates(certs);
+          syncCertToSupabase(certs[idx]);
+          renderCertificatesTable();
+          if (typeof updateStats === "function") updateStats();
+
+          // Mở khóa tài khoản sinh viên
+          try {
+            const rawUsers = localStorage.getItem("COPYCHAIN_REGISTERED_USERS");
+            if (rawUsers) {
+              const uList = JSON.parse(rawUsers);
+              const targetStudentId = (certs[idx].studentId || "").trim().toLowerCase();
+              const targetStudentName = (certs[idx].studentName || "").trim().toLowerCase();
+              let changedUser = false;
+              uList.forEach(u => {
+                const uMssv = (u.mssv || u.id || "").trim().toLowerCase();
+                const uName = (u.fullName || u.name || "").trim().toLowerCase();
+                if ((targetStudentId && uMssv === targetStudentId) || (targetStudentName && uName === targetStudentName)) {
+                  u.status = "ACTIVE";
+                  u.isRevoked = false;
+                  u.isSuspended = false;
+                  u.revokeReason = null;
+                  u.badge = "Học viên HCE";
+                  changedUser = true;
+                  if (supabaseClient) {
+                    supabaseClient.from("copychain_users").update({
+                      role: "AUTHOR",
+                      badge: "Học viên HCE",
+                      updated_at: nowIso
+                    }).eq("id", u.id).then(() => {}).catch(() => {});
+                  }
+                }
+              });
+              if (changedUser) {
+                localStorage.setItem("COPYCHAIN_REGISTERED_USERS", JSON.stringify(uList));
+              }
+            }
+          } catch (eU) {}
+
+          toast(`✅ Đã phục hồi chứng nhận ${currentReactivatingCertCode} thành công trên Sepolia!`, "success");
+        }
+
+        closeReactivateCertModal();
+
+      } catch (err) {
+        console.error("Lỗi confirmReactivateCertificate:", err);
+        if (err.code === 4001 || (err.message && err.message.includes("rejected"))) {
+          toast("Bạn đã hủy ký giao dịch trên MetaMask.", "warning");
+        } else {
+          toast("Lỗi mở khóa chứng chỉ: " + (err.reason || err.message || err), "error");
+        }
+      } finally {
+        if (btnConfirm) {
+          btnConfirm.disabled = false;
+          btnConfirm.innerHTML = `<span>🔓</span> <span>Xác Nhận Ký Ví Mở Khóa On-Chain</span>`;
+        }
+      }
     }
 
     // ========================================================================

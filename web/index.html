@@ -11633,7 +11633,7 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
 
     // Lắng nghe sự kiện đồng bộ chéo thời gian thực giữa các tab (Cross-Tab Real-time Storage Sync)
     window.addEventListener("storage", (event) => {
-      if (event.key === "COPYCHAIN_REGISTERED_WORKS" || event.key === "COPYCHAIN_REGISTERED_RECORDS") {
+      if (event.key === "COPYCHAIN_REGISTERED_WORKS" || event.key === "COPYCHAIN_REGISTERED_RECORDS" || event.key === "COPYCHAIN_CURRENT_USER" || event.key === "COPYCHAIN_REGISTERED_USERS") {
         console.log("🔄 [Index Real-Time Sync] Phát hiện thay đổi dữ liệu từ tab khác:", event.key);
         try {
           if (event.key === "COPYCHAIN_REGISTERED_WORKS" && event.newValue) {
@@ -11647,6 +11647,15 @@ Bằng chứng này chứng thực quyền ưu tiên tác giả bất biến tr�
             if (typeof renderLiveTicker === "function") renderLiveTicker();
             if (typeof populateDeedRecordPicker === "function") populateDeedRecordPicker();
             if (typeof updatePortfolioCounters === "function") updatePortfolioCounters();
+          }
+          if (event.key === "COPYCHAIN_CURRENT_USER" && event.newValue) {
+            currentAuthUser = JSON.parse(event.newValue);
+            if (typeof updateAuthUI === "function") updateAuthUI();
+          }
+          // Kiểm tra lại chế tài kỷ luật liêm chính học thuật và tự động dỡ bỏ cảnh báo đỏ
+          if (typeof checkAcademicIntegrityStatus === "function" && typeof showAcademicRevocationBanner === "function") {
+            const integrity = checkAcademicIntegrityStatus(currentAuthUser);
+            showAcademicRevocationBanner(integrity);
           }
         } catch (e) {
           console.warn("⚠️ Lỗi đồng bộ tab chéo trên Cổng Khách Hàng:", e);

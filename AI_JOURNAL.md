@@ -1157,3 +1157,37 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 3. **TC-03 (Chống kẻ lạ rút trộm):** Nếu gọi `withdrawFees()` từ bất kỳ ví nào khác ngoài Owner `0xB07FB...`, Smart Contract lập tức Revert `UnauthorizedCaller`.
 
 **Ai phát hiện:** Sinh viên Lê Huy deploy thành công hợp đồng lên Sepolia; AI đối soát RPC, xác thực bytecode và kích hoạt toàn bộ luồng giao dịch thanh toán on-chain.
+
+
+---
+
+### Lần 39: Xây dựng Tính năng Phục hồi Quyền Học thuật & Mở Khóa Tài khoản On-Chain qua MetaMask trên Cổng Admin
+
+**Ngày ghi nhận:** 12/11/2026
+
+**Bối cảnh:**
+- Sau khi trải nghiệm cơ chế chế tài kỷ luật tự động (tài khoản sinh viên `Lê văn quang huy - USR-2` bị đình chỉ nộp bài do trước đó Admin đã thu hồi đề tài `CC-2026-5458` vì lý do đạo văn), sinh viên Lê Huy yêu cầu xây dựng tính năng **Mở khóa tài khoản & Phục hồi quyền học thuật (Academic Reinstatement)** trực tiếp trên Cổng Quản Trị Admin (`admin.html`).
+- Yêu cầu kỹ thuật: Quy trình mở khóa phải vận hành tương tự cơ chế thu hồi, bắt buộc phải có chữ ký xác thực bằng ví MetaMask của Admin và phát sóng giao dịch on-chain lên Sepolia để đảm bảo tính pháp lý và kiểm toán minh bạch.
+
+**Giải pháp Kỹ thuật Triệt để:**
+1. *Bổ sung Nút "Mở Khóa" & Giao diện Modal Quyết Định Phục Hồi:*
+   - Trên bảng giám sát đề tài (Tab 4) và bảng chứng nhận khóa học (Tab 2) của `admin.html`: Với các bản ghi đang ở trạng thái `ĐÃ THU HỒI`, bổ sung nút hành động màu xanh lá **`[🔓 Mở Khóa]`**.
+   - Khi bấm, xuất hiện Modal chuẩn mực yêu cầu Admin nhập căn cứ/lý do phục hồi (ví dụ: *Sinh viên đã giải trình khiếu nại thành công, bổ sung minh chứng trích dẫn đầy đủ...*).
+2. *Cơ chế Ký số Ví MetaMask & Phát sóng On-Chain lên Sepolia:*
+   - Tương tự như quy trình thu hồi, lệnh mở khóa kích hoạt giao dịch ký số từ ví Admin (`0xB07FB...`) phát sóng lên mạng Sepolia với tiền tố `HCE_WORK_REINSTATE` / `REINSTATE_WORK` hoặc `HCE_CERT_REINSTATE`.
+   - Giao dịch được thợ đào đóng gói vào khối Sepolia, sinh mã băm `reinstatedTxHash` lưu vết kiểm toán vĩnh cửu.
+3. *Đồng bộ Hóa Đa Tầng (Supabase Cloud + LocalStorage + Cross-Tab Event):*
+   - Cập nhật trạng thái của đề tài trong `copychain_works` và `copychain_records` từ `REVOKED` trở lại `VERIFIED` (`SEPOLIA ON-CHAIN`), `is_revoked: false`.
+   - Tìm kiếm và tự động xóa bỏ cờ đình chỉ học thuật của sinh viên trong danh bạ `copychain_users` và tài khoản hiện hành (`COPYCHAIN_CURRENT_USER`), chuyển `status` sang `ACTIVE`.
+   - Kích hoạt trình phát sự kiện `storage` thời gian thực: Cổng Khách Hàng (`index.html`) ngay lập tức bắt sự kiện, ẩn hoàn toàn banner cảnh báo đỏ và cho phép sinh viên tiếp tục nộp bài bình thường mà không cần tải lại trang.
+
+**Góc nhìn Quản trị rủi ro & Kế toán On-chain:**
+- **Quy trình Kháng nghị & Khắc phục Sai sót Học thuật (Academic Due Process):**
+  - Trong quản trị đại học, việc xử lý vi phạm liêm chính khoa học luôn đi kèm quyền khiếu nại và phúc khảo. Việc số hóa toàn bộ quy trình kỷ luật và mở khóa lên blockchain đảm bảo mọi phán quyết của Hội đồng đều có dấu vết kiểm toán (Audit Trail) bất biến, chống lạm quyền hoặc xóa án kỷ luật tùy tiện.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt:**
+1. **TC-01 (Happy Path - Ký ví mở khóa thành công trên Sepolia):** Admin chọn đề tài `CC-2026-5458`, nhập lý do giải trình thành công, ký giao dịch MetaMask; trạng thái đề tài lập tức chuyển sang huy hiệu màu xanh `SEPOLIA ON-CHAIN`.
+2. **TC-02 (Real-time Cross-Tab Unban):** Tab Khách Hàng của sinh viên lập tức ẩn biểu ngữ đình chỉ màu đỏ trong thời gian thực, mở khóa các bước Wizard tiếp theo.
+3. **TC-03 (Chống mở khóa không có quyền):** Giao dịch mở khóa bắt buộc phải xuất phát từ ví Admin có thẩm quyền; từ chối xử lý nếu không có chữ ký MetaMask hợp lệ.
+
+**Ai phát hiện:** Sinh viên Lê Huy đề xuất bổ sung tính năng mở khóa bằng MetaMask; AI xây dựng giải pháp UI modal, logic ký ví on-chain và đồng bộ hai chiều Supabase.
