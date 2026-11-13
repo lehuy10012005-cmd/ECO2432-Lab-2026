@@ -1226,3 +1226,36 @@ Nếu chỉ mô tả chung chung "viết tool phân tích ví", AI thường b�
 3. **TC-03 (Bộ kiểm thử tự động toàn diện):** Chạy lại bộ kịch bản kiểm thử `node test/ScholarProof.test.js`, xác nhận 8/8 ca kiểm thử tiếp tục ĐẠT (PASS) 100%.
 
 **Ai phát hiện:** Sinh viên Lê Huy chỉ định yêu cầu cập nhật tài liệu; AI thực thi cập nhật chuẩn xác, tuân thủ nguyên tắc không sửa cấu trúc.
+
+---
+
+### Lần 41: Khắc phục Lỗi Cú Pháp Phân Cách Bảng Markdown GFM (Table Delimiter Row Syntax) trên README.md
+
+**Ngày ghi nhận:** 13/11/2026
+
+**Bối cảnh:**
+- Trên giao diện GitHub của kho lưu trữ, bảng danh sách sinh viên thực hiện ("👥 Nhóm sinh viên thực hiện") không hiển thị thành khung bảng kẻ ô (Table Frame) mà bị vỡ giao diện thành một khối văn bản thô dài dính liền các ký tự phân cách `||`.
+- Sinh viên Lê Huy chụp ảnh màn hình gửi yêu cầu: *"làm cái khung đi"*.
+
+**Nguyên nhân Kỹ thuật:**
+- Theo chuẩn quy chuẩn **GitHub Flavored Markdown (GFM)**:
+  - Dòng phân cách (Delimiter Row) bắt buộc phải có số lượng ô phân cách bằng đúng số lượng cột của dòng tiêu đề (Header Row).
+  - Bảng thông tin sinh viên có 6 cột: `STT | Họ và tên sinh viên | Mã sinh viên | Lớp | Vai trò dự án | Email`.
+  - Tại dòng 16 cũ của `README.md`, xuất hiện lỗi đánh máy thiếu một dấu gạch đứng `|` giữa cột 3 và 4: `| :---: | :--- | :--- :---: | :---: | :--- | :--- |` (chuỗi `:--- :---:` bị dính cách, chỉ có 5 ô phân cách thay vì 6 ô).
+  - Khi phát hiện dòng phân cách không hợp lệ, bộ phân giải Markdown của GitHub tự động hủy chế độ kết xuất bảng và gộp toàn bộ các dòng bên dưới thành một đoạn văn bản (paragraph) thông thường.
+
+**Giải pháp Kỹ thuật Triệt để:**
+1. *Chuẩn hóa Cú pháp Phân cách Bảng:*
+   - Bổ sung ký tự `|` còn thiếu tại dòng 16, định dạng chuẩn xác 6 cột:
+     `| :---: | :--- | :---: | :---: | :--- | :--- |`
+   - Căn lề giữa cho cột `STT`, `Mã sinh viên`, `Lớp`, và căn lề trái cho `Họ và tên`, `Vai trò`, `Email`.
+2. *Đồng bộ Hóa Hai Chiều:*
+   - Đồng bộ tệp [`README.md`](./README.md) trong thư mục gốc và thư mục repo `hce-web3-starter/`.
+   - Đẩy commit mới lên cả 2 remote `group/main` và `origin/main` để GitHub hiển thị khung bảng kẻ viền hoàn chỉnh.
+
+**Bộ 3 Ca Kiểm Thử Nghiêm Ngặt:**
+1. **TC-01 (GFM Table Parsing):** Kiểm tra khớp số cột giữa Header (6), Delimiter (6) và Row 1, Row 2 (6 cột). Khung bảng (Table Frame) hiển thị hoàn hảo với viền kẻ ô chuẩn trên GitHub.
+2. **TC-02 (Markdown Repo Audit):** Quét toàn bộ các tệp `.md` trong dự án (chạy regex `\| :---.*:---`), xác nhận không còn bất kỳ bảng biểu nào bị lỗi cú pháp dính cột.
+3. **TC-03 (Automated Unit Tests):** Chạy lại bộ kịch bản kiểm thử `node test/ScholarProof.test.js`, xác nhận 8/8 ca kiểm thử tiếp tục ĐẠT (PASS) 100%.
+
+**Ai phát hiện:** Sinh viên Lê Huy phát hiện lỗi hiển thị mất khung bảng trên GitHub qua ảnh chụp màn hình; AI truy vết chính xác lỗi cú pháp GFM và sửa triệt để.
